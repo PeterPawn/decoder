@@ -1,6 +1,10 @@
 ## decode_passwords for FRITZ!OS versions > 06.05
 
-Copyright (C) 2014 P.Haemmerlein (http://www.yourfritz.de)
+### enhanced version for use with FRITZ!OS versions after 06.25
+
+=======================================================================================
+
+Copyright (C) 2014-2016 P. Hämmerlein (http://www.yourfritz.de)
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of the GNU General Public License
@@ -65,7 +69,7 @@ Exit codes:
 *  123 - the specified WLAN key for mimicry seems to be unusual
 *  124 - the specified MAC address for mimicry seems to be invalid
 *  125 - the temporary path looks suspicious
-*  126 - missing 'webdavcfginfo' binary
+*  126 - missing 'webdavcfginfo' binary or another usable decoder
 *  127 - invalid arguments specified, usage help will be shown
 
 Lean and mean version:
@@ -169,8 +173,9 @@ If you create the lean and mean version, there are some more depedencies:
 
 Micro version:
 --------------
-Just for fun ... the (imho) leanest version - with some additional limitations,
-but using the same control flow - *could* be:
+There's another *micro version*, which can be generated (call this script with
+`writemicro` as the first parameter) and which needs the binary to be used as a
+symlink under `/var/decoder`.
 
 ```shell
 b=/bin
@@ -182,12 +187,12 @@ r=proc
 mkdir -p $t$f $t$l $t$b $t/$r
 cd $t
 cat $*>i
-sed -ne's/.*\(\$\$\$\$[A-Z1-6]*\).*/\1/p'<i>p
+sed -ne's|.*\(\$\$\$\$[A-Z1-6]*\).*|\1|p'<i>p
 cat>s<<'Q'
 q=\\\\
 while read x;do
-echo -e "$1$2 {$5=$x;}">$4
-o="$($1$3 -p$5)"
+echo -e "webdavclient {$2=$x;}">$1
+o="$(/run -p$2)"
 o="${o//$q/$q$q}"
 o="${o//|/\\|}"
 o="${o//&/\\&}"
@@ -198,19 +203,73 @@ Q
 $m -o bind $l .$l
 $m -o bind $b .$b
 $m -t $r . ./$r
-chroot . sh s webdav client cfginfo $f/usb.cfg username
+cp /var/decoder $t/run
+chroot . sh s $f/usb.cfg username
 sed -fc<i
 cd ..
 u$m $t/$r $t$b $t$l
 rm -r $t
 ```
 
-That version needs only 469 bytes on 30 lines and could do the basic job too. And
+That version needs only 479 bytes on 31 lines and could do the basic job too. And
 another benefit: You can specify one or more names of files to decode as arguments,
 for example: `sh micro_decode /var/flash/*.cfg`.
 
-It's only a proof of concept and not intended for distribution from other sources.
-Please respect that license limitation.
+It's not intended for distribution from other sources, please respect that license
+limitation.
+
+The micro version was changed to call `/var/decoder`, after the vendor changed (since
+version 06.25+) the handling of username and password decoding for the WebDAV
+function - it uses only shared memory now to provide the credentials.
+
+For the same reason the script was enhanced to check the presence of a child
+directory named `decoders` and use the appropriate version for the present hardware
+revision - this makes the unmodified script usable on different platforms without
+further changes, if the subdirectory contains symlinks to the proper decoding binary.
+
+If the mentioned subdirectory is missing, a name of `avm_decoder` is used as a
+fallback option.
+
+To make it easier to use another (elder) firmware version without a license violation
+(the AVM license prohibits extracting AVM binaries as single file(s)), the script
+checks for a symlink under `/var/decoder` as *first choice* - if you have another
+SquashFS image (extracted from a complete firmware image), you may mount this
+image somewhere and create the mentioned symlink pointing to the mounted structure.
+
+The calling interface (incl. the usage of a virtualized `usb.cfg` file) is kept
+unchanged to be usable with an (otherwise provided) elder version of "webdavcfginfo"
+from the vendor.
+
+Even if it's possible to use an elder version of `ar7cfgconv` to decode some values,
+this solution is usable in combination with `ar7cfgctl` to extract single settings
+from the ar7.cfg file (and to decode an arbitrary value - as long as it's properly
+encoded - from other config files too), which make it more suitable to be used in
+own scripts. Such an usage could be look like this:
+
+```shell
+cfgvar()
+{
+	local n="$1" i p="$2" v
+	v="$(echo -e "$n" | ar7cfgctl -w 2>/dev/null)"
+	i=$(expr index "$v" '\$\$\$\$')
+	if [ $i -gt 0 ]; then
+		v="$(echo "$v" | decode_passwords)"
+	fi
+	if ! test -z "$p"; then
+		p="${p//\[/\\[}"
+		p="${p//\"/\\"}"
+		p="${p//\./\\.}"
+		p="${p//\$/\\\$}"
+		v="$(echo "$v" | sed -n -e "s|$p||p")"
+	fi
+	echo "$v" | sed -n -e 's|^\([^ ]*\) = \(\".*\"\)|\1=\2|p'
+}
+eval $(cfgvar "ddns.accounts.username\nddns.accounts.passwd" "ddns.accounts.")
+```
+
+This would read the username and password for the first DynDNS account and return
+them in variables "username" and "password" to be `eval`uated and assigned to the
+corresponding shell variables.
 
 =======================================================================================
 ## Discussions/questions
