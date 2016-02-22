@@ -244,7 +244,7 @@ Even if it's possible to use an elder version of `ar7cfgconv` to decode some val
 this solution is usable in combination with `ar7cfgctl` to extract single settings
 from the ar7.cfg file (and to decode an arbitrary value - as long as it's properly
 encoded - from other config files too), which make it more suitable to be used in
-own scripts. Such an usage could be look like this:
+own scripts. Such an usage could look like this:
 
 ```shell
 cfgvar()
