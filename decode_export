@@ -1,0 +1,203 @@
+#! /bin/sh
+#######################################################################################################
+#                                                                                                     #
+# decode every occurence of an encoded secret value from an export file                               #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# Copyright (C) 2014-2017 P.Hämmerlein (peterpawn@yourfritz.de)                                       #
+#                                                                                                     #
+# This program is free software; you can redistribute it and/or modify it under the terms of the GNU  #
+# General Public License as published by the Free Software Foundation; either version 2 of the        #
+# License, or (at your option) any later version.                                                     #
+#                                                                                                     #
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without   #
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      #
+# General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more details.             #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# The script takes the input file from STDIN, extracts the random cipher key from the 'Password'      #
+# entry in its header and calls the 'decode_secrets' script with this random key.                     #
+# The key needed to decipher the random key entry may be specified as an user-defined password, as a  #
+# couple of variables for a single device or it could be read from the current environment, if we're  #
+# running on a FRITZ!OS device.                                                                       #
+#                                                                                                     #
+# Therefore the following calls are all valid:                                                        #
+#                                                                                                     #
+# decode_export < INPUTFILE                                                                           #
+# - decode the export file with the settings from the current device, may only be used on a FRITZ!OS  #
+#   device, where the needed values are present in the 'urlader environment'                          #
+#                                                                                                     #
+# decode_export PASSWORD < INPUTFILE                                                                  #
+# - decode the export file with the specified password                                                #
+#                                                                                                     #
+# decode_export SERIAL MACA < INPUTFILE                                                               #
+# - decode the export file with the specified values from a FRITZ!OS device; this will decode a file, #
+#   which was exported without a user-defined password                                                #
+#                                                                                                     #
+# The line with the 'Password' value in the file header remains unchanged, because the encrypted      #
+# value consists of binary data and may not be shown as a string value in a useful manner.            #
+#                                                                                                     #
+# This script needs an OpenSSL binary with the 'dgst' function (MD5 support is mandatory) and the AES #
+# algorithm with a key length of 256 bits has to be supported by the 'enc' function.                  #
+# But the OpenSSL binary is not called directly from here, there's a bunch of other scripts, which    #
+# will be used by this one and have to be present in the same directory.                              #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# constants                                                                                           #
+#                                                                                                     #
+#######################################################################################################
+needed_scripts="password_from_device device_password user_password decode_secret decode_secrets"
+password_entry="Password"
+#######################################################################################################
+#                                                                                                     #
+# subfunctions                                                                                        #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# import the needed functions from the YourFritz script library                                       #
+#                                                                                                     #
+#######################################################################################################
+if [ -f "$0.yf_scriptlib" ]; then
+	. $0.yf_scriptlib
+else
+	YF_SCRIPT_FUNCTIONS="yf_mktemp yf_bin2hex"
+	. "$YF_SCRIPT_DIR/yf_helpers"
+fi
+#######################################################################################################
+#                                                                                                     #
+# check environment                                                                                   #
+#                                                                                                     #
+#######################################################################################################
+for n in $needed_scripts; do
+	[ "$(expr "$0" : ".*\(/\).*")" = "/" ] && d="${0%/*}" || d="."
+	eval $n="$d/$n"
+	eval f="\$$n"
+	if ! [ -x "$f" ]; then
+		printf "Missing another needed executable (%s).\n" "$n" 1>&2
+		exit 1
+	fi
+done
+#######################################################################################################
+#                                                                                                     #
+# create temporary directory                                                                          #
+#                                                                                                     #
+#######################################################################################################
+td=$(yf_mktemp -d)
+if [ ${#td} -eq 0 ]; then
+	printf "Error creating a temporary directory.\n" 1>&2
+	exit 1
+fi
+trap "exit 1" INT HUP
+trap "rm -r $td 2>/dev/null" EXIT
+#######################################################################################################
+#                                                                                                     #
+# check options                                                                                       #
+#                                                                                                     #
+#######################################################################################################
+debug=0
+mimicry=0
+for x in $*; do
+	case "$x" in
+		("-d" | "--debug")
+			debug=1
+			shift
+			;;
+		("--")
+			shift
+			break
+			;;
+		(-*)
+			printf "Unknown option '%s' specified.\n" "$x" 1>&2
+			exit 1
+			;;
+		(*)
+			break;
+	esac
+done
+#######################################################################################################
+#                                                                                                     #
+# check parameters                                                                                    #
+#                                                                                                     #
+#######################################################################################################
+[ $# -eq 0 ] && device=1 || device=0
+[ $# -eq 1 ] && password=1 || password=0
+[ $# -eq 2 ] && mimicry=1 || mimicry=0
+if [ $# -gt 2 ]; then
+	printf "Unexpected number of parameters specified.\n" 1>&2
+	exit 1
+fi
+#######################################################################################################
+#                                                                                                     #
+# check input file                                                                                    #
+#                                                                                                     #
+#######################################################################################################
+if [ -t 0 ]; then
+	printf "STDIN is a terminal device, but you have to provide the export file there.\n" 1>&2
+	exit 1
+fi
+cat - >"$td/input"
+[ -s "$td/input" ] || exit 0 # empty input file
+#######################################################################################################
+#                                                                                                     #
+# get the password to decipher the random key entry                                                   #
+#                                                                                                     #
+#######################################################################################################
+if [ $device -eq 1 ]; then
+	export_key="$($password_from_device --export | yf_bin2hex)"
+	if [ ${#export_key} -eq 0 ]; then
+		printf "Error reading device variables, are we really on a FRITZ!Box device?\n" 1>&2
+		exit 1
+	fi
+elif [ $password -eq 1 ]; then
+	export_key="$($user_password "$1" | yf_bin2hex)"
+	if [ ${#export_key} -eq 0 ]; then
+		printf "Error creating password hash as decipher key.\n" 1>&2
+		exit 1
+	fi
+else
+	export_key="$($device_password "$1" "$2" | yf_bin2hex)"
+	if [ ${#export_key} -eq 0 ]; then
+		printf "Error creating the device value based password hash as decipher key.\n" 1>&2
+		exit 1
+	fi
+fi
+[ $debug -eq 1 ] && printf "computed/specified key value is '%s'\n" "$export_key" 1>&2
+#######################################################################################################
+#                                                                                                     #
+# extract the 'Password' value from the header of our file and try to decode it                       #
+#                                                                                                     #
+#######################################################################################################
+rnd_pw="$(sed -n -e "s|^[ \t]*$password_entry=\$\$\$\$\([A-Z1-6]*\).*|\1|p" <"$td/input" 2>/dev/null)"
+if [ ${#rnd_pw} -eq 0 ]; then
+	printf "Unable to locate the '%s' entry in the file header, is this really an export file from a FRITZ!Box device?\n" "$password_entry" 1>&2
+	exit 1
+fi
+export_rnd="$($decode_secret "$rnd_pw" "$export_key" 2>/dev/null | yf_bin2hex)"
+if [ ${#export_rnd} -eq 0 ]; then
+	printf "Unable to decrypt the random cipher key with the specified export key or device data.\n" 1>&2
+	exit 1
+fi
+random_key="$(expr "$export_rnd" : "\(.\{$(( ${#export_rnd} / 2 ))\}\).*")"
+[ $debug -eq 1 ] && printf "random key value is '%s'\n" "$random_key" 1>&2
+[ $debug -eq 1 ] && dbg="-d" || unset dbg
+#######################################################################################################
+#                                                                                                     #
+# write the header and the decoded data to STDOUT                                                     #
+#                                                                                                     #
+#######################################################################################################
+sed -n -e "1,/^[ \t]*$password_entry=\$\$\$\$[A-Z1-6]*\$/p" "$td/input"
+sed -e "1,/^[ \t]*$password_entry=\$\$\$\$[A-Z1-6]*\$/d" "$td/input" | $decode_secrets $dbg "$random_key"
+#######################################################################################################
+#                                                                                                     #
+# no housekeeping needed, temporary data will be cleaned up by our trap command above                 #
+#                                                                                                     #
+#######################################################################################################
+exit 0
+#######################################################################################################
+#                                                                                                     #
+# end of script                                                                                       #
+#                                                                                                     #
+#######################################################################################################
