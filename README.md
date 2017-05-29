@@ -17,15 +17,16 @@ To generate a password for decoding of data from a TFFS file, you need to have a
 * the serial number, as it was stored in the 'urlader environment' - it was a sequence of 16 '0'es for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
 * the MAC address stored as 'maca' in the 'urlader environment' and last, but not least
 * the WLAN key from factory settings - locate it on the back of the device, where it was printed on a sticker
+* the TR-069 passphrase, if the device has a CWMP account configured (tr069_serial and tr069_passphrase are present in the environment)
 
-If data is exported without a password (using 'tr069fwupdate configexport' - possibly this will not function any longer, due to the 2FA was introduced for new versions), the password for the export file will be built from the same values as above, but the WLAN key will be omitted for the MD5 hash.
+If data is exported without a password (using 'tr069fwupdate configexport' - possibly this will not function any longer, since the 2FA was introduced for new versions), the password for the export file will be built from the same values as above, but the WLAN key and TR-069 passphrase will always be omitted while building the MD5 hash.
 
-For each export file, the specified (or implicit) password is only used to encrypt a random value, which will be stored under "Password" in the header of an export file. Every encoded value within the export file uses this random value as key. It looks a little bit strange, but this random value is encoded with a length of 32 byte, while only the first 16 byte are used for encryption and the 2nd 16 byte are simply a repetition of the 1st 16 byte. If a password was provided while exporting the data, its MD5 hash value is used as the key to encrypt the random key and if the password was omitted, the hash is built from the 'SerialNumber' (with newline at the end) and the 'maca' content (a newline at its end is needed too).
+For each export file, the specified (or implicit) password is only used to encrypt a random value, which will be stored under "Password" in the header of an export file. Every encoded value within the export file uses this random value as key. It looks a little bit strange, but this random value is encoded with a length of 32 byte, while only the first 16 byte are used for encryption/decryption and the 2nd 16 byte are simply a repetition of the 1st 16 byte. If a password was provided while exporting the data, its MD5 hash value is used as the key to encrypt the random key and if the password was omitted, the hash is built from the 'SerialNumber' (with newline at the end) and the 'maca' content (a newline at its end is needed too).
 
 If you want to decode an export file, which was created with a password, you need to know exactly this password to decode any data, because the random encryption key from the "Password" field in its header can't be decoded without it (it uses a strong AES-256 encryption). If the data was exported without a password, you need the device, where the file was created on or you need to know the 'SerialNumber' and 'maca' values of the source device.
 
-### License changes:
-It's not allowed any longer to create a 'lean & mean' version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the v0.2_freeze branch.
+### License changes and limitations:
+It's not allowed any longer to create a 'lean & mean' version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the 'v0.2_freeze' branch.
 
 Even if this project is licensed under the GPLv2, I'd prefer to include (justified) suggestions into the base project and therefore there's a license exception to the GPLv2 text: You may fork this project and modify it to meet your own desire.
 
@@ -33,10 +34,12 @@ But the Freetz project (from www.freetz.org) may only use the unmodified version
 
 There will be an exhaustive description (in a future IPPF thread), how AVM's encryption works. If the Freetz project really needs it's own version and should I deny to make the required changes to my own version, an experienced programmer should be able to create his own version from scratch.
 
-I would like to work *together* on an usable version, but this means to work in *common* and it's not the "fine english manner" to use the project of a stranger and make own changes, without any attempts to discuss the sense (or senselessness) first.
+I would like to work *together* on an usable version, but this means to work in *common* and it's not the "fine english manner" to use the project of a stranger and make own changes, without any attempts to discuss their sense (or senselessness) first.
 
 ### Provided files:
-The whole project consists of POSIX-compatible shell scripts for various decoding tasks. Encoding of values is not provided here - AVM's components accept cleartext values in nearly all places, where an encrypted value may be used. Because the shell-based decryption isn't very fast and the original firmware from vendor doesn't contain the needed OpenSSL binary, it's a possible, alternative approach to use an own C program for decryption. This binary can use the existing OpenSSL libraries from stock firmware.
+The whole project consists of POSIX-compatible shell scripts for various decoding tasks. Encoding of values is not provided here - AVM's components accept clear-text values in nearly all places, where an encrypted value may be used. Because the shell-based decryption isn't very fast (that's a little bit of understatement ... it's really, really, really slow) and the original firmware from vendor doesn't contain the needed OpenSSL binary, it's a possible, alternative approach to use an own C program for decryption. This binary can use the existing OpenSSL libraries from stock firmware.
+
+The 'source' subfolder contains an implementation of a 'multi-call' utility in C, which provides all the functions, that are available as shell scripts too.
 
 ### Discussions/questions/changes
 
