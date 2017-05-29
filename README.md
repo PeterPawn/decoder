@@ -13,6 +13,8 @@ All scripts in this project need an OpenSSL binary with
 * AES-256 decryption
 capabilities.
 
+For recurring tasks (like data conversions) the shell script library from the YourFritz repository (www.yourfritz.de) will be used. Therefore you have to provide a valid installation of this library or you may prepare include files for each script. If a file ```*script_name*.yf_scriptlib``` exists, it will be included with the 'dot' command (.) directly. Please keep in mind, that you may not publish/distribute such a prepared file - only the whole script library (with intact comments) may be distributed to others.
+
 To generate a password for decoding of data from a TFFS file, you need to have access to the device in question or you need to know the following data for the source device:
 * the serial number, as it was stored in the 'urlader environment' - it was a sequence of 16 '0'es for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
 * the MAC address stored as 'maca' in the 'urlader environment' and last, but not least
@@ -24,6 +26,8 @@ If data is exported without a password (using 'tr069fwupdate configexport' - pos
 For each export file, the specified (or implicit) password is only used to encrypt a random value, which will be stored under "Password" in the header of an export file. Every encoded value within the export file uses this random value as key. It looks a little bit strange, but this random value is encoded with a length of 32 byte, while only the first 16 byte are used for encryption/decryption and the 2nd 16 byte are simply a repetition of the 1st 16 byte. If a password was provided while exporting the data, its MD5 hash value is used as the key to encrypt the random key and if the password was omitted, the hash is built from the 'SerialNumber' (with newline at the end) and the 'maca' content (a newline at its end is needed too).
 
 If you want to decode an export file, which was created with a password, you need to know exactly this password to decode any data, because the random encryption key from the "Password" field in its header can't be decoded without it (it uses a strong AES-256 encryption). If the data was exported without a password, you need the device, where the file was created on or you need to know the 'SerialNumber' and 'maca' values of the source device.
+
+The C implementation needs an OpenSSL version to be built and any C library - it should work with 'glibc' and 'uClibc' without problems. If any changes are needed to use 'dietlibc', your pull requests are very welcome.
 
 ### License changes and limitations:
 It's not allowed any longer to create a 'lean & mean' version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the 'v0.2_freeze' branch.
