@@ -44,6 +44,8 @@ typedef enum {
 	DECODER_ERROR_WRITE_FAILED,
 	// buffer too small for output data
 	DECODER_ERROR_BUF_TOO_SMALL,
+	// error allocating memory
+	DECODER_ERROR_NO_MEMORY,
 	// invalid Base32 character
 	DECODER_ERROR_INV_B32_DATA,
 	// invalid size of Base32 encoded string
@@ -60,12 +62,15 @@ typedef enum {
 	DECODER_ERROR_INV_HEX_DATA,
 	// invalid hexadecimal data size
 	DECODER_ERROR_INV_HEX_SIZE,
+	// invalid decipher key was specified
+	DECODER_ERROR_INVALID_KEY,
 } decoder_error_t;
 
 static char *		__decoder_error_text[] = {
 	"no error",
 	"write failed",
 	"buffer too small",
+	"no memory",
 	"invalid base32 data",
 	"invalid base32 data size",
 	"invalid base64 data",
@@ -74,6 +79,7 @@ static char *		__decoder_error_text[] = {
 	"invalid data size for base64 encode",
 	"invalid hexadecimal data",
 	"invalid hexadecimal data size",
+	"invalid decipher key",
 };
 
 typedef enum {
@@ -81,6 +87,13 @@ typedef enum {
 	VERBOSITY_NORMAL,
 	VERBOSITY_VERBOSE
 } decoder_verbosity_t;
+
+// constant
+
+#define AVM_HASH_SIZE			16
+#define AVM_KEY_SIZE			32
+#define	AVM_IV_SIZE				16
+#define AVM_BLOCK_SIZE			16
 
 // function prototypes
 
@@ -91,6 +104,9 @@ void	usageScreen_b64dec(void);
 void	usageScreen_b64enc(void);
 void	usageScreen_hexdec(void);
 void	usageScreen_hexenc(void);
+void	usageScreen_user_password(void);
+void	usageScreen_device_password(void);
+void	usageScreen_decode_secret(void);
 
 size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t binarySize);
 size_t	binaryToBase32(char *binary, size_t binarySize, char *base32, size_t base32Size);
@@ -108,6 +124,9 @@ int b64dec_main(int argc, char** argv, int argo);
 int b64enc_main(int argc, char** argv, int argo);
 int hexdec_main(int argc, char** argv, int argo);
 int hexenc_main(int argc, char** argv, int argo);
+int user_password_main(int argc, char** argv, int argo);
+int device_password_main(int argc, char** argv, int argo);
+int decode_secret_main(int argc, char** argv, int argo);
 
 #endif
 

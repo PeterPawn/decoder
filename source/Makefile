@@ -29,7 +29,7 @@ override CFLAGS += -W -Wall -std=c99 -O0 -ggdb -fvisibility=hidden
 #
 # link binaries with this libraries too
 #
-LIBS = 
+LIBS = -lcrypto
 #
 # targets to make
 #

@@ -42,6 +42,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
+#include <openssl/evp.h>
 #include "decoder.h"
 
 #define EXPORTED                        __attribute__((__visibility__("default")))
@@ -52,8 +53,9 @@
 static decoder_verbosity_t 				__decoder_verbosity = VERBOSITY_NORMAL;
 
 #define verbosity_options_long			{ "verbose", no_argument, NULL, 'v' },\
-										{ "quiet", no_argument, NULL, 'q' }
-#define verbosity_options_short			"qv"
+										{ "quiet", no_argument, NULL, 'q' },\
+										{ "help", no_argument, NULL, 'h' }
+#define verbosity_options_short			"qvh"
 #define check_verbosity_options_short()	case 'v':\
 											__decoder_verbosity = VERBOSITY_VERBOSE;\
 											break;\
@@ -94,6 +96,9 @@ static commandEntry_t	commands[] = {
 	{ .name = "b64enc", .ep = &b64enc_main },
 	{ .name = "hexdec", .ep = &hexdec_main },
 	{ .name = "hexenc", .ep = &hexenc_main },
+	{ .name = "user_password", .ep = &user_password_main },
+	{ .name = "device_password", .ep = &device_password_main },
+	{ .name = "decode_secret", .ep = &decode_secret_main },
 	{ .name = NULL, .ep = NULL }
 };
 
@@ -112,6 +117,41 @@ void	usageScreen_b32dec(void)
 void	usageScreen_b32enc(void)
 {
 	errorMessage("help for b32enc\n");
+}
+
+void	usageScreen_b64dec(void)
+{
+	errorMessage("help for b64dec\n");
+}
+
+void	usageScreen_b64enc(void)
+{
+	errorMessage("help for b64enc\n");
+}
+
+void	usageScreen_hexdec(void)
+{
+	errorMessage("help for hexdec\n");
+}
+
+void	usageScreen_hexenc(void)
+{
+	errorMessage("help for hexenc\n");
+}
+
+void	usageScreen_user_password(void)
+{
+	errorMessage("help for user_password\n");
+}
+
+void	usageScreen_device_password(void)
+{
+	errorMessage("help for device_password\n");
+}
+
+void	usageScreen_decode_secret(void)
+{
+	errorMessage("help for decode_secret\n");
 }
 
 // Base32 encoding table
@@ -485,7 +525,7 @@ void b32dec_output(char * base32, bool hexOutput)
 	}
 }
 
-int b32dec_main(int argc UNUSED, char** argv, int argo)
+int b32dec_main(int argc, char** argv, int argo)
 {
 	char				buffer[81];
 	char *				input;
@@ -550,7 +590,7 @@ int b32dec_main(int argc UNUSED, char** argv, int argo)
 
 // 'b32enc' function - encode binary data from STDIN to Base32 encoded on STDOUT
 
-int b32enc_main(int argc UNUSED, char** argv, int argo)
+int b32enc_main(int argc, char** argv, int argo)
 {
 	bool				hexInput = false;
 	bool				padInput = false;
@@ -582,8 +622,8 @@ int b32enc_main(int argc UNUSED, char** argv, int argo)
 					break;
 
 				check_verbosity_options_short();
-				help_option(b32dec);
-				getopt_message_displayed(b32dec);
+				help_option(b32enc);
+				getopt_message_displayed(b32enc);
 				invalid_option(opt);
 			}
 		} 
@@ -727,7 +767,7 @@ void b64dec_output(char * base64, bool hexOutput, bool pad)
 	}
 }
 
-int b64dec_main(int argc UNUSED, char** argv, int argo)
+int b64dec_main(int argc, char** argv, int argo)
 {
 	char				buffer[80];
 	char *				input;
@@ -761,8 +801,8 @@ int b64dec_main(int argc UNUSED, char** argv, int argo)
 					break;
 
 				check_verbosity_options_short();
-				help_option(b32dec);
-				getopt_message_displayed(b32dec);
+				help_option(b64dec);
+				getopt_message_displayed(b64dec);
 				invalid_option(opt);
 			}
 		} 
@@ -798,7 +838,7 @@ int b64dec_main(int argc UNUSED, char** argv, int argo)
 
 // 'b64enc' function - encode binary data from STDIN to Base64 encoded on STDOUT
 
-int b64enc_main(int argc UNUSED, char** argv, int argo)
+int b64enc_main(int argc, char** argv, int argo)
 {
 	bool				hexInput = false;
 	bool				padOutput = false;
@@ -863,8 +903,8 @@ int b64enc_main(int argc UNUSED, char** argv, int argo)
 					break;
 
 				check_verbosity_options_short();
-				help_option(b32dec);
-				getopt_message_displayed(b32dec);
+				help_option(b64enc);
+				getopt_message_displayed(b64enc);
 				invalid_option(opt);
 			}
 		} 
@@ -961,7 +1001,7 @@ int b64enc_main(int argc UNUSED, char** argv, int argo)
 
 // 'hexdec' function - decode hexadecimal presentation of data from STDIN to STDOUT
 
-int hexdec_main(int argc UNUSED, char** argv, int argo)
+int hexdec_main(int argc, char** argv, int argo)
 {
 	char				buffer[80];
 	size_t				read = 0;
@@ -981,8 +1021,8 @@ int hexdec_main(int argc UNUSED, char** argv, int argo)
 			switch (opt)
 			{
 				check_verbosity_options_short();
-				help_option(b32dec);
-				getopt_message_displayed(b32dec);
+				help_option(hexdec);
+				getopt_message_displayed(hexdec);
 				invalid_option(opt);
 			}
 		} 
@@ -1058,7 +1098,7 @@ int hexdec_main(int argc UNUSED, char** argv, int argo)
 
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT
 
-int hexenc_main(int argc UNUSED, char** argv, int argo)
+int hexenc_main(int argc, char** argv, int argo)
 {
 	bool				wrapLines = false;
 	uint32_t			lineSize = 80;
@@ -1111,8 +1151,8 @@ int hexenc_main(int argc UNUSED, char** argv, int argo)
 					break;
 
 				check_verbosity_options_short();
-				help_option(b32dec);
-				getopt_message_displayed(b32dec);
+				help_option(hexenc);
+				getopt_message_displayed(hexenc);
 				invalid_option(opt);
 			}
 		} 
@@ -1158,6 +1198,397 @@ int hexenc_main(int argc UNUSED, char** argv, int argo)
 			errorMessage("Unexpected error %d (%s) encountered.\a\n", getError(), getErrorText(getError()));
 		}
 		exit(EXIT_FAILURE);
+	}
+
+	return EXIT_SUCCESS;
+}
+
+// 'user_password' function - compute the password hash for export files with a user-specified password
+
+int user_password_main(int argc, char** argv, int argo)
+{
+	bool				hexOutput = false;
+	char *				password = NULL;
+	unsigned char		hash[AVM_HASH_SIZE];
+	uint32_t			hashLen;
+	char				hex[(sizeof(hash) * 2) + 1];
+	char *				out;
+	size_t				outLen;
+
+	if (argc > argo + 1)
+	{
+		int				opt;
+		int				optIndex = 0;
+
+		static struct option options_long[] = {
+			verbosity_options_long,
+			{ "hex-output", no_argument, NULL, 'x' },
+		};
+		char *			options_short = "x" verbosity_options_short;
+
+		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
+		{
+			switch (opt)
+			{
+				case 'x':
+					hexOutput = true;
+					break;
+
+				check_verbosity_options_short();
+				help_option(user_password);
+				getopt_message_displayed(user_password);
+				invalid_option(opt);
+			}
+		}
+		if (optind >= argc)
+		{
+			errorMessage("Missing password on command line.\a\n");
+			usageScreen_user_password();
+			return EXIT_FAILURE;
+		}
+		else
+			password = argv[optind + 1];
+	}
+	else
+	{
+		errorMessage("Missing password on command line.\a\n");
+		usageScreen_user_password();
+		return EXIT_FAILURE;
+	}
+
+	resetError();
+
+	EVP_MD_CTX		*ctx = EVP_MD_CTX_create();
+	
+	EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
+	EVP_DigestUpdate(ctx, password, strlen(password));
+	EVP_DigestFinal_ex(ctx, hash, &hashLen);
+	EVP_MD_CTX_destroy(ctx);
+	EVP_cleanup();
+
+	if (hexOutput)
+	{
+		outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+		out = hex;
+	}
+	else
+	{
+		outLen = hashLen;
+		out = (char *) hash;
+	}
+	if (fwrite(out, outLen, 1, stdout) != 1)
+	{
+		errorMessage("Write to STDOUT failed.\a\n");
+	}
+
+	return EXIT_SUCCESS;
+}
+
+// 'device_password' function - compute the password hash from the specified device properties
+
+int device_password_main(int argc, char** argv, int argo)
+{
+	bool				hexOutput = false;
+	unsigned char		hash[AVM_HASH_SIZE];
+	uint32_t			hashLen;
+	char				hex[(sizeof(hash) * 2) + 1];
+	char *				out;
+	size_t				outLen;
+	char *				serial = NULL;
+	char *				maca = NULL;
+	char *				wlanKey = NULL;
+	char *				tr069Passphrase = NULL;
+
+	if (argc > argo + 1)
+	{
+		int				opt;
+		int				optIndex = 0;
+
+		static struct option options_long[] = {
+			verbosity_options_long,
+			{ "hex-output", no_argument, NULL, 'x' },
+		};
+		char *			options_short = "x" verbosity_options_short;
+
+		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
+		{
+			switch (opt)
+			{
+				case 'x':
+					hexOutput = true;
+					break;
+
+				check_verbosity_options_short();
+				help_option(user_password);
+				getopt_message_displayed(user_password);
+				invalid_option(opt);
+			}
+		}
+		if (optind >= argc)
+		{
+			errorMessage("Missing password on command line.\a\n");
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			int		i = optind + 1;
+			int		index = 0;
+
+			char *	*arguments[] = {
+				&serial,
+				&maca,
+				&wlanKey,
+				&tr069Passphrase,
+				NULL
+			};
+
+			while (argv[i])
+			{
+				*(arguments[index++]) = argv[i++];
+				if (!arguments[index])
+					break;
+			}
+			if (!maca)
+			{
+				errorMessage("At least two arguments (serial and maca) are required.\a\n");
+				usageScreen_device_password();
+				return EXIT_FAILURE;
+			}
+		}
+	}
+	else
+	{
+		errorMessage("Missing arguments on command line.\a\n");
+		usageScreen_device_password();
+		return EXIT_FAILURE;
+	}
+
+	resetError();
+
+	EVP_MD_CTX		*ctx = EVP_MD_CTX_create();
+	
+	EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
+	EVP_DigestUpdate(ctx, serial, strlen(serial));
+	EVP_DigestUpdate(ctx, "\n", 1);
+	EVP_DigestUpdate(ctx, maca, strlen(maca));
+	EVP_DigestUpdate(ctx, "\n", 1);
+	if (wlanKey && *wlanKey)
+		EVP_DigestUpdate(ctx, wlanKey, strlen(wlanKey));
+	if (tr069Passphrase && *tr069Passphrase)
+		EVP_DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
+	EVP_DigestFinal_ex(ctx, hash, &hashLen);
+	EVP_MD_CTX_destroy(ctx);
+	EVP_cleanup();
+
+	if (hexOutput)
+	{
+		outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+		out = hex;
+	}
+	else
+	{
+		outLen = hashLen;
+		out = (char *) hash;
+	}
+	if (fwrite(out, outLen, 1, stdout) != 1)
+	{
+		errorMessage("Write to STDOUT failed.\a\n");
+	}
+
+	return EXIT_SUCCESS;
+}
+
+// 'decode_secret' function - decode the specified secret value (in Base32 encoding) perties
+
+int decode_secret_main(int argc, char** argv, int argo)
+{
+	bool				hexOutput = false;
+	char *				out;
+	size_t				outLen;
+	char *				secret = NULL;
+	char *				key = NULL;
+	unsigned char 		hash[AVM_HASH_SIZE];
+	uint32_t			hashLen = 0;
+
+	if (argc > argo + 1)
+	{
+		int				opt;
+		int				optIndex = 0;
+
+		static struct option options_long[] = {
+			verbosity_options_long,
+			{ "hex-output", no_argument, NULL, 'x' },
+		};
+		char *			options_short = "x" verbosity_options_short;
+
+		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
+		{
+			switch (opt)
+			{
+				case 'x':
+					hexOutput = true;
+					break;
+
+				check_verbosity_options_short();
+				help_option(user_password);
+				getopt_message_displayed(user_password);
+				invalid_option(opt);
+			}
+		}
+		if (optind >= argc)
+		{
+			errorMessage("Missing password on command line.\a\n");
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			int		i = optind + 1;
+			int		index = 0;
+
+			char *	*arguments[] = {
+				&secret,
+				&key,
+				NULL
+			};
+
+			while (argv[i])
+			{
+				*(arguments[index++]) = argv[i++];
+				if (!arguments[index])
+					break;
+			}
+			if (!key)
+			{
+				errorMessage("Exactly two arguments (base32 encrypted value and hexadecimal key) are required.\a\n");
+				usageScreen_decode_secret();
+				return EXIT_FAILURE;
+			}
+		}
+	}
+	else
+	{
+		errorMessage("Exactly two arguments (base32 encrypted value and hexadecimal key) are required.\a\n");
+		usageScreen_decode_secret();
+		return EXIT_FAILURE;
+	}
+
+	resetError();
+
+	size_t			secretBufSize = base32ToBinary(secret, (size_t) -1, NULL, 0);
+	size_t			keyBufSize = hexadecimalToBinary(key, (size_t) -1, NULL, 0);
+	size_t			secretSize = 0;
+	size_t			decryptedSize = 0;
+	size_t			keySize = 0;
+	size_t			dataLen = 0;
+
+	unsigned char *	secretBuffer = (unsigned char *) malloc(secretBufSize);
+	unsigned char *	decryptedBuffer = (unsigned char *) malloc(secretBufSize + AVM_BLOCK_SIZE);
+	unsigned char *	keyBuffer = (unsigned char *) malloc(AVM_KEY_SIZE);
+	char *			hexBuffer = NULL;
+
+	if (!secretBuffer || !decryptedBuffer || !keyBuffer)
+	{
+		errorMessage("Memory allocation error.\a\n");
+		return EXIT_FAILURE;
+	}
+
+	memset(secretBuffer, 0, secretBufSize);
+	memset(decryptedBuffer, 0, secretBufSize + AVM_BLOCK_SIZE);
+	memset(keyBuffer, 0, AVM_KEY_SIZE);
+	
+	resetError();
+	secretSize = base32ToBinary(secret, (size_t) -1, (char *) secretBuffer, secretBufSize);
+	keySize = hexadecimalToBinary(key, (size_t) -1, (char *) keyBuffer, keyBufSize);
+
+	if (isAnyError())
+	{
+		errorMessage("The specified arguments contain invalid data.\a\n");
+		return EXIT_FAILURE; /* buffers are freed on exit by the run-time */
+	}
+
+	if (keySize != 16)
+	{
+		errorMessage("The specified key has a wrong size.\a\n");
+		return EXIT_FAILURE;
+	}
+
+	EVP_CIPHER_CTX		*ctx = EVP_CIPHER_CTX_new();
+	EVP_MD_CTX			*hctx = EVP_MD_CTX_create();
+	
+	EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, keyBuffer, secretBuffer);
+	EVP_DecryptUpdate(ctx, decryptedBuffer, (int *) &decryptedSize, secretBuffer + AVM_IV_SIZE, secretSize - AVM_IV_SIZE);
+
+	EVP_DigestInit_ex(hctx, EVP_md5(), NULL);
+	EVP_DigestUpdate(hctx, decryptedBuffer + 4, decryptedSize - 4);
+	EVP_DigestFinal_ex(hctx, hash, &hashLen);
+	
+	if (memcmp(decryptedBuffer, hash, 4))
+	{	
+		setError(INVALID_KEY);
+		errorMessage("The specified password is wrong.\a\n");
+	}
+	else
+	{
+		dataLen = (*((unsigned char *) decryptedBuffer + 4) << 24) + (*((unsigned char *) decryptedBuffer + 5) << 16) + (*((unsigned char *) decryptedBuffer + 6) << 8) + (*((unsigned char *) decryptedBuffer + 7));
+		out = (char *) decryptedBuffer + 8;
+	}
+	
+	EVP_MD_CTX_destroy(hctx);
+	EVP_CIPHER_CTX_cleanup(ctx);
+	EVP_CIPHER_CTX_free(ctx);
+	EVP_cleanup();
+
+	if (!isAnyError())
+	{
+		if (hexOutput)
+		{
+			hexBuffer = (char *) malloc((dataLen * 2) * 1);
+			if (!hexBuffer)
+			{
+				errorMessage("Error allocating memory.\a\n");
+				setError(NO_MEMORY);
+			}
+			else
+			{
+				outLen = binaryToHexadecimal(out, dataLen, hexBuffer, (dataLen * 2) + 1);
+				out = hexBuffer;
+			}
+		}
+		else
+		{
+			outLen = dataLen;
+			if (*(out + outLen) == 0) /* C-style string, omit last byte */
+				outLen--;
+		}
+		if (!isAnyError() && fwrite(out, outLen, 1, stdout) != 1)
+		{
+			errorMessage("Write to STDOUT failed.\a\n");
+		}
+	}
+
+	if (secretBuffer)
+	{
+		memset(secretBuffer, 0, secretBufSize);
+		free(secretBuffer);
+		secretBuffer = NULL;
+	}
+	if (decryptedBuffer)
+	{
+		memset(decryptedBuffer, 0, secretBufSize);
+		free(decryptedBuffer);
+		decryptedBuffer = NULL;
+	}
+	if (keyBuffer)
+	{
+		memset(keyBuffer, 0, keyBufSize);
+		free(keyBuffer);
+		keyBuffer = NULL;
+	}
+	if (hexBuffer)
+	{
+		memset(hexBuffer, 0, dataLen * 2);
+		free(hexBuffer);
+		hexBuffer = NULL;
 	}
 
 	return EXIT_SUCCESS;
