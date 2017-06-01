@@ -166,18 +166,22 @@ void	usageScreen_decode_exports(void)
 
 // Base32 encoding table
 
-static char * UNUSED	base32Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456";
+static 	char * UNUSED	base32Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456";
 
 // Base64 encoding table
 
-static char * UNUSED	base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+static 	char * UNUSED	base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 // hexadecimal translation table
 
-static char * UNUSED	hexTable = "0123456789ABCDEF";
+static 	char * UNUSED	hexTable = "0123456789ABCDEF";
 
 // static size values
 static	size_t			cipher_keyLen, cipher_ivLen, cipher_blockSize;
+
+// urlader environment file name
+
+static	char * UNUSED	environmentFileName = URLADER_ENV_PATH;
 
 // subfunctions
 
@@ -430,10 +434,11 @@ bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key
 					currentOffset = 0;
 				}
 				memcpy(copy, currentBuffer->data + currentOffset, foundOffset - currentOffset);
-	
-				fflush(out);
+				*(copy + valueSize) = 0;
+
 				if (!DecryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
 				{
+					verboseMessage(" -> decryption failed\n");
 					if (fwrite("$$$$", 4, 1, out) == 1)
 					{
 						if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
@@ -453,7 +458,6 @@ bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key
 					currentBuffer = found;
 					currentOffset = foundOffset;
 				}
-				fflush(out);
 				free(cipherText);
 			}
 		}
@@ -866,15 +870,18 @@ bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE
 {
 	size_t			cipherBufSize = base32ToBinary(cipherText, valueSize, NULL, 0);
 	size_t			cipherSize;
-	char *			cipherBuffer = (char *) malloc(cipherBufSize);
+	char *			cipherBuffer = (char *) malloc(cipherBufSize + cipher_blockSize);
 	size_t			decryptedSize = 0;
 	char *			decryptedBuffer = (char *) malloc(cipherBufSize + cipher_blockSize);
 	CipherContext 	*localCtx;
 
-	cipherSize = base32ToBinary(cipherText, (size_t) -1, (char *) cipherBuffer, cipherBufSize);
+	cipherSize = base32ToBinary(cipherText, (size_t) -1, (char *) cipherBuffer, cipherBufSize + cipher_blockSize);
 	
 	localCtx = (ctx ? ctx : EVP_CIPHER_CTX_new());
 	CipherInit(localCtx, key, cipherBuffer);
+	verboseMessage("found cipher text '%s' -> ", cipherText);
+	if (!(cipherSize % cipher_blockSize))
+		cipherSize++;
 	if (CipherUpdate(localCtx, decryptedBuffer, &decryptedSize, cipherBuffer + cipher_ivLen, cipherSize - cipher_ivLen))
 	{
 		char *		value;
@@ -887,6 +894,7 @@ bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE
 			{
 				int	start = 0;
 
+				verboseMessage("decrypted to '%s'\n", value);
 				for (int i = 0; i < (int) valueSize; i++)
 				{
 					if (*(value + i) == '\\' || *(value + i) == '"') /* split output */
@@ -913,6 +921,24 @@ bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE
 			{
 				memcpy(outBuffer, value, valueSize + (isString ? 1 : 0));	
 			}
+			if (!isString)
+			{
+				char *	hexBuffer = malloc((valueSize * 2) + 1);
+
+				if (hexBuffer)
+				{
+					binaryToHexadecimal(value, valueSize, hexBuffer, (valueSize * 2) + 1);
+					*(hexBuffer + (valueSize * 2)) = 0;
+					verboseMessage("decrypted to 0x%s\n", hexBuffer);
+					free(hexBuffer);
+				}
+				else
+					verboseMessage("error displaying value, but decryption was successful\n");
+			}
+		}
+		else
+		{
+			verboseMessage("decrypt failed\n");
 		}
 	}
 	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize, true);
@@ -1037,11 +1063,11 @@ bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * d
 
 bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 {
-	FILE *				environment = fopen(URLADER_ENV_PATH, "r");
+	FILE *				environment = fopen(environmentFileName, "r");
 
 	if (!environment)
 	{
-		errorMessage("Error opening environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", URLADER_ENV_PATH);
+		errorMessage("Error opening environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", environmentFileName);
 		return false;	
 	}
 	
@@ -1051,7 +1077,7 @@ bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 
 	if (!env)
 	{
-		errorMessage("Error reading environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", URLADER_ENV_PATH);
+		errorMessage("Error reading environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", environmentFileName);
 		return false;
 	}
 
@@ -1086,7 +1112,7 @@ bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 			char *		curr = value;
 			size_t		valueSize = 0;
 
-			verboseMessage("Found device property '%s' with value '", var->show);				
+			verboseMessage("found device property '%s' with value '", var->show);
 			while (currentBuffer && *curr != '\n') 
 			{
 				if (currentBuffer->used <= currentOffset) /* next buffer */
@@ -1137,11 +1163,11 @@ bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 		{
 			if (var->errorIfMissing == true)
 			{
-				errorMessage("Unable to read variable '%s' from environment file on procfs(%s).\n\nAre we really running on a FRITZ!OS device?\a\n", var->show, URLADER_ENV_PATH);
+				errorMessage("Unable to read variable '%s' from environment file on procfs(%s).\n\nAre we really running on a FRITZ!OS device?\a\n", var->show, environmentFileName);
 				setError(URLADER_ENV_ERR);
 				break;
 			}
-			verboseMessage("Device property '%s' does not exist.\n", var->show);
+			verboseMessage("device property '%s' does not exist.\n", var->show);
 		}
 		var++;
 		if (forExport && !var->export)
@@ -1911,6 +1937,7 @@ int user_password_main(int argc, char** argv, int argo)
 	char				hash[MAX_DIGEST_SIZE];
 	uint32_t			hashLen = sizeof(hash);
 	char				hex[(sizeof(hash) * 2) + 1];
+	size_t				hexLen;
 	char *				out;
 	size_t				outLen;
 
@@ -1939,7 +1966,7 @@ int user_password_main(int argc, char** argv, int argo)
 				invalid_option(opt);
 			}
 		}
-		if (optind >= argc)
+		if (optind >= (argc - argo))
 		{
 			errorMessage("Missing password on command line.\a\n");
 			usageScreen_user_password();
@@ -1957,15 +1984,18 @@ int user_password_main(int argc, char** argv, int argo)
 
 	resetError();
 
-	if (!Digest(password, strlen(password), hash, hashLen))
+	if ((hashLen = Digest(password, strlen(password), hash, hashLen)) == 0)
 	{
 		errorMessage("Error computing digest value.\a\n");
 		return EXIT_FAILURE;
 	}
 
+	hexLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+	hex[hexLen] = 0;
+	verboseMessage("user password converted to key 0x%s\n", hex);
 	if (hexOutput)
 	{
-		outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+		outLen = hexLen;
 		out = hex;
 	}
 	else
@@ -2021,7 +2051,7 @@ int device_password_main(int argc, char** argv, int argo)
 				invalid_option(opt);
 			}
 		}
-		if (optind >= argc)
+		if (optind >= (argc - argo))
 		{
 			errorMessage("Missing password on command line.\a\n");
 			return EXIT_FAILURE;
@@ -2189,7 +2219,7 @@ int decode_secret_main(int argc, char** argv, int argo)
 				invalid_option(opt);
 			}
 		}
-		if (optind >= argc)
+		if (optind >= (argc - argo))
 		{
 			errorMessage("Missing password on command line.\a\n");
 			return EXIT_FAILURE;
@@ -2238,7 +2268,7 @@ int decode_secret_main(int argc, char** argv, int argo)
 	size_t			dataLen = 0;
 	bool			isString = false;
 
-	char *			secretBuffer = (char *) malloc(secretBufSize);
+	char *			secretBuffer = (char *) malloc(secretBufSize + cipher_blockSize);
 	char *			decryptedBuffer = (char *) malloc(secretBufSize + cipher_blockSize);
 	char *			keyBuffer = (char *) malloc(cipher_keyLen);
 	char *			hexBuffer = NULL;
@@ -2249,7 +2279,7 @@ int decode_secret_main(int argc, char** argv, int argo)
 		return EXIT_FAILURE;
 	}
 
-	memset(secretBuffer, 0, secretBufSize);
+	memset(secretBuffer, 0, secretBufSize + cipher_blockSize);
 	memset(decryptedBuffer, 0, secretBufSize + cipher_blockSize);
 	memset(keyBuffer, 0, cipher_keyLen);
 	
@@ -2271,6 +2301,8 @@ int decode_secret_main(int argc, char** argv, int argo)
 
 	CipherContext 		*ctx = CipherInit(NULL, keyBuffer, secretBuffer);
 	
+	if (!(secretSize % 16))
+		secretSize++;
 	if (CipherUpdate(ctx, decryptedBuffer, &decryptedSize, secretBuffer + cipher_ivLen, secretSize - cipher_ivLen))
 	{
 		if (!DigestCheckValue(decryptedBuffer, decryptedSize, &out, &dataLen, &isString))
@@ -2514,12 +2546,11 @@ int decode_export_main(int argc, char** argv, int argo)
 		current = found;
 		offset = foundOffset;
 
-		char *			value = memoryBufferAdvancePointer(&current, &offset, strlen(EXPORT_PASSWORD_NAME));
-
+		memoryBufferAdvancePointer(&current, &offset, strlen(EXPORT_PASSWORD_NAME));
 		found = current;
 		foundOffset = offset;
+		memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
 
-		char *			start = memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
 		char *			copy;
 		char *			cipherText = (char *) malloc(valueSize + 1);
 		bool			passwordIsCorrect = false;
@@ -2538,6 +2569,12 @@ int decode_export_main(int argc, char** argv, int argo)
 		memset(key + cipher_ivLen, 0, cipher_keyLen - cipher_ivLen);
 		if (passwordIsCorrect)
 		{
+			char 		hex[(MAX_DIGEST_SIZE * 2) + 1];
+			size_t		hexLen = binaryToHexadecimal(key, cipher_keyLen - cipher_ivLen, hex, (MAX_DIGEST_SIZE * 2) + 1);
+
+			hex[hexLen] = 0;
+			verboseMessage("using key 0x%s for decryption\n", hex);
+
 			cipherText = clearMemory(cipherText, valueSize + 1, true);
 			current = inputFile;
 			offset = 0;
