@@ -64,6 +64,18 @@ typedef enum {
 	DECODER_ERROR_INV_HEX_SIZE,
 	// invalid decipher key was specified
 	DECODER_ERROR_INVALID_KEY,
+	// error returned from an OpenSSL cipher function
+	DECODER_ERROR_OSSL_CIPHER_ERR,
+	// error returned from an OpenSSL digest function
+	DECODER_ERROR_OSSL_DIGEST_ERR,
+	// error reading STDIN file into memory buffers
+	DECODER_ERROR_STDIN_BUFFER_ERR,
+	// error opening/reading device environment on a FRITZ!OS device
+	DECODER_ERROR_URLADER_ENV_ERR,
+	// error decrypting a file with the specified arguments
+	DECODER_ERROR_DECRYPT_ERR,
+	// STDIN file looks invalid and not like an export file 
+	DECODER_ERROR_INVALID_FILE,
 } decoder_error_t;
 
 static char *		__decoder_error_text[] = {
@@ -80,6 +92,12 @@ static char *		__decoder_error_text[] = {
 	"invalid hexadecimal data",
 	"invalid hexadecimal data size",
 	"invalid decipher key",
+	"OpenSSL cipher function failed",
+	"OpenSSL digest function failed",
+	"error reading stdin data to memory",
+	"unable to open device environment",
+	"decryption failed",
+	"not an export file",
 };
 
 typedef enum {
@@ -88,12 +106,62 @@ typedef enum {
 	VERBOSITY_VERBOSE
 } decoder_verbosity_t;
 
-// constant
+// STDIN to memory structures
 
-#define AVM_HASH_SIZE			16
-#define AVM_KEY_SIZE			32
-#define	AVM_IV_SIZE				16
-#define AVM_BLOCK_SIZE			16
+typedef struct memoryBuffer {
+	struct memoryBuffer	*next;
+	struct memoryBuffer	*prev;
+	size_t				size;
+	size_t				used;
+	char				data[];
+} memoryBuffer_t;
+
+memoryBuffer_t *	memoryBufferNew(size_t size);
+memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start);
+memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize);
+char *				memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset, char *find, size_t findSize, bool *split);
+char *				memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *lastOffset, size_t offset);
+
+// FRITZ!OS environment related settings
+
+#ifdef USE_REAL_PROCFS
+#define	URLADER_ENV_PATH		"/proc/sys/urlader/environment"
+#else
+#define URLADER_ENV_PATH		"/var/env"
+#endif
+#define URLADER_SERIAL_NAME		"SerialNumber"
+#define URLADER_MACA_NAME		"maca"
+#define URLADER_WLANKEY_NAME	"wlan_key"
+#define URLADER_TR069PP_NAME	"tr069_passphrase"
+
+#define EXPORT_PASSWORD_NAME	"\nPassword=$$$$"
+
+// EVP types 
+
+#define CipherContext			EVP_CIPHER_CTX
+#define DigestContext			EVP_MD_CTX
+#define CipherType				EVP_aes_256_cbc()
+#define DigestType				EVP_md5()
+#define MAX_DIGEST_SIZE			EVP_MAX_MD_SIZE
+
+// cipher and digest functions
+
+void			CipherSizes();
+CipherContext *	CipherInit(CipherContext * ctx, char * key, char * iv);
+CipherContext *	CipherCleanup(CipherContext * ctx);
+bool			CipherUpdate(CipherContext * ctx, char *output, size_t *outputSize, char *input, size_t inputSize);
+
+DigestContext *	DigestInit();
+DigestContext * DigestCleanup(DigestContext * ctx);
+bool			DigestUpdate(DigestContext * ctx, char * buffer, size_t bufferSize);
+bool			DigestFinal(DigestContext * ctx, char * output);
+size_t			Digest(char *buffer, size_t bufferSize, char *digest, size_t digestSize);
+size_t			DigestLength(DigestContext * ctx);
+bool			DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string);
+bool			DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped);
+bool			keyFromDevice(char * hash, size_t * hashSize, bool forExport);
+bool			keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase);
+
 
 // function prototypes
 
@@ -106,7 +174,10 @@ void	usageScreen_hexdec(void);
 void	usageScreen_hexenc(void);
 void	usageScreen_user_password(void);
 void	usageScreen_device_password(void);
+void	usageScreen_password_from_device(void);
 void	usageScreen_decode_secret(void);
+void	usageScreen_decode_secrets(void);
+void	usageScreen_decode_export(void);
 
 size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t binarySize);
 size_t	binaryToBase32(char *binary, size_t binarySize, char *base32, size_t base32Size);
@@ -115,8 +186,9 @@ size_t	binaryToBase64(char *binary, size_t binarySize, char *base64, size_t base
 size_t	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t outputSize);
 size_t	binaryToHexadecimal(char *input, size_t inputSize, char *output, size_t outputSize);
 char *	wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint32_t *toWrite, char *output);
+void *	clearMemory(void * buffer, size_t size, bool freeBuffer);
 
-// entry point prototypes
+// entry point 
 
 int b32dec_main(int argc, char** argv, int argo);
 int b32enc_main(int argc, char** argv, int argo);
@@ -126,7 +198,10 @@ int hexdec_main(int argc, char** argv, int argo);
 int hexenc_main(int argc, char** argv, int argo);
 int user_password_main(int argc, char** argv, int argo);
 int device_password_main(int argc, char** argv, int argo);
+int password_from_device_main(int argc, char** argv, int argo);
 int decode_secret_main(int argc, char** argv, int argo);
+int decode_secrets_main(int argc, char** argv, int argo);
+int decode_export_main(int argc, char** argv, int argo);
 
 #endif
 

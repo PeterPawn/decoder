@@ -27,15 +27,12 @@
 
 #define _GNU_SOURCE
 
-#include <assert.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <ctype.h>
 #include <limits.h>
-#include <dlfcn.h>
 #include <stdio.h>
-#include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
 #include <string.h>
@@ -83,7 +80,7 @@ static decoder_error_t					__decoder_error = DECODER_ERROR_NOERROR;
 #define getErrorText(err)				(__decoder_error_text[err])
 #define isAnyError()					(getError() != DECODER_ERROR_NOERROR)
 #define isError(err)					(getError() == DECODER_ERROR_##err)
-
+#define isVerbose()						(__decoder_verbosity == VERBOSITY_VERBOSE)
 #define errorMessage(...)				if (__decoder_verbosity != VERBOSITY_SILENT) fprintf(stderr, ##__VA_ARGS__)
 #define verboseMessage(...)				if (__decoder_verbosity == VERBOSITY_VERBOSE) fprintf(stderr, ##__VA_ARGS__)
 
@@ -98,7 +95,10 @@ static commandEntry_t	commands[] = {
 	{ .name = "hexenc", .ep = &hexenc_main },
 	{ .name = "user_password", .ep = &user_password_main },
 	{ .name = "device_password", .ep = &device_password_main },
+	{ .name = "password_from_device", .ep = &password_from_device_main },
 	{ .name = "decode_secret", .ep = &decode_secret_main },
+	{ .name = "decode_secrets", .ep = &decode_secrets_main },
+	{ .name = "decode_export", .ep = &decode_export_main },
 	{ .name = NULL, .ep = NULL }
 };
 
@@ -154,6 +154,16 @@ void	usageScreen_decode_secret(void)
 	errorMessage("help for decode_secret\n");
 }
 
+void	usageScreen_decode_secrets(void)
+{
+	errorMessage("help for decode_secrets\n");
+}
+
+void	usageScreen_decode_exports(void)
+{
+	errorMessage("help for decode_exports\n");
+}
+
 // Base32 encoding table
 
 static char * UNUSED	base32Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456";
@@ -166,7 +176,310 @@ static char * UNUSED	base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 
 static char * UNUSED	hexTable = "0123456789ABCDEF";
 
+// static size values
+static	size_t			cipher_keyLen, cipher_ivLen, cipher_blockSize;
+
 // subfunctions
+
+memoryBuffer_t *	memoryBufferNew(size_t size)
+{
+	memoryBuffer_t	*new = (memoryBuffer_t *) malloc(size);
+	if (new)
+	{
+		memset(new, 0, size);
+		new->size = size;
+	}
+	return new;
+}
+
+memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start)
+{
+	memoryBuffer_t	*curr = start;
+	
+	while (curr)
+	{
+		memoryBuffer_t	*next = curr->next;
+		
+		memset(curr, 0, curr->size);
+		free(curr);
+		curr = next;
+	}
+	return NULL;
+}
+
+memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
+{
+	size_t			allocSize;
+	memoryBuffer_t	*top = NULL;
+	memoryBuffer_t	*curr = NULL;
+	char *			data;
+	size_t			read;
+	size_t			toRead;
+
+	allocSize = (chunkSize > 0 ? chunkSize : 8 * 1024);
+	allocSize += sizeof(memoryBuffer_t);
+	top = memoryBufferNew(allocSize);
+	curr = top;
+	data = top->data;
+	toRead = curr->size - curr->used - sizeof(memoryBuffer_t);
+	while ((read = fread(data, 1, toRead, file)) > 0)
+	{
+		curr->used += read;
+		data += read;
+		if ((read == toRead) && (curr->used == curr->size - sizeof(memoryBuffer_t))) /* buffer is full */
+		{
+			memoryBuffer_t	*next = memoryBufferNew(allocSize);
+			if (!next)
+			{
+				setError(STDIN_BUFFER_ERR);
+				top = memoryBufferFreeChain(top);
+				break;
+			}
+			curr->next = next;
+			next->prev = curr;
+			curr = next;
+			data = curr->data;
+			toRead = curr->size - sizeof(memoryBuffer_t);
+		}
+	}
+	if (!top->used)
+	{	
+		setError(NOERROR);
+		free(top);
+		top = NULL;
+	}
+	return top;
+}
+
+char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset, char *find, size_t findSize, bool *split)
+{
+	memoryBuffer_t	*current = *buffer;
+	
+	while (current)
+	{
+		char *		chk = current->data + *offset;
+		size_t		remaining = current->used - *offset;
+
+		while (remaining > 0)
+		{
+			if (remaining < findSize)
+			{
+				if (strncmp(chk, find, remaining) == 0)
+				{
+					if (current->next)
+					{
+						if (strncmp(current->data, find + remaining, findSize - remaining) == 0) /* match across buffers */
+						{
+							*buffer = current;
+							*offset = (chk - current->data);
+							*split = true;
+						}
+					}
+					else /* partial match at end of data */
+						return NULL;
+				}
+				chk++;
+				remaining--;
+				if (remaining == 0) /* next buffer, if any */
+				{
+					if (current->next)
+					{
+						current = current->next;
+						remaining = current->used;
+						chk = current->data;
+					}
+					else /* no match */
+						return NULL;
+				}				
+			}
+			else
+			{
+				if (strncmp(chk, find, findSize) == 0)
+				{
+					*buffer = current;
+					*offset = (chk - current->data);
+					*split = false;
+					return chk;
+				}	
+				chk++;
+				remaining--;
+			}
+		}
+	}
+	return NULL;	
+}
+
+char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *lastOffset, size_t offset)
+{
+	memoryBuffer_t	*current = *buffer;
+	uint32_t		advance = offset;
+	
+	while (current)
+	{
+		if ((current->used - *lastOffset) < advance) /* next buffer */
+		{
+			if (current->next)
+			{
+				advance -= (current->used - *lastOffset);
+				current = current->next;
+				*buffer = current;
+				*lastOffset = 0;
+				continue;
+			}
+		}
+		*lastOffset += advance;
+		return (current->data + *lastOffset);
+	}
+	return NULL;	
+}
+
+char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *offset, size_t * size, bool *split)
+{
+	memoryBuffer_t	*current = *buffer;
+	size_t  		curOffset = *offset;
+	size_t			count = 0;
+	char *			cur = current->data + curOffset;
+
+	*split = false;	
+	while (current)
+	{
+		if (current->used <= curOffset) /* next buffer */
+		{
+			if (current->next)
+			{
+				current = current->next;
+				*buffer = current;
+				*offset = 0;
+				cur = current->data;
+				*split = true;
+			}
+		}
+		if ((*cur >= 'A' && *cur <= 'Z') || (*cur >= '1' && *cur <= '6'))
+		{
+			count++;
+			cur++;
+			curOffset++;
+		}
+		else /* character outside of our Base32 set found */
+		{
+			*buffer = current;
+			*offset = curOffset;
+			*size = count;
+			return cur;
+		}
+	}
+	return NULL;	
+}
+
+// scan memory buffer and replace occurences of encrypted data while writing data to STDOUT
+
+bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out)
+{
+	CipherContext 		*ctx = CipherInit(NULL, NULL, NULL);
+	memoryBuffer_t 		*currentBuffer = *buffer;
+	size_t				currentOffset = offset;
+	
+	while (currentBuffer)
+	{
+		memoryBuffer_t	*found = currentBuffer;
+		size_t			foundOffset = currentOffset;
+		bool			split = false;
+		char *			cipherTextStart;
+	
+		if ((cipherTextStart = memoryBufferFindString(&found, &foundOffset, "$$$$", 4, &split)) != NULL) /* encrypted data exists */
+		{
+			while (currentBuffer && (currentBuffer != found)) /* output data crosses at least one buffer boundary */
+			{
+				if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
+				{
+					setError(WRITE_FAILED);
+					currentBuffer = NULL;
+					break;
+				}
+				currentBuffer = currentBuffer->next;
+				currentOffset = 0;
+			}
+			if (currentBuffer)
+			{
+				if (fwrite(currentBuffer->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
+				{
+					setError(WRITE_FAILED);
+					currentBuffer = NULL;
+					break;
+				}
+				currentOffset = foundOffset;
+			}
+			cipherTextStart = memoryBufferAdvancePointer(&currentBuffer, &currentOffset, 4);
+			found = currentBuffer;
+			foundOffset = currentOffset;
+
+			size_t		valueSize;
+			char *		cipherTextEnd = memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
+			if (cipherTextEnd)
+			{
+				char *	copy;
+				char *	cipherText = (char *) malloc(valueSize + 1);
+			
+				memset(cipherText, 0, valueSize + 1);
+				copy = cipherText;
+				while (currentBuffer && (currentBuffer != found))
+				{
+					memcpy(copy, currentBuffer->data + currentOffset, currentBuffer->used - currentOffset);
+					copy += (currentBuffer->used - currentOffset);
+					currentBuffer = currentBuffer->next;
+					currentOffset = 0;
+				}
+				memcpy(copy, currentBuffer->data + currentOffset, foundOffset - currentOffset);
+	
+				fflush(out);
+				if (!DecryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
+				{
+					if (fwrite("$$$$", 4, 1, out) == 1)
+					{
+						if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
+						{
+							setError(WRITE_FAILED);
+							currentBuffer = NULL;
+						}
+					}
+					else
+					{
+						setError(WRITE_FAILED);
+						currentBuffer = NULL;
+					}
+				}
+				else
+				{
+					currentBuffer = found;
+					currentOffset = foundOffset;
+				}
+				fflush(out);
+				free(cipherText);
+			}
+		}
+		else /* no more encrypted data, write remaining buffers */
+		{
+			while (currentBuffer)
+			{
+				if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
+				{
+					setError(WRITE_FAILED);
+					currentBuffer = NULL;
+					break;
+				}
+				currentBuffer = currentBuffer->next;
+				currentOffset = 0;
+			}
+		}
+	}
+
+	ctx = CipherCleanup(ctx);
+
+	return !isAnyError();
+
+}
+
+// conversion functions
 
 size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t binarySize)
 {
@@ -452,6 +765,8 @@ size_t	binaryToHexadecimal(char *input, size_t inputSize, char *output, size_t o
 	return (index * 2);
 }
 
+// output formatting
+
 char *	wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint32_t *toWrite, char *output)
 {
 	uint32_t			remOnLine = lineSize - *charsOnLine;
@@ -477,6 +792,390 @@ char *	wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint
 		}
 	}
 	return out;
+}
+
+// free memory after clearing its content
+
+void *	clearMemory(void * buffer, size_t size, bool freeBuffer)
+{
+	if (buffer)
+	{
+		memset(buffer, 0, size);
+		if (freeBuffer) free(buffer);
+	}
+	return NULL;
+}
+
+// cipher functions
+
+CipherContext *	CipherInit(CipherContext * ctx, char * key, char * iv)
+{
+	CipherContext	*cipherCTX = NULL;
+
+	if (ctx)
+	{
+		if (key && iv) /* reset context first */
+		{
+			cipherCTX = ctx;
+			EVP_CIPHER_CTX_init(cipherCTX);
+		}
+	}
+	else
+	{
+		cipherCTX = EVP_CIPHER_CTX_new();
+		if (!cipherCTX)
+			returnError(OSSL_CIPHER_ERR, NULL);
+	}
+	if (!key && !iv)
+		return cipherCTX;
+	if (EVP_DecryptInit_ex(cipherCTX, CipherType, NULL, (unsigned char *) key, (unsigned char *) iv))
+		return cipherCTX;
+	returnError(OSSL_CIPHER_ERR, NULL);
+}
+
+void	CipherSizes()
+{
+	cipher_keyLen = cipher_ivLen = cipher_blockSize = (size_t) -1;
+	cipher_keyLen = EVP_CIPHER_key_length(CipherType);
+	cipher_ivLen = EVP_CIPHER_iv_length(CipherType);
+	cipher_blockSize = EVP_CIPHER_block_size(CipherType);
+}
+
+CipherContext *	CipherCleanup(CipherContext * ctx)
+{	
+	if (!ctx)
+		return NULL;
+	EVP_CIPHER_CTX_cleanup(ctx);
+	EVP_CIPHER_CTX_free(ctx);
+	return NULL;
+}
+
+bool	CipherUpdate(CipherContext * ctx, char *output, size_t *outputSize, char *input, size_t inputSize)
+{
+	if (!ctx)
+		return false;
+	if (!EVP_DecryptUpdate(ctx, (unsigned char *) output, (int *) outputSize, (unsigned char *) input, inputSize))
+	{
+		setError(OSSL_CIPHER_ERR);
+		return false;
+	}
+	return true;
+}
+
+bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped)
+{
+	size_t			cipherBufSize = base32ToBinary(cipherText, valueSize, NULL, 0);
+	size_t			cipherSize;
+	char *			cipherBuffer = (char *) malloc(cipherBufSize);
+	size_t			decryptedSize = 0;
+	char *			decryptedBuffer = (char *) malloc(cipherBufSize + cipher_blockSize);
+	CipherContext 	*localCtx;
+
+	cipherSize = base32ToBinary(cipherText, (size_t) -1, (char *) cipherBuffer, cipherBufSize);
+	
+	localCtx = (ctx ? ctx : EVP_CIPHER_CTX_new());
+	CipherInit(localCtx, key, cipherBuffer);
+	if (CipherUpdate(localCtx, decryptedBuffer, &decryptedSize, cipherBuffer + cipher_ivLen, cipherSize - cipher_ivLen))
+	{
+		char *		value;
+		size_t		valueSize = 0;
+		bool		isString = false;
+
+		if (DigestCheckValue(decryptedBuffer, decryptedSize, &value, &valueSize, &isString))
+		{
+			if (out && valueSize && escaped)
+			{
+				int	start = 0;
+
+				for (int i = 0; i < (int) valueSize; i++)
+				{
+					if (*(value + i) == '\\' || *(value + i) == '"') /* split output */
+					{	
+						if ((i > start) && fwrite((value + start), (i - start), 1, out) != 1)
+						{
+							setError(WRITE_FAILED);
+							break;
+						}
+						if (fwrite("\\", 1, 1, out) != 1)
+						{
+							setError(WRITE_FAILED);
+							break;
+						}
+						start = i;
+					}
+				}
+				valueSize -= start;
+				value += start;
+			}
+			if (out && (valueSize > 0) && (fwrite(value, valueSize, 1, out) != 1))
+				setError(WRITE_FAILED);
+			if (!out && outBuffer)
+			{
+				memcpy(outBuffer, value, valueSize + (isString ? 1 : 0));	
+			}
+		}
+	}
+	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize, true);
+	decryptedBuffer = clearMemory(decryptedBuffer, cipherBufSize + cipher_blockSize, true);
+	if (!ctx)
+		localCtx = CipherCleanup(localCtx);
+
+	return !isAnyError();
+}
+
+// digest functions
+
+DigestContext * DigestInit()
+{
+	DigestContext	*ctx = EVP_MD_CTX_create();
+
+	if (!ctx)
+		setError(OSSL_DIGEST_ERR);
+	else
+	{
+		if (!EVP_DigestInit_ex(ctx, DigestType, NULL))
+		{
+			setError(OSSL_DIGEST_ERR);
+			EVP_MD_CTX_destroy(ctx);
+			ctx = NULL;
+		}
+	}
+	return ctx;
+}
+
+bool	DigestUpdate(DigestContext * ctx, char * buffer, size_t bufferSize)
+{
+	if (!ctx)
+		return false;
+	if (!EVP_DigestUpdate(ctx, buffer, bufferSize))
+	{
+		setError(OSSL_DIGEST_ERR);
+		return false;
+	}
+	return true;
+}
+
+bool	DigestFinal(DigestContext * ctx, char * output)
+{
+	if (!ctx)
+		return false;
+	if (!EVP_DigestFinal_ex(ctx, (unsigned char *) output, NULL))
+	{
+		setError(OSSL_DIGEST_ERR);
+		return false;
+	}
+	return true;
+}
+
+DigestContext *	DigestCleanup(DigestContext * ctx)
+{
+	if (!ctx)
+		return NULL;
+	EVP_MD_CTX_destroy(ctx);
+	return NULL;
+}
+
+size_t	Digest(char *buffer, size_t bufferSize, char *digest, size_t digestSize)
+{
+	size_t		size = 0;
+
+	resetError();
+
+	DigestContext	*ctx = DigestInit();
+
+	if (isAnyError())
+		return false;
+
+	size = DigestLength(ctx);
+	if (digestSize < size)
+		setError(BUF_TOO_SMALL);
+	else
+	{
+		if (DigestUpdate(ctx, buffer, bufferSize))
+		{
+			DigestFinal(ctx, digest);
+		}		
+	}
+	ctx = DigestCleanup(ctx);
+	return (isAnyError() ? 0 : size);
+}
+
+size_t	DigestLength(DigestContext * ctx)
+{
+	if (!ctx)
+		return (size_t) -1;
+	return EVP_MD_CTX_size(ctx);
+}
+
+bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string)
+{
+	char				hash[MAX_DIGEST_SIZE];
+	size_t				hashLen = sizeof(hash);
+
+	if ((hashLen = Digest(buffer + 4, bufferSize - 4, hash, hashLen)) == 0)
+		return false;
+
+	if (memcmp(buffer, hash, 4))
+		return false;
+
+	*dataLen = 	(*((unsigned char *) buffer + 4) << 24) +
+				(*((unsigned char *) buffer + 5) << 16) + 
+				(*((unsigned char *) buffer + 6) << 8) + 
+				(*((unsigned char *) buffer + 7));
+	
+	*value = buffer + 8;
+	if (*(buffer + 8 + *dataLen - 1) == 0)
+	{
+		(*dataLen)--;
+		*string = true;
+	}
+	
+	return dataLen;
+}
+
+// password generation from device properties
+
+bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
+{
+	FILE *				environment = fopen(URLADER_ENV_PATH, "r");
+
+	if (!environment)
+	{
+		errorMessage("Error opening environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", URLADER_ENV_PATH);
+		return false;	
+	}
+	
+	memoryBuffer_t *	env = memoryBufferReadFile(environment, 8 * 1024);
+
+	fclose(environment);
+
+	if (!env)
+	{
+		errorMessage("Error reading environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", URLADER_ENV_PATH);
+		return false;
+	}
+
+	DigestContext	 	*ctx = DigestInit();
+
+	struct variables {
+		char *			name;
+		char *			show;
+		char *			append;
+		bool			errorIfMissing;
+		bool			export;
+	}					envVariables[] = {
+						{ .name = URLADER_SERIAL_NAME"\t", .show = URLADER_SERIAL_NAME, .append = "\n", .errorIfMissing = true, .export = true },
+						{ .name = URLADER_MACA_NAME"\t", .show = URLADER_MACA_NAME, .append = "\n", .errorIfMissing = true, .export = true },
+						{ .name = URLADER_WLANKEY_NAME"\t", .show = URLADER_WLANKEY_NAME, .append = NULL, .errorIfMissing = true, .export = false },
+						{ .name = URLADER_TR069PP_NAME"\t", .show = URLADER_TR069PP_NAME, .append = NULL, .errorIfMissing = false, .export = false },
+						{ .name = NULL, .show = NULL, .append = NULL, .errorIfMissing = false },
+	};
+	struct variables 	*var = envVariables;
+
+	while (var && var->name)
+	{
+		memoryBuffer_t	*currentBuffer = env;
+		size_t			currentOffset = 0;
+		char *			name;
+		bool			split;
+	
+		name = memoryBufferFindString(&currentBuffer, &currentOffset, var->name, strlen(var->name), &split);
+		if (name)
+		{	
+			char *		value = memoryBufferAdvancePointer(&currentBuffer, &currentOffset, strlen(var->name));
+			char *		curr = value;
+			size_t		valueSize = 0;
+
+			verboseMessage("Found device property '%s' with value '", var->show);				
+			while (currentBuffer && *curr != '\n') 
+			{
+				if (currentBuffer->used <= currentOffset) /* next buffer */
+				{
+					if (currentBuffer->next)
+					{
+						DigestUpdate(ctx, value, valueSize);
+						if (isVerbose())
+						{
+							while (*value != '\n' && valueSize > 0)
+							{
+								verboseMessage("%c", *value);
+								value++;
+								valueSize--;
+							}
+							verboseMessage("'\n");
+						}
+						currentBuffer = currentBuffer->next;
+						value = currentBuffer->data;
+						valueSize = 0;
+						curr = value;
+					}
+					else
+						break;
+				}
+				else
+				{
+					curr++;
+					currentOffset++;
+					valueSize++;
+				}
+			}
+			DigestUpdate(ctx, value, valueSize);
+			if (var->append)
+				DigestUpdate(ctx, var->append, strlen(var->append));
+			if (isVerbose())
+			{
+				while (*value != '\n' && valueSize > 0)
+				{
+					verboseMessage("%c", *value);
+					value++;
+					valueSize--;
+				}
+				verboseMessage("'\n");
+			}
+		}
+		else
+		{
+			if (var->errorIfMissing == true)
+			{
+				errorMessage("Unable to read variable '%s' from environment file on procfs(%s).\n\nAre we really running on a FRITZ!OS device?\a\n", var->show, URLADER_ENV_PATH);
+				setError(URLADER_ENV_ERR);
+				break;
+			}
+			verboseMessage("Device property '%s' does not exist.\n", var->show);
+		}
+		var++;
+		if (forExport && !var->export)
+			break;
+	}
+
+	env = memoryBufferFreeChain(env);
+
+	*hashSize = DigestLength(ctx);
+	DigestFinal(ctx, hash);
+	ctx = DigestCleanup(ctx);
+	
+	return !isAnyError();
+}
+
+// password generation from properties
+
+bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase)
+{
+	DigestContext	 	*ctx = DigestInit();
+
+	DigestUpdate(ctx, serial, strlen(serial));
+	DigestUpdate(ctx, "\n", 1);
+	DigestUpdate(ctx, maca, strlen(maca));
+	DigestUpdate(ctx, "\n", 1);
+	if (wlanKey && *wlanKey)
+		DigestUpdate(ctx, wlanKey, strlen(wlanKey));
+	if (tr069Passphrase && *tr069Passphrase)
+		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
+	*hashSize = DigestLength(ctx);
+	DigestFinal(ctx, hash);
+	ctx = DigestCleanup(ctx);
+
+	return !isAnyError();
 }
 
 // callable functions of the multi-call binary
@@ -1209,8 +1908,8 @@ int user_password_main(int argc, char** argv, int argo)
 {
 	bool				hexOutput = false;
 	char *				password = NULL;
-	unsigned char		hash[AVM_HASH_SIZE];
-	uint32_t			hashLen;
+	char				hash[MAX_DIGEST_SIZE];
+	uint32_t			hashLen = sizeof(hash);
 	char				hex[(sizeof(hash) * 2) + 1];
 	char *				out;
 	size_t				outLen;
@@ -1258,13 +1957,11 @@ int user_password_main(int argc, char** argv, int argo)
 
 	resetError();
 
-	EVP_MD_CTX		*ctx = EVP_MD_CTX_create();
-	
-	EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
-	EVP_DigestUpdate(ctx, password, strlen(password));
-	EVP_DigestFinal_ex(ctx, hash, &hashLen);
-	EVP_MD_CTX_destroy(ctx);
-	EVP_cleanup();
+	if (!Digest(password, strlen(password), hash, hashLen))
+	{
+		errorMessage("Error computing digest value.\a\n");
+		return EXIT_FAILURE;
+	}
 
 	if (hexOutput)
 	{
@@ -1289,8 +1986,8 @@ int user_password_main(int argc, char** argv, int argo)
 int device_password_main(int argc, char** argv, int argo)
 {
 	bool				hexOutput = false;
-	unsigned char		hash[AVM_HASH_SIZE];
-	uint32_t			hashLen;
+	char				hash[MAX_DIGEST_SIZE];
+	size_t				hashLen = sizeof(hash);
 	char				hex[(sizeof(hash) * 2) + 1];
 	char *				out;
 	size_t				outLen;
@@ -1365,36 +2062,95 @@ int device_password_main(int argc, char** argv, int argo)
 
 	resetError();
 
-	EVP_MD_CTX		*ctx = EVP_MD_CTX_create();
-	
-	EVP_DigestInit_ex(ctx, EVP_md5(), NULL);
-	EVP_DigestUpdate(ctx, serial, strlen(serial));
-	EVP_DigestUpdate(ctx, "\n", 1);
-	EVP_DigestUpdate(ctx, maca, strlen(maca));
-	EVP_DigestUpdate(ctx, "\n", 1);
-	if (wlanKey && *wlanKey)
-		EVP_DigestUpdate(ctx, wlanKey, strlen(wlanKey));
-	if (tr069Passphrase && *tr069Passphrase)
-		EVP_DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
-	EVP_DigestFinal_ex(ctx, hash, &hashLen);
-	EVP_MD_CTX_destroy(ctx);
-	EVP_cleanup();
-
-	if (hexOutput)
+	if (keyFromProperties(hash, &hashLen, serial, maca, wlanKey, tr069Passphrase))
 	{
-		outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
-		out = hex;
+		if (hexOutput)
+		{
+			outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+			out = hex;
+		}
+		else
+		{
+			outLen = hashLen;
+			out = (char *) hash;
+		}
+		if (fwrite(out, outLen, 1, stdout) != 1)
+		{
+			errorMessage("Write to STDOUT failed.\a\n");
+		}
 	}
 	else
+		return EXIT_FAILURE;
+
+	return EXIT_SUCCESS;
+}
+
+// 'password_from_device' function - compute the password hash from the current device properties
+
+int password_from_device_main(int argc, char** argv, int argo)
+{
+	bool				hexOutput = false;
+	bool				forExport = false;
+	char				hash[MAX_DIGEST_SIZE];
+	size_t				hashLen = sizeof(hash);
+	char				hex[(sizeof(hash) * 2) + 1];
+	char *				out;
+	size_t				outLen;
+
+	if (argc > argo + 1)
 	{
-		outLen = hashLen;
-		out = (char *) hash;
-	}
-	if (fwrite(out, outLen, 1, stdout) != 1)
-	{
-		errorMessage("Write to STDOUT failed.\a\n");
+		int				opt;
+		int				optIndex = 0;
+
+		static struct option options_long[] = {
+			verbosity_options_long,
+			{ "hex-output", no_argument, NULL, 'x' },
+			{ "for-export", no_argument, NULL, 'e' },
+		};
+		char *			options_short = "xe" verbosity_options_short;
+
+		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
+		{
+			switch (opt)
+			{
+				case 'x':
+					hexOutput = true;
+					break;
+
+				case 'e':
+					forExport = true;
+					break;
+
+				check_verbosity_options_short();
+				help_option(user_password);
+				getopt_message_displayed(user_password);
+				invalid_option(opt);
+			}
+		}
 	}
 
+	resetError();
+
+	keyFromDevice(hash, &hashLen, forExport);
+	
+	if (!isAnyError())
+	{
+		if (hexOutput)
+		{
+			outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+			out = hex;
+		}
+		else
+		{
+			outLen = hashLen;
+			out = (char *) hash;
+		}
+		if (fwrite(out, outLen, 1, stdout) != 1)
+		{
+			errorMessage("Write to STDOUT failed.\a\n");
+		}
+	}
+	
 	return EXIT_SUCCESS;
 }
 
@@ -1407,8 +2163,6 @@ int decode_secret_main(int argc, char** argv, int argo)
 	size_t				outLen;
 	char *				secret = NULL;
 	char *				key = NULL;
-	unsigned char 		hash[AVM_HASH_SIZE];
-	uint32_t			hashLen = 0;
 
 	if (argc > argo + 1)
 	{
@@ -1474,16 +2228,19 @@ int decode_secret_main(int argc, char** argv, int argo)
 
 	resetError();
 
+	CipherSizes();
+
 	size_t			secretBufSize = base32ToBinary(secret, (size_t) -1, NULL, 0);
 	size_t			keyBufSize = hexadecimalToBinary(key, (size_t) -1, NULL, 0);
 	size_t			secretSize = 0;
 	size_t			decryptedSize = 0;
 	size_t			keySize = 0;
 	size_t			dataLen = 0;
+	bool			isString = false;
 
-	unsigned char *	secretBuffer = (unsigned char *) malloc(secretBufSize);
-	unsigned char *	decryptedBuffer = (unsigned char *) malloc(secretBufSize + AVM_BLOCK_SIZE);
-	unsigned char *	keyBuffer = (unsigned char *) malloc(AVM_KEY_SIZE);
+	char *			secretBuffer = (char *) malloc(secretBufSize);
+	char *			decryptedBuffer = (char *) malloc(secretBufSize + cipher_blockSize);
+	char *			keyBuffer = (char *) malloc(cipher_keyLen);
 	char *			hexBuffer = NULL;
 
 	if (!secretBuffer || !decryptedBuffer || !keyBuffer)
@@ -1493,8 +2250,8 @@ int decode_secret_main(int argc, char** argv, int argo)
 	}
 
 	memset(secretBuffer, 0, secretBufSize);
-	memset(decryptedBuffer, 0, secretBufSize + AVM_BLOCK_SIZE);
-	memset(keyBuffer, 0, AVM_KEY_SIZE);
+	memset(decryptedBuffer, 0, secretBufSize + cipher_blockSize);
+	memset(keyBuffer, 0, cipher_keyLen);
 	
 	resetError();
 	secretSize = base32ToBinary(secret, (size_t) -1, (char *) secretBuffer, secretBufSize);
@@ -1512,31 +2269,20 @@ int decode_secret_main(int argc, char** argv, int argo)
 		return EXIT_FAILURE;
 	}
 
-	EVP_CIPHER_CTX		*ctx = EVP_CIPHER_CTX_new();
-	EVP_MD_CTX			*hctx = EVP_MD_CTX_create();
+	CipherContext 		*ctx = CipherInit(NULL, keyBuffer, secretBuffer);
 	
-	EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, keyBuffer, secretBuffer);
-	EVP_DecryptUpdate(ctx, decryptedBuffer, (int *) &decryptedSize, secretBuffer + AVM_IV_SIZE, secretSize - AVM_IV_SIZE);
-
-	EVP_DigestInit_ex(hctx, EVP_md5(), NULL);
-	EVP_DigestUpdate(hctx, decryptedBuffer + 4, decryptedSize - 4);
-	EVP_DigestFinal_ex(hctx, hash, &hashLen);
-	
-	if (memcmp(decryptedBuffer, hash, 4))
-	{	
-		setError(INVALID_KEY);
-		errorMessage("The specified password is wrong.\a\n");
-	}
-	else
+	if (CipherUpdate(ctx, decryptedBuffer, &decryptedSize, secretBuffer + cipher_ivLen, secretSize - cipher_ivLen))
 	{
-		dataLen = (*((unsigned char *) decryptedBuffer + 4) << 24) + (*((unsigned char *) decryptedBuffer + 5) << 16) + (*((unsigned char *) decryptedBuffer + 6) << 8) + (*((unsigned char *) decryptedBuffer + 7));
-		out = (char *) decryptedBuffer + 8;
+		if (!DigestCheckValue(decryptedBuffer, decryptedSize, &out, &dataLen, &isString))
+		{	
+			setError(INVALID_KEY);
+			errorMessage("The specified password is wrong.\a\n");
+		}
 	}
 	
-	EVP_MD_CTX_destroy(hctx);
-	EVP_CIPHER_CTX_cleanup(ctx);
-	EVP_CIPHER_CTX_free(ctx);
-	EVP_cleanup();
+	ctx = CipherCleanup(ctx);
+	secretBuffer = clearMemory(secretBuffer, secretBufSize, true);
+	keyBuffer = clearMemory(keyBuffer, keyBufSize, true);
 
 	if (!isAnyError())
 	{
@@ -1555,43 +2301,282 @@ int decode_secret_main(int argc, char** argv, int argo)
 			}
 		}
 		else
-		{
 			outLen = dataLen;
-			if (*(out + outLen) == 0) /* C-style string, omit last byte */
-				outLen--;
-		}
 		if (!isAnyError() && fwrite(out, outLen, 1, stdout) != 1)
-		{
 			errorMessage("Write to STDOUT failed.\a\n");
-		}
 	}
 
-	if (secretBuffer)
-	{
-		memset(secretBuffer, 0, secretBufSize);
-		free(secretBuffer);
-		secretBuffer = NULL;
-	}
-	if (decryptedBuffer)
-	{
-		memset(decryptedBuffer, 0, secretBufSize);
-		free(decryptedBuffer);
-		decryptedBuffer = NULL;
-	}
-	if (keyBuffer)
-	{
-		memset(keyBuffer, 0, keyBufSize);
-		free(keyBuffer);
-		keyBuffer = NULL;
-	}
-	if (hexBuffer)
-	{
-		memset(hexBuffer, 0, dataLen * 2);
-		free(hexBuffer);
-		hexBuffer = NULL;
-	}
+	decryptedBuffer = clearMemory(decryptedBuffer, secretBufSize, true);
+	hexBuffer = clearMemory(hexBuffer, dataLen * 2, true);
 
 	return EXIT_SUCCESS;
+}
+
+// 'decode_secrets' function - decode all secret values from STDIN content and copy it with replaced values to STDOUT
+
+int decode_secrets_main(int argc, char** argv, int argo)
+{
+	char 				hash[MAX_DIGEST_SIZE];
+	size_t				hashLen = sizeof(hash);
+	char *				serial = NULL;
+	char *				maca = NULL;
+	char *				wlanKey = NULL;
+	char *				tr069Passphrase = NULL;
+
+	if (argc > argo + 1)
+	{
+		int				opt;
+		int				optIndex = 0;
+
+		static struct option options_long[] = {
+			verbosity_options_long,
+		};
+		char *			options_short = verbosity_options_short;
+
+		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
+		{
+			switch (opt)
+			{
+				check_verbosity_options_short();
+				help_option(user_password);
+				getopt_message_displayed(user_password);
+				invalid_option(opt);
+			}
+		}
+		if (optind < argc)
+		{
+			int		i = optind + 1;
+			int		index = 0;
+
+			char *	*arguments[] = {
+				&serial,
+				&maca,
+				&wlanKey,
+				&tr069Passphrase,
+				NULL
+			};
+
+			while (argv[i])
+			{
+				*(arguments[index++]) = argv[i++];
+				if (!arguments[index])
+					break;
+			}
+		}
+	}
+
+	resetError();
+
+	CipherSizes();
+
+	char			key[cipher_keyLen];
+
+	memset(key, 0, cipher_keyLen);
+
+	if (!serial) /* use device properties from running system */
+	{
+		if (!keyFromDevice(hash, &hashLen, false))
+			return EXIT_FAILURE;
+		memcpy(key, hash, cipher_ivLen);
+	}
+	else if (!maca) /* single argument - assume it's a hexadecimal key already */
+	{
+		hexadecimalToBinary(serial, strlen(serial), key, cipher_keyLen);
+		if (isAnyError())
+			return EXIT_FAILURE;
+	}
+	else if (!wlanKey) /* serial and maca - use an export key from device */
+	{
+		errorMessage("To use the properties of another device, you have to specify at least three\nvalues ('%s', '%s' and '%s').\a\n", URLADER_SERIAL_NAME, URLADER_MACA_NAME, URLADER_WLANKEY_NAME);
+		return EXIT_FAILURE;
+	}
+	else
+	{
+		if (!keyFromProperties(hash, &hashLen, serial, maca, wlanKey, tr069Passphrase))
+			return EXIT_FAILURE;
+		memcpy(key, hash, cipher_ivLen);
+	}
+
+	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, 8 * 1024);
+	
+	if (!inputFile)
+	{
+		if (!isAnyError()) /* empty input file */
+			return EXIT_SUCCESS;	
+		errorMessage("Error reading STDIN to memory.\a\n");
+		return EXIT_FAILURE;
+	}
+
+	memoryBufferProcessFile(&inputFile, 0, key, stdout);
+
+	inputFile = memoryBufferFreeChain(inputFile);
+
+	return !isAnyError();
+}
+
+// 'decode_export' function - decode all secret values from the export file on STDIN and copy it with replaced values to STDOUT
+
+int decode_export_main(int argc, char** argv, int argo)
+{
+	char 				hash[MAX_DIGEST_SIZE];
+	size_t				hashLen = sizeof(hash);
+	char *				serial = NULL;
+	char *				maca = NULL;
+
+	if (argc > argo + 1)
+	{
+		int				opt;
+		int				optIndex = 0;
+
+		static struct option options_long[] = {
+			verbosity_options_long,
+		};
+		char *			options_short = verbosity_options_short;
+
+		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
+		{
+			switch (opt)
+			{
+				check_verbosity_options_short();
+				help_option(user_password);
+				getopt_message_displayed(user_password);
+				invalid_option(opt);
+			}
+		}
+		if (optind < argc)
+		{
+			int		i = optind + 1;
+			int		index = 0;
+
+			char *	*arguments[] = {
+				&serial,
+				&maca,
+				NULL
+			};
+
+			while (argv[i])
+			{
+				*(arguments[index++]) = argv[i++];
+				if (!arguments[index])
+					break;
+			}
+		}
+	}
+
+	resetError();
+
+	CipherSizes();
+
+	char			key[cipher_keyLen];
+
+	memset(key, 0, cipher_keyLen);
+
+	if (!serial) /* use device properties from running system */
+	{
+		if (!keyFromDevice(hash, &hashLen, true))
+			return EXIT_FAILURE;
+		memcpy(key, hash, cipher_ivLen);
+	}
+	else if (!maca) /* single argument - assume it's a user-defined password */
+	{
+		hashLen = Digest(serial, strlen(serial), hash, hashLen);
+		if (isAnyError())
+			return EXIT_FAILURE;
+		memcpy(key, hash, cipher_ivLen);
+	}
+	else
+	{
+		if (!keyFromProperties(hash, &hashLen, serial, maca, NULL, NULL))
+			return EXIT_FAILURE;
+		memcpy(key, hash, cipher_ivLen);
+	}
+
+	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, 8 * 1024);
+	
+	if (!inputFile)
+	{
+		if (!isAnyError()) /* empty input file */
+			return EXIT_SUCCESS;	
+		errorMessage("Error reading STDIN to memory.\a\n");
+		return EXIT_FAILURE;
+	}
+
+	memoryBuffer_t *	current = inputFile;
+	memoryBuffer_t *	found = current;
+	size_t				offset = 0;
+	size_t				foundOffset = offset;
+	size_t				valueSize = 0;
+	char *				name;
+	bool				split = false;
+
+	if ((name = memoryBufferFindString(&found, &foundOffset, EXPORT_PASSWORD_NAME, strlen(EXPORT_PASSWORD_NAME) , &split)) != NULL)
+	{
+		current = found;
+		offset = foundOffset;
+
+		char *			value = memoryBufferAdvancePointer(&current, &offset, strlen(EXPORT_PASSWORD_NAME));
+
+		found = current;
+		foundOffset = offset;
+
+		char *			start = memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
+		char *			copy;
+		char *			cipherText = (char *) malloc(valueSize + 1);
+		bool			passwordIsCorrect = false;
+			
+		memset(cipherText, 0, valueSize + 1);
+		copy = cipherText;
+		while (current && (current != found))
+		{
+			memcpy(copy, current->data + offset, current->used - offset);
+			copy += (current->used - offset);
+			current = current->next;
+			offset = 0;
+		}
+		memcpy(copy, current->data + offset, foundOffset - offset);
+		passwordIsCorrect = DecryptValue(NULL, cipherText, valueSize, NULL, key, key, false);
+		memset(key + cipher_ivLen, 0, cipher_keyLen - cipher_ivLen);
+		if (passwordIsCorrect)
+		{
+			cipherText = clearMemory(cipherText, valueSize + 1, true);
+			current = inputFile;
+			offset = 0;
+			while (current && (current != found)) /* output data in front of password field */
+			{
+				if (fwrite(current->data + offset, current->used - offset, 1, stdout) != 1)
+				{
+					setError(WRITE_FAILED);
+					break;
+				}
+				current = current->next;
+				offset = 0;
+			}
+			if (current)
+			{
+				if (fwrite(current->data + offset, foundOffset - offset, 1, stdout) != 1)
+					setError(WRITE_FAILED);
+				else
+					offset = foundOffset;
+			}
+		}
+		else
+		{
+			setError(DECRYPT_ERR);
+			errorMessage("Decryption failed with the specified arguments.\a\n");	
+		}
+	}
+	else
+	{
+		errorMessage("Unable to find the password entry in the provided file.\nIs this really an export file?\a\n");
+		setError(INVALID_FILE);
+	}
+
+	if (!isAnyError())
+		memoryBufferProcessFile(&found, foundOffset, key, stdout);
+
+	inputFile = memoryBufferFreeChain(inputFile);
+
+	return !isAnyError();
 }
 
 // main entry point for each call
@@ -1643,6 +2628,7 @@ int main(int argc, char** argv)
 		}
 		arguments[0] = ename;
 		int exitCode = (*command->ep)(argumentCount, arguments, argumentOffset);
+		EVP_cleanup();
 		exit(exitCode);
 	}
 
