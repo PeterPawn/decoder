@@ -52,7 +52,7 @@ LIBS = -lcrypto
 #
 # targets to make
 #
-.PHONY: all clean
+.PHONY: all clean links
 #
 all: $(BINARY) $(SYMLINKS)
 #
@@ -63,8 +63,12 @@ $(BINARY): $(BIN_OBJS)
 #
 # make symlinks
 #
+links:	$(SYMLINKS)
+#
+# create symlinks for functions
+#
 $(SYMLINKS):
-	@ln -sf $(BINARY) $@ && echo "symlink for $@ created"
+	@ln -sf $(BINARY) $(CROSSBUILD_LINK_TARGET)$@ && echo "symlink for $@ created"
 #
 # everything to make, if header file changes
 #

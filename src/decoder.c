@@ -1611,9 +1611,9 @@ int b64enc_main(int argc, char** argv, int argo)
 						}
 						else
 						{
-							if ((optind + 1) >= argc)
+							if ((optind + argo) >= argc)
 								break; /* last option, no number present */
-							startString = argv[optind + 1];
+							startString = argv[optind + argo];
 							if (*startString == '-')
 								break; /* next is an option */
 						}
@@ -1859,9 +1859,9 @@ int hexenc_main(int argc, char** argv, int argo)
 						}
 						else
 						{
-							if ((optind + 1) >= argc)
+							if ((optind + argo) >= argc)
 								break; /* last option, no number present */
-							startString = argv[optind + 1];
+							startString = argv[optind + argo];
 							if (*startString == '-')
 								break; /* next is an option */
 						}
@@ -1974,7 +1974,7 @@ int user_password_main(int argc, char** argv, int argo)
 			return EXIT_FAILURE;
 		}
 		else
-			password = argv[optind + 1];
+			password = argv[optind + argo];
 	}
 	else
 	{
@@ -2059,7 +2059,7 @@ int device_password_main(int argc, char** argv, int argo)
 		}
 		else
 		{
-			int		i = optind + 1;
+			int		i = optind + argo;
 			int		index = 0;
 
 			char *	*arguments[] = {
@@ -2227,7 +2227,7 @@ int decode_secret_main(int argc, char** argv, int argo)
 		}
 		else
 		{
-			int		i = optind + 1;
+			int		i = optind + argo;
 			int		index = 0;
 
 			char *	*arguments[] = {
@@ -2378,7 +2378,7 @@ int decode_secrets_main(int argc, char** argv, int argo)
 		}
 		if (optind < argc)
 		{
-			int		i = optind + 1;
+			int		i = optind + argo;
 			int		index = 0;
 
 			char *	*arguments[] = {
@@ -2478,7 +2478,7 @@ int decode_export_main(int argc, char** argv, int argo)
 		}
 		if (optind < argc)
 		{
-			int		i = optind + 1;
+			int		i = optind + argo;
 			int		index = 0;
 
 			char *	*arguments[] = {
@@ -2666,6 +2666,11 @@ int main(int argc, char** argv)
 		}
 		arguments[0] = ename;
 		int exitCode = (*command->ep)(argumentCount, arguments, argumentOffset);
+		if (exitCode == EXIT_SUCCESS)
+		{
+			if (isatty(1))
+				fprintf(stdout, "\n");
+		}
 		EVP_cleanup();
 		exit(exitCode);
 	}

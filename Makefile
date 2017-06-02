@@ -4,7 +4,7 @@ BASENAME:=decode_passwords
 #
 # binary directory
 #
-SRC_DIR=source
+SRC_DIR=src
 #
 # targets to make
 #
