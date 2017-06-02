@@ -938,6 +938,7 @@ bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE
 		}
 		else
 		{
+			setError(DECRYPT_ERR);
 			verboseMessage("decrypt failed\n");
 		}
 	}
