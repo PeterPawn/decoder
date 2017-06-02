@@ -64,6 +64,7 @@ if [ -f "$0.yf_scriptlib" ]; then
 	. $0.yf_scriptlib
 else
 	YF_SCRIPT_FUNCTIONS="yf_mktemp yf_bin2hex"
+	YF_SCRIPT_SAVE=1
 	. "$YF_SCRIPT_DIR/yf_helpers"
 fi
 #######################################################################################################
