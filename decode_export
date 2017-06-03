@@ -80,12 +80,16 @@ trap "rm -r $td 2>/dev/null" EXIT
 #######################################################################################################
 debug=0
 mimicry=0
-for x in $*; do
-	case "$x" in
+while [ $# -gt 0 ]; do
+	case "$1" in
 		("-d" | "--debug")
 			debug=1
 			dbg="-d"
 			shift
+			;;
+		("-a" | "--alt-environ")
+			altenv="-a $2"
+			shift 2
 			;;
 		("--")
 			shift
@@ -128,7 +132,7 @@ cat - >"$td/input"
 #                                                                                                     #
 #######################################################################################################
 if [ $device -eq 1 ]; then
-	export_key="$($password_from_device --export)"
+	export_key="$($password_from_device --export $altenv)"
 	if [ ${#export_key} -eq 0 ]; then
 		printf "Error reading device variables, are we really on a FRITZ!Box device?\n" 1>&2
 		exit 1
