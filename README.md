@@ -17,7 +17,7 @@ For recurring tasks (like data conversions) the shell script library from the Yo
 
 To generate a password for decoding of data from a TFFS file, you need to have access to the device in question or you need to know the following data for the source device:
 * the serial number, as it was stored in the 'urlader environment' - it was a sequence of 16 '0'es for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
-* the MAC address stored as 'maca' in the 'urlader environment' and last, but not least
+* the MAC address stored as 'maca' in the 'urlader environment'
 * the WLAN key from factory settings - locate it on the back of the device, where it was printed on a sticker
 * the TR-069 passphrase, if the device has a CWMP account configured (tr069_serial and tr069_passphrase are present in the environment)
 
@@ -40,7 +40,7 @@ But if any (justified) changes to the program logic are really needed, I'll inco
 
 There is an exhaustive description (http://www.ip-phone-forum.de/showthread.php?t=295101 - sorry, it's only in german language), how AVM's encryption works. If the Freetz project really needs its own version and should I deny to make the required changes to my master version, an experienced programmer should be able to create his own program from scratch.
 
-That's not an attempt to foreclose the Freetz project or any of its user from using this project - the unmodified version may be used ad libitum. But I would like to work *together* on an usable version and this means to work in common and it's not the "fine english manner" to use the project of a stranger and make own changes, without any attempts to discuss their sense first (or their senselessness).
+That's not an attempt to foreclose the Freetz project or any of its users from the possible benefits on this project - the unmodified version may be used ad libitum. But I would like to work *together* on an usable version and this means to work in common and it's not the "fine english manner" to use the project of a stranger and make own changes, without any attempts to discuss their sense first (or their senselessness).
 
 ### Integration into a Freetz build
 If you aren't a Freetz developer and you want to incorporate this project into your Freetz build, you can simply clone the whole repository into the ```make``` sub-directory as follows:
@@ -59,8 +59,8 @@ It's possible, that you may find a pre-compiled, statically linked binary for yo
 
 ### Discussions/questions/changes
 
-There is a (german) thread regarding this project at
+There is a thread (with a description in german language, but questions in english are accepted too) regarding this project at
 
-http://www.ip-phone-forum.de/showthread.php?t=276183
+http://www.ip-phone-forum.de/showthread.php?t=295101
 
 Please contemplate to use this forum, if you've any questions.
