@@ -1,0 +1,83 @@
+config FREETZ_PACKAGE_DECODER
+	bool "decoder 0.3"
+	select FREETZ_LIB_libcrypto if ! FREETZ_PACKAGE_DECODER_STATIC
+	default y
+	help
+		decrypt AVM cipher text - see https://github.com/PeterPawn/decode_passwords.git
+
+		This package is a replacement for 'decrypt-fritzos-cfg' and is able to work 
+		without any further file from AVM - only the usual libraries are needed.
+
+		It's a multi-call binary and you have to select the functions to install.
+
+config FREETZ_PACKAGE_DECODER_STATIC
+	depends on FREETZ_PACKAGE_DECODER
+	bool "build statically linked binary"
+	default n
+	help
+		Build the utility as a static binary.
+
+menu "  symlinks to create for 'decoder'"
+	depends on FREETZ_PACKAGE_DECODER
+
+config FREETZ_PACKAGE_DECODER_DECODE_SECRETS
+	depends on FREETZ_PACKAGE_DECODER
+	bool "decode_secrets - decrypt cipher-text values"
+	default y
+	help
+		This is a filter and copies all data from STDIN to STDOUT while decryptable 
+		cipher-text occurrences are replaced with their clear-text values.
+
+config FREETZ_PACKAGE_DECODER_DECODE_EXPORT
+	depends on FREETZ_PACKAGE_DECODER
+	bool "decode_export - decrypt settings export files"
+	default n
+	help
+		This is a filter and copies all data from STDIN to STDOUT while decryptable 
+		cipher-text occurrences are replaced with their clear-text values.
+		It's a replacement for 'decode_secrets' with automatic handling of the special
+		encryption for the export password.
+
+config FREETZ_PACKAGE_DECODER_DECODE_SECRET
+	depends on FREETZ_PACKAGE_DECODER
+	bool "decode_secret - decrypt a single value"
+	default n
+	help
+		This function expects the encrypted data and the key as command line arguments.
+
+config FREETZ_PACKAGE_DECODER_USER_PASSWORD
+	depends on FREETZ_PACKAGE_DECODER
+	bool "user_password - create a decryption key from a specified password"
+	default n
+
+config FREETZ_PACKAGE_DECODER_DEVICE_PASSWORD
+	depends on FREETZ_PACKAGE_DECODER
+	bool "device_password - create a decryption key from specified device properties"
+	default n
+
+config FREETZ_PACKAGE_DECODER_PASSWORD_FROM_DEVICE
+	depends on FREETZ_PACKAGE_DECODER
+	bool "password_from_device - create a decryption key from device properties"
+	default n
+
+config FREETZ_PACKAGE_DECODER_DECODE_PASSWORDS
+	depends on FREETZ_PACKAGE_DECODER
+	bool "decode_passwords - this is an older synonym for 'decode_secrets'"
+	default n
+
+config FREETZ_PACKAGE_DECODER_HEXUTIL
+	depends on FREETZ_PACKAGE_DECODER
+	bool "hexdec/hexenc - convert from hexadecimal to binary and vice versa"
+	default n
+
+config FREETZ_PACKAGE_DECODER_B64UTIL
+	depends on FREETZ_PACKAGE_DECODER
+	bool "b64dec/b64enc - convert from Base64 to binary and vice versa"
+	default n
+
+config FREETZ_PACKAGE_DECODER_B32UTIL
+	depends on FREETZ_PACKAGE_DECODER
+	bool "b32dec/b32enc - convert from Base32 to binary and vice versa"
+	default n
+
+endmenu

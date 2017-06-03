@@ -1,6 +1,6 @@
 # project
 #
-BASENAME:=decode_passwords
+BASENAME:=decoder
 #
 # binary directory
 #
@@ -12,6 +12,8 @@ SRC_DIR=src
 #
 all:
 	$(MAKE) -C $(SRC_DIR)
+install:
+	$(MAKE) -C $(SRC_DIR) install
 #
 # cleanup
 #

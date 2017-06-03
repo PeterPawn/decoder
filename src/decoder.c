@@ -98,6 +98,7 @@ static commandEntry_t	commands[] = {
 	{ .name = "password_from_device", .ep = &password_from_device_main },
 	{ .name = "decode_secret", .ep = &decode_secret_main },
 	{ .name = "decode_secrets", .ep = &decode_secrets_main },
+	{ .name = "decode_passwords", .ep = &decode_secrets_main },
 	{ .name = "decode_export", .ep = &decode_export_main },
 	{ .name = NULL, .ep = NULL }
 };
