@@ -84,7 +84,7 @@ all: $(BINARY)
 $(SRCS:%.c=%.o): $(HDRS) Makefile
 #
 $(BINARY): $(SRCS:%.c=%.o)
-	$(CC) $(LDFLAGS) $(filter %.o,$<) -L. -o $@ $(LIBS)
+	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) $(filter %.o,$<) -L. -o $@ $(LIBS)
 #
 strip:	$(BINARY)
 	$(STRIP) $(BINARY)
