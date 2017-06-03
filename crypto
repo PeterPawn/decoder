@@ -1,0 +1,166 @@
+#! /bin/sh
+# vim: set tabstop=4 syntax=sh :
+#######################################################################################################
+#                                                                                                     #
+# provide a wrapper for a MD5 digest and an AES-256 decrypt function for AVM's cipher text decryption #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# Copyright (C) 2014-2017 P.Hämmerlein (peterpawn@yourfritz.de)                                       #
+#                                                                                                     #
+# This program is free software; you can redistribute it and/or modify it under the terms of the GNU  #
+# General Public License as published by the Free Software Foundation; either version 2 of the        #
+# License, or (at your option) any later version.                                                     #
+#                                                                                                     #
+# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without   #
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      #
+# General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more details.             #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# This script encapsulates all calls to the OpenSSL binary for the other scripts and to make things   #
+# even easier, all calls to the YourFritz shell script library (data conversions and handling of a    #
+# temporary file/directory) are gathered in this script.                                              #
+#                                                                                                     #
+# For the real crypto operations this script needs an OpenSSL binary with the 'dgst' function (for    #
+# MD5 hashes) and knowledge of the AES-256 (CBC) encryption mode, which will be used with the         #
+# 'enc -d' function.                                                                                  #
+#                                                                                                     #
+# If you'd like to use this project with another crypto solution, you may change the calls within     #
+# this script.                                                                                        #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# check debug option                                                                                  #
+#                                                                                                     #
+#######################################################################################################
+if [ "$1" = "-d" -o "$1" = "--debug" ]; then
+	debug=1
+	shift
+else
+	debug=0
+fi
+#######################################################################################################
+#                                                                                                     #
+# subfunctions                                                                                        #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# import the needed functions from the YourFritz script library                                       #
+#                                                                                                     #
+#######################################################################################################
+if [ -f "$0.yf_scriptlib" ]; then
+	. $0.yf_scriptlib
+else
+	YF_SCRIPT_FUNCTIONS="yf_base32_decode yf_bin2hex yf_hex2bin yf_hex2dec yf_mktemp"
+	YF_SCRIPT_SAVE=1
+	. "$YF_SCRIPT_DIR/yf_helpers"
+fi
+#######################################################################################################
+#                                                                                                     #
+# compute the md5 digest of the data from STDIN, write hexadecimal string to STDOUT                   #
+#                                                                                                     #
+#######################################################################################################
+digest()
+{
+	openssl dgst -md5 | sed -n -e "s|(stdin)= \(.*\)|\1|p"
+}
+#######################################################################################################
+#                                                                                                     #
+# decode a Base32 encoded value from STDIN to a hexadecimal string on STDOUT                          #
+#                                                                                                     #
+#######################################################################################################
+b32dec()
+{
+	yf_base32_decode | yf_bin2hex
+}
+#######################################################################################################
+#                                                                                                     #
+# decode a Base32 encoded value from STDIN to a hexadecimal string on STDOUT                          #
+#                                                                                                     #
+#######################################################################################################
+aes_decrypt()
+{
+	yf_hex2bin | openssl enc -d -aes-256-cbc -K "$1" -iv "$2" 2>/dev/null | yf_bin2hex
+}
+#######################################################################################################
+#                                                                                                     #
+# check parameters and run the requested function                                                     #
+#                                                                                                     #
+#######################################################################################################
+if [ $# -lt 1 ]; then
+	printf "Missing at least one argument, the function to execute.\n" 1>&2
+	exit 1
+fi
+rc=0
+function="$1"
+shift
+case "$function" in
+	("aes_decrypt")
+		if [ -t 0 ]; then
+			printf "STDIN is a terminal device.\n" 1>&2
+			exit 1
+		fi
+		if [ ${#2} -eq 0 ]; then
+			printf "Missing key and/or IV argument.\n" 1>&2
+			exit 1
+		fi
+		aes_decrypt $*
+		rc=$?
+		;;
+	("digest")
+		if [ -t 0 ]; then
+			printf "STDIN is a terminal device.\n" 1>&2
+			exit 1
+		fi
+		if [ ${#1} -gt 0 ] && [ "$1" = "-x" ]; then
+			yf_hex2bin | digest
+		else
+			digest
+		fi
+		rc=$?
+		;;
+	("b32dec")
+		if [ -t 0 ]; then
+			printf "STDIN is a terminal device.\n" 1>&2
+			exit 1
+		fi
+		b32dec
+		rc=$?
+		;;
+	("hexdec")
+		if [ -t 0 ]; then
+			printf "STDIN is a terminal device.\n" 1>&2
+			exit 1
+		fi
+		yf_hex2bin
+		rc=$?
+		;;
+	("hex2dec")
+		if [ -t 0 ]; then
+			printf "STDIN is a terminal device.\n" 1>&2
+			exit 1
+		fi
+		yf_hex2dec $(cat)
+		rc=$?
+		;;
+	("mktemp")
+		yf_mktemp $*
+		rc=$?
+		;;
+	(*)
+		printf "Unknown function '%s' specified.\n" "$function" 1>&2
+		rc=1
+		;;
+esac
+#######################################################################################################
+#                                                                                                     #
+# no housekeeping needed                                                                              #
+#                                                                                                     #
+#######################################################################################################
+exit $rc
+#######################################################################################################
+#                                                                                                     #
+# end of script                                                                                       #
+#                                                                                                     #
+#######################################################################################################

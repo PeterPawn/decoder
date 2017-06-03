@@ -1,4 +1,5 @@
 #! /bin/sh
+# vim: set tabstop=4 syntax=sh :
 #######################################################################################################
 #                                                                                                     #
 # decode every occurence of an encoded secret value from an export file                               #
@@ -39,34 +40,13 @@
 # The line with the 'Password' value in the file header remains unchanged, because the encrypted      #
 # value consists of binary data and may not be shown as a string value in a useful manner.            #
 #                                                                                                     #
-# This script needs an OpenSSL binary with the 'dgst' function (MD5 support is mandatory) and the AES #
-# algorithm with a key length of 256 bits has to be supported by the 'enc' function.                  #
-# But the OpenSSL binary is not called directly from here, there's a bunch of other scripts, which    #
-# will be used by this one and have to be present in the same directory.                              #
-#                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
 # constants                                                                                           #
 #                                                                                                     #
 #######################################################################################################
-needed_scripts="password_from_device device_password user_password decode_secret decode_secrets"
+needed_scripts="password_from_device device_password user_password decode_secret decode_secrets crypto"
 password_entry="Password"
-#######################################################################################################
-#                                                                                                     #
-# subfunctions                                                                                        #
-#                                                                                                     #
-#######################################################################################################
-#                                                                                                     #
-# import the needed functions from the YourFritz script library                                       #
-#                                                                                                     #
-#######################################################################################################
-if [ -f "$0.yf_scriptlib" ]; then
-	. $0.yf_scriptlib
-else
-	YF_SCRIPT_FUNCTIONS="yf_mktemp yf_bin2hex"
-	YF_SCRIPT_SAVE=1
-	. "$YF_SCRIPT_DIR/yf_helpers"
-fi
 #######################################################################################################
 #                                                                                                     #
 # check environment                                                                                   #
@@ -86,7 +66,7 @@ done
 # create temporary directory                                                                          #
 #                                                                                                     #
 #######################################################################################################
-td=$(yf_mktemp -d)
+td=$(crypto mktemp -d)
 if [ ${#td} -eq 0 ]; then
 	printf "Error creating a temporary directory.\n" 1>&2
 	exit 1
@@ -104,6 +84,7 @@ for x in $*; do
 	case "$x" in
 		("-d" | "--debug")
 			debug=1
+			dbg="-d"
 			shift
 			;;
 		("--")
@@ -147,19 +128,19 @@ cat - >"$td/input"
 #                                                                                                     #
 #######################################################################################################
 if [ $device -eq 1 ]; then
-	export_key="$($password_from_device --export | yf_bin2hex)"
+	export_key="$($password_from_device --export)"
 	if [ ${#export_key} -eq 0 ]; then
 		printf "Error reading device variables, are we really on a FRITZ!Box device?\n" 1>&2
 		exit 1
 	fi
 elif [ $password -eq 1 ]; then
-	export_key="$($user_password "$1" | yf_bin2hex)"
+	export_key="$($user_password "$1")"
 	if [ ${#export_key} -eq 0 ]; then
 		printf "Error creating password hash as decipher key.\n" 1>&2
 		exit 1
 	fi
 else
-	export_key="$($device_password "$1" "$2" | yf_bin2hex)"
+	export_key="$($device_password "$1" "$2")"
 	if [ ${#export_key} -eq 0 ]; then
 		printf "Error creating the device value based password hash as decipher key.\n" 1>&2
 		exit 1
@@ -176,14 +157,14 @@ if [ ${#rnd_pw} -eq 0 ]; then
 	printf "Unable to locate the '%s' entry in the file header, is this really an export file from a FRITZ!Box device?\n" "$password_entry" 1>&2
 	exit 1
 fi
-export_rnd="$($decode_secret "$rnd_pw" "$export_key" 2>/dev/null | yf_bin2hex)"
+[ $debug -eq 1 ] && printf "random key Base32 value is '%s'\n" "$rnd_pw" 1>&2
+export_rnd="$($decode_secret $dbg -x "$rnd_pw" "$export_key" 2>/dev/null)"
 if [ ${#export_rnd} -eq 0 ]; then
 	printf "Unable to decrypt the random cipher key with the specified export key or device data.\n" 1>&2
 	exit 1
 fi
 random_key="$(expr "$export_rnd" : "\(.\{$(( ${#export_rnd} / 2 ))\}\).*")"
 [ $debug -eq 1 ] && printf "random key value is '%s'\n" "$random_key" 1>&2
-[ $debug -eq 1 ] && dbg="-d" || unset dbg
 #######################################################################################################
 #                                                                                                     #
 # write the header and the decoded data to STDOUT                                                     #
