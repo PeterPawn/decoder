@@ -55,6 +55,7 @@ The whole project consists of POSIX-compatible shell scripts for various decodin
 The ```src``` subfolder contains an implementation of a multi-call utility in C, which provides all the functions (and some additionals too), that are available as shell scripts too. You need only an OpenSSL installation (1.0.2 prefered, I haven't tested it with later versions yet) to build it and I would advise you to use a compiled version - it's lightning fast, compared to the shell versions.
 
 It's possible, that you may find a pre-compiled, statically linked binary for your platform in the ```bin``` directory. I tend to provide/upload some files, which I myself need and use regularly. If you want to use any of these files, you should check the detached GPG signature seriously.
+The ```bin``` directory contains now a version for MIPS32R2 with BE and a version for x86-64, which has been tested with the Windows 10 ```bash``` too. It's working, as long as you provide an environment dump (or another text file looking like it) as ```/var/env```. The next task is it now, to make the path to this environment file selectable on run-time.
 
 ### Discussions/questions/changes
 
