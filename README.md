@@ -14,8 +14,6 @@ All scripts in this project need an OpenSSL binary with
 capabilities.
 Every call to ```openssl``` is encapsulated by the ```crypto``` shell script. If you want to use any other crypto solution, you have to change the calls there.
 
-For other recurring tasks (e.g. data conversions) the shell script library from the YourFritz repository (www.yourfritz.de) will be used. Therefore you have to provide a valid installation of this library or you may prepare an include files for the only script (```crypto```), which depends on this library. If a file ```crypto.yf_scriptlib``` exists, it will be included with the 'dot' command (.) directly. If such a file does not exist, it will be created on the first call of a script, which uses ```crypto``` internally - your account has to have write access to the directory with the shell files on this first call. Please keep in mind, that you may not publish/distribute such a prepared script library file - only the whole script library (with intact comments) may be distributed to others. If you want to remove these intermediate script library file, you can invoke ```make clean-scriptlib``` in the root directory. If you want to prepare the include file, you can use ```make prepare-scriptlib```.
-
 To generate a password for decoding of data from a TFFS file, you need to have access to the device in question or you need to know the following data for the source device:
 * the serial number, as it was stored in the 'urlader environment' - it was a sequence of 16 '0'es for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
 * the MAC address stored as 'maca' in the 'urlader environment'
