@@ -4,105 +4,129 @@
 #                                                                                                     #
 # decode every occurence of an encoded secret value from an export file                               #
 #                                                                                                     #
-#######################################################################################################
+###################################################################################################VER#
 #                                                                                                     #
-# Copyright (C) 2014-2017 P.Hämmerlein (peterpawn@yourfritz.de)                                       #
+# decode_export, version 0.3, from decode_passwords                                                   #
 #                                                                                                     #
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU  #
-# General Public License as published by the Free Software Foundation; either version 2 of the        #
-# License, or (at your option) any later version.                                                     #
+# This script is a part of the project from https://github.com/PeterPawn/decode_passwords.            #
 #                                                                                                     #
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without   #
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      #
-# General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more details.             #
+###################################################################################################CPY#
+#                                                                                                     #
+# Copyright (C) 2014-2017 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+#                                                                                                     #
+###################################################################################################LIC#
+#                                                                                                     #
+# This project is free software, licensed under a slightly modified GPL version; most people          #
+# can redistribute it and/or modify it under the terms of the GNU General Public License as           #
+# published by the Free Software Foundation; either version 2 of the License, or (at your             #
+# option) any later version.                                                                          #
+#                                                                                                     #
+# This project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;           #
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           #
+# See the GNU General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more          #
+# details.                                                                                            #
 #                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
 # The script takes the input file from STDIN, extracts the random cipher key from the 'Password'      #
 # entry in its header and calls the 'decode_secrets' script with this random key.                     #
-# The key needed to decipher the random key entry may be specified as an user-defined password, as a  #
-# couple of variables for a single device or it could be read from the current environment, if we're  #
-# running on a FRITZ!OS device.                                                                       #
 #                                                                                                     #
-# Therefore the following calls are all valid:                                                        #
-#                                                                                                     #
-# decode_export < INPUTFILE                                                                           #
-# - decode the export file with the settings from the current device, may only be used on a FRITZ!OS  #
-#   device, where the needed values are present in the 'urlader environment'                          #
-#                                                                                                     #
-# decode_export PASSWORD < INPUTFILE                                                                  #
-# - decode the export file with the specified password                                                #
-#                                                                                                     #
-# decode_export SERIAL MACA < INPUTFILE                                                               #
-# - decode the export file with the specified values from a FRITZ!OS device; this will decode a file, #
-#   which was exported without a user-defined password                                                #
-#                                                                                                     #
-# The line with the 'Password' value in the file header remains unchanged, because the encrypted      #
-# value consists of binary data and may not be shown as a string value in a useful manner.            #
-#                                                                                                     #
+#######################################################################################################
+usage_text()
+{
+	__purpose_hdr
+	__nl "This script decrypts all occurences of encrypted data on STDIN (if decryption is possible) and"
+	__nl "writes the data to STDOUT, while replacing cipher-text with the corresponding clear-text values."
+	__usage_hdr
+	__usage_opt "options"; __usage_opt_end; __usage_opt "password" "$( printf " | "; __undl "serial"; printf " "; \
+		__undl "maca")"; printf " < "; __undl "input-file"
+	__usage_end
+	__options_hdr
+	__nl; __option_show_opt 24 "-a" "--alt-env" "filename"; __option_show_desc "use an alternative source for the 'urlader environment'"
+	__option_debug 24
+	__option_help 24
+	__option_version 24
+	__options_end
+	__nl "The "; __undl "input-file"; printf " has to be a saved-settings file, which was exported from FRITZ!OS.\n"
+	__nl "These files use a two-stage encryption, where a random value will be chosen and encrypted with a"
+	__nl "key for the first stage. Then it will be stored in an entry with the name 'Password' in the file"
+	__nl "header. All further data inside the file will be encrypted with this random key. The first key's"
+	__nl "value is derived from device properties (see "; __bold "password_from_device"; printf " for details), if an export file"
+	__nl "is created without an user-specified "; __undl "password"; printf ". Otherwise this "; __undl "password"; \
+		printf " will be used to compute"
+	__nl "the first key and you must specify the same "; __undl "password"; printf " to decrypt the file.\n"
+	__nl "If a file was created without a "; __undl "password"; printf ", there are two alternatives to specify the two needed"
+	__nl "properties of the source device. You can use the second form of parameters with "; __undl "serial"; printf " and "; \
+		__undl "maca"
+	__nl "set to the correct values or you can use an alternative file for the 'urlader environment'"
+	__nl "(using the '-a' option from above) and the script will extract the values there.\n"
+	__nl "If the key value for the second stage can not be decrypted, further processing will be aborted.\n"
+	__nl "The encrypted value of the '$password_entry' field in the header will remain unchanged. Its value isn't"
+	__nl "usable for other cases and as long as it's kept intact, the file may be later imported again by"
+	__nl "a FRITZ!OS device (with the right properties or with a password) even if all encrypted values are"
+	__nl "replaced by their corresponding cleartext. Only the CRC32 checksum at the end of the file has to"
+	__nl "be re-computed."
+}
+. yf_usage_helpers
+__required_scripts="password_from_device device_password user_password decode_secret decode_secrets crypto"
+__required_commands="sed"
 #######################################################################################################
 #                                                                                                     #
 # constants                                                                                           #
 #                                                                                                     #
 #######################################################################################################
-needed_scripts="password_from_device device_password user_password decode_secret decode_secrets crypto"
 password_entry="Password"
 #######################################################################################################
 #                                                                                                     #
 # check environment                                                                                   #
 #                                                                                                     #
 #######################################################################################################
-for n in $needed_scripts; do
-	[ "$(expr "$0" : ".*\(/\).*")" = "/" ] && d="${0%/*}" || d="."
-	eval $n="$d/$n"
-	eval f="\$$n"
-	if ! [ -x "$f" ]; then
-		printf "Missing another needed executable (%s).\n" "$n" 1>&2
-		exit 1
+$__set_base_dir__
+$__check_required_commands__
+$__check_required_scripts__
+#######################################################################################################
+#                                                                                                     #
+# check parameters                                                                                    #
+#                                                                                                     #
+#######################################################################################################
+$__help_option__
+$__version_option__
+$__debug_option__
+while [ $# -gt 0 ]; do
+	__is_option "$1" || break
+	if __check_option "$1" "-a" "--alt-env" >/dev/null; then
+		if [ ${#2} -eq 0 ] || __is_option "$2"; then
+			__emsg "Missing file name after option '%s'." "$1"
+			exit 1
+		else
+			altenv="$2"
+			shift 2
+			continue
+		fi
 	fi
+	__is_last_option "$1" && shift && break
+	__emsg "Unknown option '%s'." "$1" && exit 1
 done
+#######################################################################################################
+#                                                                                                     #
+# check environment                                                                                   #
+#                                                                                                     #
+#######################################################################################################
+$__set_base_dir__
+$__check_required_commands__
+$__check_required_scripts__
 #######################################################################################################
 #                                                                                                     #
 # create temporary directory                                                                          #
 #                                                                                                     #
 #######################################################################################################
-td=$(crypto mktemp -d)
+td="$("$crypto" mktemp -d)"
 if [ ${#td} -eq 0 ]; then
-	printf "Error creating a temporary directory.\n" 1>&2
+	__emsg "Error creating a temporary directory."
 	exit 1
 fi
 trap "exit 1" INT HUP
 trap "rm -r $td 2>/dev/null" EXIT
-#######################################################################################################
-#                                                                                                     #
-# check options                                                                                       #
-#                                                                                                     #
-#######################################################################################################
-debug=0
-mimicry=0
-while [ $# -gt 0 ]; do
-	case "$1" in
-		("-d" | "--debug")
-			debug=1
-			dbg="-d"
-			shift
-			;;
-		("-a" | "--alt-environ")
-			altenv="-a $2"
-			shift 2
-			;;
-		("--")
-			shift
-			break
-			;;
-		(-*)
-			printf "Unknown option '%s' specified.\n" "$x" 1>&2
-			exit 1
-			;;
-		(*)
-			break;
-	esac
-done
 #######################################################################################################
 #                                                                                                     #
 # check parameters                                                                                    #
@@ -112,7 +136,7 @@ done
 [ $# -eq 1 ] && password=1 || password=0
 [ $# -eq 2 ] && mimicry=1 || mimicry=0
 if [ $# -gt 2 ]; then
-	printf "Unexpected number of parameters specified.\n" 1>&2
+	__emsg "Unexpected number of parameters."
 	exit 1
 fi
 #######################################################################################################
@@ -120,37 +144,37 @@ fi
 # check input file                                                                                    #
 #                                                                                                     #
 #######################################################################################################
-if [ -t 0 ]; then
-	printf "STDIN is a terminal device, but you have to provide the export file there.\n" 1>&2
-	exit 1
-fi
+__check_terminal 0 "You should provide an export file there." && exit 1
 cat - >"$td/input"
-[ -s "$td/input" ] || exit 0 # empty input file
+if ! [ -s "$td/input" ]; then
+	__debug "Input file is empty.\n"
+	exit 0
+fi
 #######################################################################################################
 #                                                                                                     #
 # get the password to decipher the random key entry                                                   #
 #                                                                                                     #
 #######################################################################################################
 if [ $device -eq 1 ]; then
-	export_key="$($password_from_device --export $altenv)"
+	export_key="$("$password_from_device" --export ${altenv:+-a} "$altenv" 2>/dev/null)"
 	if [ ${#export_key} -eq 0 ]; then
-		printf "Error reading device variables, are we really on a FRITZ!Box device?\n" 1>&2
+		__emsg "Error reading device variables, are we really on a FRITZ!Box device?"
 		exit 1
 	fi
 elif [ $password -eq 1 ]; then
 	export_key="$($user_password "$1")"
 	if [ ${#export_key} -eq 0 ]; then
-		printf "Error creating password hash as decipher key.\n" 1>&2
+		__emsg "Error creating password hash as decipher key."
 		exit 1
 	fi
 else
 	export_key="$($device_password "$1" "$2")"
 	if [ ${#export_key} -eq 0 ]; then
-		printf "Error creating the device value based password hash as decipher key.\n" 1>&2
+		__emsg "Error creating the device value based password hash as decipher key."
 		exit 1
 	fi
 fi
-[ $debug -eq 1 ] && printf "computed/specified key value is '%s'\n" "$export_key" 1>&2
+__debug "computed/specified key value is '%s'\n" "$export_key"
 #######################################################################################################
 #                                                                                                     #
 # extract the 'Password' value from the header of our file and try to decode it                       #
@@ -158,24 +182,24 @@ fi
 #######################################################################################################
 rnd_pw="$(sed -n -e "s|^[ \t]*$password_entry=\$\$\$\$\([A-Z1-6]*\).*|\1|p" <"$td/input" 2>/dev/null)"
 if [ ${#rnd_pw} -eq 0 ]; then
-	printf "Unable to locate the '%s' entry in the file header, is this really an export file from a FRITZ!Box device?\n" "$password_entry" 1>&2
+	__emsg "Unable to locate the '%s' entry in the file header, is this really an export file from a FRITZ!Box device?" "$password_entry"
 	exit 1
 fi
-[ $debug -eq 1 ] && printf "random key Base32 value is '%s'\n" "$rnd_pw" 1>&2
-export_rnd="$($decode_secret $dbg -x "$rnd_pw" "$export_key" 2>/dev/null)"
+__debug "random key Base32 value is '%s'\n" "$rnd_pw"
+export_rnd="$("$decode_secret" $__debug_text__ -x "$rnd_pw" "$export_key" 2>/dev/null)"
 if [ ${#export_rnd} -eq 0 ]; then
-	printf "Unable to decrypt the random cipher key with the specified export key or device data.\n" 1>&2
+	__emsg "Unable to decrypt the random cipher key with the specified export key or device data."
 	exit 1
 fi
 random_key="$(expr "$export_rnd" : "\(.\{$(( ${#export_rnd} / 2 ))\}\).*")"
-[ $debug -eq 1 ] && printf "random key value is '%s'\n" "$random_key" 1>&2
+__debug "random key value is '%s'\n" "$random_key"
 #######################################################################################################
 #                                                                                                     #
 # write the header and the decoded data to STDOUT                                                     #
 #                                                                                                     #
 #######################################################################################################
 sed -n -e "1,/^[ \t]*$password_entry=\$\$\$\$[A-Z1-6]*\$/p" "$td/input"
-sed -e "1,/^[ \t]*$password_entry=\$\$\$\$[A-Z1-6]*\$/d" "$td/input" | $decode_secrets $dbg "$random_key"
+sed -e "1,/^[ \t]*$password_entry=\$\$\$\$[A-Z1-6]*\$/d" "$td/input" | "$decode_secrets" $__debug_text__ "$random_key"
 #######################################################################################################
 #                                                                                                     #
 # no housekeeping needed, temporary data will be cleaned up by our trap command above                 #

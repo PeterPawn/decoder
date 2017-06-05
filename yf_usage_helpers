@@ -1,0 +1,176 @@
+# vim: set tabstop=4 syntax=sh :
+#######################################################################################################
+#                                                                                                     #
+# usage and display helpers from YourFritz framework                                                  #
+#                                                                                                     #
+#######################################################################################################
+__bold__="$(printf "\033[1m")"
+__undl__="$(printf "\033[4m")"
+__rset__="$(printf "\033[0m")"
+__bold() { printf "$__bold__"; printf -- "$@"; printf "$__rset__"; }
+__undl() { printf "$__undl__"; printf -- "$@"; printf "$__rset__"; }
+__show_script_name()
+{
+	printf "\033[1m\033[31m${0#*/}\033[0m: "
+}
+__get_script_lines()
+{
+	sed -n -e "/^#*${1}#\$/,/^#\{20\}.*#\$/p" "$0" | \
+	sed -e '1d;$d' | \
+	sed -e 's|# \(.*\) *#$|\1|' | \
+	sed -e 's|^#*#$|--|p' | \
+	sed -e '$d'
+}
+__license()
+{
+	__get_script_lines "LIC"
+}
+__version()
+{
+	__get_script_lines "VER" | sed -e "1,2s|^\([^,]*\),\(.*\)\$|$__bold__\1$__rset__,\2|"
+}
+__copyright()
+{
+	__get_script_lines "CPY"
+}
+__emsg()
+{
+	__show_script_name 1>&2
+	mask="$1"
+	shift
+	printf "${__bold__}${mask}${__rset__}\a\n" "$@" 1>&2
+}
+__check_option()
+{
+	o="$1"
+	shift
+	for v in $*; do
+		[ "$o" = "$v" ] && printf 1 && return 0
+	done
+	printf 0
+	return 1
+}
+__is_option()
+{
+	[ "$(expr -- "$1" : "\(.\).*")" = "-" ] && return 0 || return 1
+}
+__is_last_option()
+{
+	[ "$1" = "--" ] && return 0 || return 1
+}
+__options_end__="eval while __is_option \"\$1\"; do __is_last_option \"\$1\" && shift && break;\
+	__emsg \"Unknown option '%s'.\" \"\$1\"; exit 1; done;"
+__version_option()
+{
+	if __check_option "$1" "-V" "--version" >/dev/null; then
+		__version
+		__copyright
+		__license
+		printf "\n"
+		exit 1
+	fi
+	return 1
+}
+__version_option__="eval __version_option \$@ && exit 0"
+__help_option()
+{
+	if __check_option "$1" "-h" "--help" >/dev/null; then
+		__usage
+		exit 1
+	fi
+}
+__help_option__="eval __help_option \$@"
+__debug_option()
+{
+	__check_option "$1" "-d" "--debug" && return 0
+	return 1
+}
+__debug_option__="eval __debug_set__=\$(__debug_option \$1) && __debug_text__=\"\$1\" && shift"
+__debug_on__="eval __debug_set__=1; __debug_text__=\"-d\";"
+__is_debug() { [ $__debug_set__ -eq 1 ] && return 0 || return 1; }
+__debug()
+{
+	[ $__debug_set__ -eq 1 ] || return;
+	mask="$1"
+	shift
+	printf "$mask" "$@" 1>&2
+}
+__usage()
+(
+	indent=0
+	__indent_on() { indent=$(( indent + 4 )); }
+	__indent_off() { indent=$(( indent - 4 )); }
+	__indent() { [ $indent -gt 0 ] && printf "%0${indent}s" " "; };
+	__nl() { printf "\n%s" "$(__indent)"; printf -- "$1"; }
+	__purpose_hdr() { __nl; __bold "Purpose:"; printf "\n"; }
+	__usage_name() { __bold "${0#*/}"; }
+	__usage_hdr() { printf "\n"; __nl; __bold "Usage:\n"; __indent_on; __nl "$(__usage_name)"; }
+	__usage_end() { __indent_off; printf "\n"; }
+	__usage_opt_int() { v="$1"; shift; [ $# ] && m="$@"; printf -- "[ %s%s ]" "$(__undl "$v")" "$m"; unset m v; };
+	__usage_opt_end() { printf -- " [ -- ]"; }
+	__usage_opt() { printf -- " %s" "$(__usage_opt_int "$@")"; }
+	__usage_arg() { printf -- " %s" "$(__undl "$1")"; }
+	__options_hdr() { __nl "Supported "; __undl "options"; printf " are:\n"; }
+	__options_end() { printf "\n"; }
+	__option_show_opt() {
+		printf -- "%s, %s" "$2" "$3"
+		__l4__=${#4}
+		[ $__l4__ -gt 0 ] && printf " %s%s%s" "$__undl__" "$4" "$__rset__" && __l4__=$(( __l4__ + 1 ))
+		printf "%0$(( $1 - ${#2} - ${#3} - __l4__ - 3 ))s" " "
+		unset __l4__
+	}
+	__option_show_desc() { printf -- "- %s" "$@"; }
+	__option_debug() { __nl; __option_show_opt ${1:-15} "-d" "--debug"; __option_show_desc "display debug info on STDERR; must prefix all other options, if used"; }
+	__option_help()	{ __nl; __option_show_opt ${1:-15} "-h" "--help"; __option_show_desc "show this information (must be the first option)"; }
+	__option_version()	{ __nl; __option_show_opt ${1:-15} "-V" "--version"; __option_show_desc "show version and exit (must be the first option)"; }
+	__end() { printf "\n%s\n" "$__rset__"; }
+
+	__version
+	__copyright
+	__license
+	usage_text
+	__end
+)
+__set_base_dir__="eval [ \"\$(expr \"\$0\" : \".*\(/\).*\")\" = \"/\" ] && __base_dir__=\"\${0%/*}\" || __base_dir__=\".\""
+__set_base_dir() { __set_base_dir__="$1"; }
+__check_required_scripts()
+{
+	d="$1"
+	shift
+	for n in $@; do
+		eval $n="$d/$n"
+		eval f="\$$n"
+		if ! [ -x "$f" ]; then
+			__emsg "Missing another needed executable: %s." "$n"
+			return 1
+		fi
+		printf "$n=%s\n" $f
+	done
+	return 0
+}
+__check_required_scripts__="eval __scripts__=\"\$(__check_required_scripts \"\$__base_dir__\" \"\$__required_scripts\")\" && \
+	eval \$__scripts__ || exit 1"
+__check_required_commands()
+{
+	for n in $@; do
+		command -v $n 2>/dev/null 1>&2 && continue
+		__emsg "Missing a required command: %s." "$n"
+		return 1
+	done
+	return 0
+}
+__check_required_commands__="eval __check_required_commands \"\$__required_commands\" || exit 1"
+__check_terminal()
+{
+	[ -t $1 ] || return 1
+	if [ $1 -eq 0 ]; then
+		fd="STDIN"
+	elif [ $1 -eq 1 ]; then
+		fd="STDOUT"
+	else
+		fd="FILE ($1)"
+	fi
+	shift
+	__emsg "%s is a terminal device. %s" "$fd" "$@"
+}
+

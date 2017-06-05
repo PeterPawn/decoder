@@ -4,17 +4,27 @@
 #                                                                                                     #
 # provide a wrapper for a MD5 digest and an AES-256 decrypt function for AVM's cipher text decryption #
 #                                                                                                     #
-#######################################################################################################
+###################################################################################################VER#
 #                                                                                                     #
-# Copyright (C) 2014-2017 P.Hämmerlein (peterpawn@yourfritz.de)                                       #
+# crypto, version 0.3, from decode_passwords                                                          #
 #                                                                                                     #
-# This program is free software; you can redistribute it and/or modify it under the terms of the GNU  #
-# General Public License as published by the Free Software Foundation; either version 2 of the        #
-# License, or (at your option) any later version.                                                     #
+# This script is a part of the project from https://github.com/PeterPawn/decode_passwords.            #
 #                                                                                                     #
-# This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without   #
-# even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU      #
-# General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more details.             #
+###################################################################################################CPY#
+#                                                                                                     #
+# Copyright (C) 2014-2017 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+#                                                                                                     #
+###################################################################################################LIC#
+#                                                                                                     #
+# This project is free software, licensed under a slightly modified GPL version; most people          #
+# can redistribute it and/or modify it under the terms of the GNU General Public License as           #
+# published by the Free Software Foundation; either version 2 of the License, or (at your             #
+# option) any later version.                                                                          #
+#                                                                                                     #
+# This project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;           #
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           #
+# See the GNU General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more          #
+# details.                                                                                            #
 #                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
@@ -34,16 +44,42 @@
 # this script.                                                                                        #
 #                                                                                                     #
 #######################################################################################################
-#                                                                                                     #
-# check debug option                                                                                  #
-#                                                                                                     #
-#######################################################################################################
-if [ "$1" = "-d" -o "$1" = "--debug" ]; then
-	debug=1
-	shift
-else
-	debug=0
-fi
+usage_text()
+{
+	__purpose_hdr
+	__nl "This script is only a wrapper to call the OpenSSL binary and it provides some customized"
+	__nl "YourFritz script library functions (in a single place) for the other scripts."
+	__usage_hdr
+	__usage_opt "options"; __undl "function"; __usage_opt "parameters"
+	__usage_end
+	__options_hdr
+	__option_debug
+	__option_help
+	__option_version
+	__options_end
+	__nl "The following "; __undl "functions"; printf " are implemented:\n"
+	__nl; __bold "aes_decrypt"; __indent_on
+	__nl "The hexadecimal strings from STDIN are decrypted with the specified "; __undl "key"; printf " (it's the"
+	__nl "first argument) and "; __undl "iv"; printf " (the second argument, both specified as hexadecimal strings)"
+	__nl "and the result is written to STDOUT as a hexadecimal string.\n"; __indent_off
+	__nl; __bold "digest"; __indent_on
+	__nl "The MD5 digest value for all data from STDIN is written to STDOUT as a hexadecimal"
+	__nl "string. If an option '-x' is specified for "; __undl "parameters"; printf ", data from STDIN is assumed"
+	__nl "to be a hexadecimal string and it gets converted to binary first.\n"; __indent_off
+	__nl; __bold "b32dec"; __indent_on
+	__nl "The Base32 encoded string from STDIN is converted and written as a hexadecimal"
+	__nl "string to STDOUT.\n"; __indent_off
+	__nl; __bold "hexdec"; __indent_on
+	__nl "The hexadecimal string from STDIN is converted to its binary content and the result"
+	__nl "is written to STDOUT (hexadecimal to binary).\n"; __indent_off
+	__nl; __bold "hex2dec"; __indent_on
+	__nl "The hexadecimal string from STDIN is converted to its decimal value (as a string)"
+	__nl "on STDOUT (hexadecimal to decimal).\n"; __indent_off
+	__nl; __bold "mktemp"; __indent_on
+	__nl "Creates a temporary file or directory with a unique name - some platforms don't"
+	__nl "have another "; __undl "mktemp"; printf " utility."; __indent_off
+}
+. yf_usage_helpers
 #######################################################################################################
 #                                                                                                     #
 # subfunctions                                                                                        #
@@ -54,7 +90,7 @@ yf_base32_decode()
 	rc=1
 	while read line; do
 		rc=0
-		! [ -z "$(expr "$line" : "\([^A-Z1-6\r]\)")" ] && return 1
+		! [ -z "$(expr -- "$line" : "\([^A-Z1-6\r]\)")" ] && return 1
 		line=$(printf "%s" $line | sed -e "s|\r||g")
 		[ $(( ${#line} % 8 )) -gt 0 ] && return 1
 		i=0
@@ -231,8 +267,8 @@ yf_random_string()
 			else
 				v=0
 				while [ ${#val} -gt 0 ]; do
-					v=$(( ( v << 3 ) + $(expr "$val" : "\([0-9]\).*") ))
-					val="$(expr "$val" : "[0-9]\([0-9]*\)")"
+					v=$(( ( v << 3 ) + $(expr -- "$val" : "\([0-9]\).*") ))
+					val="$(expr -- "$val" : "[0-9]\([0-9]*\)")"
 				done
 				yf_random_string_read_octals_print "$v" "$len"
 				len=$(( len - 2 ))
@@ -255,7 +291,7 @@ yf_substring()
 	[ -z $len ] || [ $len -gt $(( ${#in} - start )) ] && len=$(( ${#in} - start ))
 	len="\{$len\}"
 	[ $start -gt 0 ] && mask=".\{$start\}\(.$len\).*" || mask="\(.$len\).*"
-	expr "$in" : "$mask"
+	expr -- "$in" : "$mask"
 	return 0
 )
 #######################################################################################################
@@ -290,8 +326,12 @@ aes_decrypt()
 # check parameters and run the requested function                                                     #
 #                                                                                                     #
 #######################################################################################################
+$__help_option__
+$__version_option__
+$__debug_option__
+$__options_end__
 if [ $# -lt 1 ]; then
-	printf "Missing at least one argument, the function to execute.\n" 1>&2
+	__emsg "Missing at least one argument, the function to execute."
 	exit 1
 fi
 rc=0
@@ -299,22 +339,16 @@ function="$1"
 shift
 case "$function" in
 	("aes_decrypt")
-		if [ -t 0 ]; then
-			printf "STDIN is a terminal device.\n" 1>&2
-			exit 1
-		fi
+		__check_terminal 0 && exit 1
 		if [ ${#2} -eq 0 ]; then
-			printf "Missing key and/or IV argument.\n" 1>&2
+			__emsg "Missing key and/or IV argument."
 			exit 1
 		fi
-		aes_decrypt $*
+		aes_decrypt $@
 		rc=$?
 		;;
 	("digest")
-		if [ -t 0 ]; then
-			printf "STDIN is a terminal device.\n" 1>&2
-			exit 1
-		fi
+		__check_terminal 0 && exit 1
 		if [ ${#1} -gt 0 ] && [ "$1" = "-x" ]; then
 			yf_hex2bin | digest
 		else
@@ -323,35 +357,26 @@ case "$function" in
 		rc=$?
 		;;
 	("b32dec")
-		if [ -t 0 ]; then
-			printf "STDIN is a terminal device.\n" 1>&2
-			exit 1
-		fi
+		__check_terminal 0 && exit 1
 		b32dec
 		rc=$?
 		;;
 	("hexdec")
-		if [ -t 0 ]; then
-			printf "STDIN is a terminal device.\n" 1>&2
-			exit 1
-		fi
+		__check_terminal 0 && exit 1
 		yf_hex2bin
 		rc=$?
 		;;
 	("hex2dec")
-		if [ -t 0 ]; then
-			printf "STDIN is a terminal device.\n" 1>&2
-			exit 1
-		fi
+		__check_terminal 0 && exit 1
 		yf_hex2dec $(cat)
 		rc=$?
 		;;
 	("mktemp")
-		yf_mktemp $*
+		yf_mktemp $@
 		rc=$?
 		;;
 	(*)
-		printf "Unknown function '%s' specified.\n" "$function" 1>&2
+		__emsg "Unknown function '%s' specified." "$function"
 		rc=1
 		;;
 esac
