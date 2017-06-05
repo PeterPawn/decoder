@@ -1,4 +1,3 @@
-                                                                                                    
 **crypto**, version 0.3, from decode_passwords                                                          
                                                                                                     
 This script is a part of the project from https://github.com/PeterPawn/decode_passwords.            
@@ -22,7 +21,7 @@ YourFritz script library functions (in a single place) for the other scripts.
 
 **Usage:**
 
-    **crypto** [ *options* ] *function* [ *parameters* ]
+    __crypto__ [ _options_ ] _function_ [ _parameters_ ]
 
 Supported *options* are:
 
@@ -33,27 +32,33 @@ Supported *options* are:
 The following *functions* are implemented:
 
 **aes_decrypt**
+
     The hexadecimal strings from STDIN are decrypted with the specified *key* (it's the
     first argument) and *iv* (the second argument, both specified as hexadecimal strings)
     and the result is written to STDOUT as a hexadecimal string.
 
 **digest**
+
     The MD5 digest value for all data from STDIN is written to STDOUT as a hexadecimal
     string. If an option '-x' is specified for *parameters*, data from STDIN is assumed
     to be a hexadecimal string and it gets converted to binary first.
 
 **b32dec**
+
     The Base32 encoded string from STDIN is converted and written as a hexadecimal
     string to STDOUT.
 
 **hexdec**
+
     The hexadecimal string from STDIN is converted to its binary content and the result
     is written to STDOUT (hexadecimal to binary).
 
 **hex2dec**
+
     The hexadecimal string from STDIN is converted to its decimal value (as a string)
     on STDOUT (hexadecimal to decimal).
 
 **mktemp**
+
     Creates a temporary file or directory with a unique name - some platforms don't
     have another *mktemp* utility.
