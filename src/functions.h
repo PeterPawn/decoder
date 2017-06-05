@@ -17,15 +17,34 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef FUNCTIONS_H
 
-#define DECODER_H
+#define FUNCTIONS_H
 
 #include "common.h"
 
-// function prototypes
+// data types for internal routing to requested function
 
-void	main_usage(bool help);
+typedef struct commandEntry commandEntry_t;
+
+void (*usageScreen)(void);
+
+typedef struct commandEntry {
+	char			*name;
+	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry);
+	void			(*usage)(bool help);
+} commandEntry_t;
+
+#ifndef FUNCTIONS_C
+
+// function table
+
+extern commandEntry_t *	*commandsTable;
 
 #endif
 
+// function definitions  
+
+commandEntry_t *	getCommandEntry(int index);
+
+#endif

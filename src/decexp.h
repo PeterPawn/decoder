@@ -17,15 +17,21 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef DECEXP_H
 
-#define DECODER_H
+#define DECEXP_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+void		decexp_usage(bool help);
+int			decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry);
+
+#ifndef DECEXP_C
+
+extern commandEntry_t * 	decexp_command;
 
 #endif
 
+#endif

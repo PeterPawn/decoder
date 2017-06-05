@@ -17,15 +17,22 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef B32ENC_H
 
-#define DECODER_H
+#define B32ENC_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+void		b32enc_usage(bool help);
+int			b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry);
+
+#ifndef B32ENC_C
+
+extern commandEntry_t * 	b32enc_command;
+
+#endif
 
 #endif
 

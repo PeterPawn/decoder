@@ -17,15 +17,22 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef B64ENC_H
 
-#define DECODER_H
+#define B64ENC_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+void		b64enc_usage(bool help);
+int			b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry);
+
+#ifndef B64ENC_C
+
+extern commandEntry_t * 	b64enc_command;
+
+#endif
 
 #endif
 

@@ -17,15 +17,21 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef DECSNGL_H
 
-#define DECODER_H
+#define DECSNGL_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+void		decsngl_usage(bool help);
+int			decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry);
+
+#ifndef DECSNGL_C
+
+extern commandEntry_t * 	decsngl_command;
 
 #endif
 
+#endif

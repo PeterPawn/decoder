@@ -17,15 +17,21 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef PWFRDEV_H
 
-#define DECODER_H
+#define PWFRDEV_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+void		pwfrdev_usage(bool help);
+int			pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry);
+
+#ifndef PWFRDEV_C
+
+extern commandEntry_t * 	pwfrdev_command;
 
 #endif
 
+#endif

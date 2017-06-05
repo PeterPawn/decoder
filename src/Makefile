@@ -9,10 +9,21 @@ BASENAME:=decoder
 # 
 BINARY:=$(BASENAME)
 #
+# files
+#
+MAIN = decoder
+FILES = errors output base32 base64 hex encryption memory functions crypto
+COMMANDS = b32dec b32enc b64dec b64enc hexdec hexenc
+COMMANDS += userpw devpw pwfrdev
+COMMANDS += decsngl decfile decexp
+HFILES = common 
+#
 # source files
 #
-SRCS = decoder.c
-HDRS = decoder.h
+SRCS = $(addsuffix .c, $(FILES) $(COMMANDS))
+OBJS = $(addsuffix .o, $(FILES) $(COMMANDS))
+HDRS = $(addsuffix .h, $(FILES) $(COMMANDS) $(HFILES) $(MAIN))
+MAIN_SRC = $(addsuffix .c, $(MAIN))
 #
 # link binaries with this libraries too
 #
@@ -84,10 +95,11 @@ DESTDIR:=$(shell printf "%s" "$(INSTALLDIR)" | sed -e 's|^\(.*\)/\+$$|\1|')/
 #
 all: $(BINARY)
 #
-$(SRCS:%.c=%.o): $(HDRS) Makefile
+$(OBJS): Makefile $(SRCS) $(HDRS)
+$(MAIN_SRC:%.c=%.o): Makefile $(OBJS) $(MAIN_SRC)
 #
-$(BINARY): $(SRCS:%.c=%.o)
-	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) $(filter %.o,$<) -L. -o $@ $(LIBS)
+$(BINARY): $(OBJS) $(MAIN_SRC:%.c=%.o)
+	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$?)  
 #
 strip:	$(BINARY)
 	$(STRIP) $(BINARY)
@@ -107,6 +119,7 @@ uninstall:
 	-@for l in $(SYMLINK_TARGETS); do [ -L $(DESTDIR)$$l ] && $(RM) $(DESTDIR)$$l && echo "symlink for $$l removed"; done; true
 	-[ -f $(DESTDIR)$(BINARY) ] && $(RM) $(DESTDIR)$(BINARY) 2>/dev/null || true
 #
-clean:
+clean: 
 	-[ -f $(BINARY) ] && $(RM) $(BINARY) 2>/dev/null || true
-	-[ -f *.o ] && $(RM) *.o 2>/dev/null || true
+	-$(RM) *.o 2>/dev/null || true
+

@@ -17,15 +17,15 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef BASE32_H
 
-#define DECODER_H
+#define BASE32_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t binarySize);
+size_t	binaryToBase32(char *binary, size_t binarySize, char *base32, size_t base32Size);
 
 #endif
-

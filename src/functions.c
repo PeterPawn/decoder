@@ -17,15 +17,35 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
-
-#define DECODER_H
+#define FUNCTIONS_C
 
 #include "common.h"
 
-// function prototypes
+// callable functions table
 
-void	main_usage(bool help);
+commandEntry_t **	commandsTable[] = {
+	&b32dec_command,
+	&b32enc_command,
+	&b64dec_command,
+	&b64enc_command,
+	&hexdec_command,
+	&hexenc_command,
+	&userpw_command,
+	&devpw_command,
+	&pwfrdev_command,
+	&decsngl_command,
+	&decfile_command,
+	&decexp_command,
 
+#ifdef FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG
+	&decfos_command,
 #endif
 
+	NULL
+};
+
+commandEntry_t *	getCommandEntry(int index)
+{
+	if (!commandsTable[index]) return NULL;
+	return *(commandsTable[index]);
+};

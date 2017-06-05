@@ -17,15 +17,15 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef DECODER_H
+#ifndef HEX_H
 
-#define DECODER_H
+#define HEX_H
 
 #include "common.h"
 
 // function prototypes
 
-void	main_usage(bool help);
+size_t	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t outputSize);
+size_t	binaryToHexadecimal(char *input, size_t inputSize, char *output, size_t outputSize);
 
 #endif
-
