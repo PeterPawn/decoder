@@ -97,6 +97,9 @@ static commandEntry_t	commands[] = {
 	{ .name = "device_password", .ep = &device_password_main },
 	{ .name = "password_from_device", .ep = &password_from_device_main },
 	{ .name = "decode_secret", .ep = &decode_secret_main },
+#ifdef FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG
+	{ .name = "decrypt-fritzos-cfg", .ep = &decode_secrets_main },
+#endif
 	{ .name = "decode_secrets", .ep = &decode_secrets_main },
 	{ .name = "decode_passwords", .ep = &decode_secrets_main },
 	{ .name = "decode_export", .ep = &decode_export_main },

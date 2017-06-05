@@ -37,6 +37,9 @@ SYMLINK_TARGETS += decode_export
 SYMLINK_TARGETS += decode_secrets
 SYMLINK_TARGETS += decode_secret
 SYMLINK_TARGETS += decode_passwords
+ifeq ($(FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG), y)
+SYMLINK_TARGETS += decrypt-fritzos-cfg
+endif
 ###########################################################
 #                                                         #
 # tool definitions, will be overridden for cross builds   #
