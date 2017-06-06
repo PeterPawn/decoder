@@ -31,23 +31,12 @@ The C implementation needs an OpenSSL version to be built and any C library - it
 ### License changes and limitations:
 It's not allowed any longer to create a 'lean & mean' version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the 'v0.2_freeze' branch.
 
-Even if this project is licensed under the GPLv2, I'd prefer to include (justified) suggestions into the base project and therefore there's a license exception to the GPLv2 text: You may fork this project and modify it to meet your own desire, as long as you're not a member of the Freetz developer team.
+There is an exhaustive description (http://www.ip-phone-forum.de/showthread.php?t=295101 - sorry, it's only in german language), how AVM's encryption works.
 
-But the Freetz project (from http://www.freetz.org) may only use the unmodified version from this repository. The restrictions are limited to changes of code files (shell scripts (only the SheBang may be adjusted), C source code and include files) - if you think, there's something to patch to make the project compile as a Freetz package, feel free to patch any ```Makefile```.
-
-But if any (justified) changes to the program logic are really needed, I'll incorporate them into this project and I don't want this project to be "occupied" again.
-
-There is an exhaustive description (http://www.ip-phone-forum.de/showthread.php?t=295101 - sorry, it's only in german language), how AVM's encryption works. If the Freetz project really needs its own version and should I deny to make the required changes to my master version, an experienced programmer should be able to create his own program from scratch.
-
-That's not an attempt to foreclose the Freetz project or any of its users from the possible benefits on this project - the unmodified version may be used ad libitum. But I would like to work *together* on an usable version and this means to work in common and it's not the "fine english manner" to use the project of a stranger and make own changes, without any attempts to discuss their sense first (or their senselessness).
+The former license exception for Freetz is revoked now, I think, it's not needed anymore. My intention was (hopefully) clearly expressed and I hope, foreign changes will be well-considered now.
 
 ### Integration into a Freetz build
-If you aren't a Freetz developer and you want to incorporate this project into your Freetz build, you can simply clone the whole repository into the ```make``` sub-directory as follows:
-```
-cd make
-git clone https://github.com/PeterPawn/decode_passwords.git decoder
-```
-This will create a copy of this project, which contains in its root directory the files needed to configure and build the package. Rebuild your configuration file (```make oldconfig``` or ```make menuconfig```) and your image now.
+This project is available now from Freetz trunk with another name ... ```decrypt-fritzos-cfg```. This integration uses a slightly different configuration (with an own ```Makefile```), but I'll keep my versions of ```Config.in``` and ```decoder.mk``` (in the root of the project) as a boiler-plate for other toolchains (only the symbol names need usually a change). The example, how to include it into a Freetz build, is useless now and so I've removed it here.
 
 ### Provided files:
 The whole project consists of POSIX-compatible shell scripts for various decoding tasks. Encoding of values is not provided here - AVM's components accept clear-text values in nearly all places, where an encrypted value may be used. Because the shell-based decryption isn't very fast (that's a little bit of understatement ... it's really, really, really slow) and the original firmware from vendor doesn't contain the needed OpenSSL binary, it's a possible, alternative approach to use an own C program for decryption. This binary can use the existing OpenSSL libraries from stock firmware.
