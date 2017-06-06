@@ -2,11 +2,11 @@
 # vim: set tabstop=4 syntax=sh :
 #######################################################################################################
 #                                                                                                     #
-# provide a wrapper for a MD5 digest and an AES-256 decrypt function for AVM's cipher text decryption #
+# decode the encrypted binary data from STDIN                                                         #
 #                                                                                                     #
 ###################################################################################################VER#
 #                                                                                                     #
-# crypto, version 0.3, from decode_passwords                                                          #
+# decode_cryptedbinfile, version 0.3, from decode_passwords                                           #
 #                                                                                                     #
 # This script is a part of the project from https://github.com/PeterPawn/decode_passwords.            #
 #                                                                                                     #
@@ -28,58 +28,35 @@
 #                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
-# This script encapsulates all calls to the OpenSSL binary for the other scripts and to make things   #
-# even easier, all calls to the YourFritz shell script library (data conversions and handling of a    #
-# temporary file/directory) were gathered in this script. Meanwhile a customized version of the       #
-# needed functions (with some verifications removed) was included directly into this script. This     #
-# avoids the overhead of an additional filesystem access and - that's more important - the dependency #
-# on an installation of the YourFritz script library for the system, where the script is running on,  #
-# was removed now.                                                                                    #
-#                                                                                                     #
-# For the real crypto operations this script needs an OpenSSL binary with the 'dgst' function (for    #
-# MD5 hashes) and knowledge of the AES-256 (CBC) encryption mode, which will be used with the         #
-# 'enc -d' function.                                                                                  #
-#                                                                                                     #
-# If you'd like to use this project with another crypto solution, you may change the calls within     #
-# this script.                                                                                        #
+# The script takes the hexadecimal content of an encrypted binary file from an settings export file   #
+# and tries to decrypt it with the specified key.                                                     #
 #                                                                                                     #
 #######################################################################################################
 usage_text()
 {
 	__purpose_hdr
-	__nl "This script is only a wrapper to call the OpenSSL binary and it provides some customized"
-	__nl "YourFritz script library functions (in a single place) for the other scripts."
+	__nl "This script expects the hexadecimal encoded content of a CRYPTEDBINFILE entry from an export"
+	__nl "file and tries to decrypt it. If decryption was possible, the clear-text data will be written"
+	__nl "to STDOUT."
 	__usage_hdr
-	__usage_opt "options"; __undl "function"; __usage_opt "parameters"
+	__usage_opt "options"; __usage_opt_end; __usage_opt "password" "$( printf " | "; __undl "serial"; printf " "; \
+		__undl "maca")"
 	__usage_end
 	__options_hdr
-	__option_debug
-	__option_help
-	__option_version
+	__nl; __option_show_opt 24 "-a" "--alt-env" "filename"; __option_show_desc "use an alternative source for the 'urlader environment'"
+	__option_debug 24
+	__option_help 24
+	__option_version 24
 	__options_end
-	__nl "The following "; __undl "functions"; printf " are implemented:\n"
-	__nl; __bold "aes_decrypt"; __indent_on
-	__nl "The hexadecimal strings from STDIN are decrypted with the specified "; __undl "key"; printf " (it's the"
-	__nl "first argument) and "; __undl "iv"; printf " (the second argument, both specified as hexadecimal strings)"
-	__nl "and the result is written to STDOUT as a hexadecimal string.\n"; __indent_off
-	__nl; __bold "digest"; __indent_on
-	__nl "The MD5 digest value for all data from STDIN is written to STDOUT as a hexadecimal"
-	__nl "string. If an option '-x' is specified for "; __undl "parameters"; printf ", data from STDIN is assumed"
-	__nl "to be a hexadecimal string and it gets converted to binary first.\n"; __indent_off
-	__nl; __bold "b32dec"; __indent_on
-	__nl "The Base32 encoded string from STDIN is converted and written as a hexadecimal"
-	__nl "string to STDOUT.\n"; __indent_off
-	__nl; __bold "hexdec"; __indent_on
-	__nl "The hexadecimal string from STDIN is converted to its binary content and the result"
-	__nl "is written to STDOUT (hexadecimal to binary).\n"; __indent_off
-	__nl; __bold "hexenc"; __indent_on
-	__nl "The binary data from STDIN is converted to a hexadecimal string on STDOUT.\n"; __indent_off
-	__nl; __bold "hex2dec"; __indent_on
-	__nl "The hexadecimal string from STDIN is converted to its decimal value (as a string)"
-	__nl "on STDOUT (hexadecimal to decimal).\n"; __indent_off
-	__nl; __bold "mktemp"; __indent_on
-	__nl "Creates a temporary file or directory with a unique name - some platforms don't"
-	__nl "have another "; __undl "mktemp"; printf " utility."; __indent_off
+	__nl "The input data has to be extracted from the body of a CRYPTEDBINFILE entry - that means, the lines"
+	__nl "(starting with asterisks) around the hexadecimal lines have to be removed.\n"
+	__nl "If the export file was created with a password, this password must be specified as the only"
+	__nl "parameter. If no password was used to export the settings, there are two alternatives to specify"
+	__nl "the two needed properties of the source device. You can use the second form of parameters with"
+	__nl; __undl "serial"; printf " and "; __undl "maca"; printf " set to the correct values or you can use an alternative file for the 'urlader"
+	__nl "environment' (using the '-a' option from above) and the script will extract the values there.\n"
+	__nl "If the content can not be decrypted (decrypted raw data contain 32 bytes at the end, where we"
+	__nl "can check a successful decryption), nothing is written to STDOUT."
 }
 #######################################################################################################
 #                                                                                                     #
@@ -256,329 +233,134 @@ __check_terminal()
 	__emsg "%s is a terminal device. %s" "$fd" "$@"
 }
 
+__required_commands="sed dd"
+__required_scripts="crypto user_password device_password password_from_device"
 #######################################################################################################
 #                                                                                                     #
-# subfunctions                                                                                        #
-#                                                                                                     #
-#######################################################################################################
-yf_base32_decode()
-(
-	rc=1
-	while read line; do
-		rc=0
-		! [ -z "$(expr -- "$line" : "\([^A-Z1-6\r]\)")" ] && return 1
-		line=$(printf "%s" $line | sed -e "s|\r||g")
-		[ $(( ${#line} % 8 )) -gt 0 ] && return 1
-		i=0
-		f=0
-		while [ $i -lt ${#line} ]; do
-			part=$(printf "%s" $(yf_substring "$line" $i 8) | sed -e "s|.|& |g")
-			i=$(( i + 8 ))
-			v=0
-			j=0
-			for c in $part; do
-				v=$(( ( v << 5 ) + $(yf_index "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456" $c) - 1 ))
-				j=$(( j + 1 ))
-				[ $(( j % 4 )) -ne 0 ] && continue
-				r=$(( j % 8 ))
-				o=$(( v >> r ))
-				s=$(( 24 - ( r * 2 ) ))
-				v=$(( v & ( 0x00FFFFFF >> ( r * 5 ) ) ))
-				while [ $s -gt 0 ]; do
-					s=$(( s - 8 ))
-					d=$(( ( o >> s ) & 255 ))
-					[ $d -eq 0 ] \
-						&& dd if=/dev/zero bs=1 count=1 2>/dev/null \
-						|| printf "%b" "\0$(( d >> 6 ))$(( ( d >> 3 ) & 7 ))$(( d & 7 ))"
-				done
-			done
-		done
-	done
-	return $rc
-)
-yf_bin2hex()
-(
-	yf_bin2hex_read_octal()
-	{
-		i=1
-		ff=0
-		while read pos left right; do
-			while [ $i -lt $pos ]; do
-				if [ $ff -eq 1 ]; then
-					printf "ff"
-					ff=0
-				else
-					printf "00"
-				fi
-				i=$(( i + 1 ))
-			done
-			if [ $right -eq 377 ] && [ $ff -eq 0 ]; then
-				ff=1
-				continue
-			fi
-			printf "%02x" 0$right
-			i=$(( pos + 1 ))
-		done
-	}
-
-	( cat; printf "%b" "\0377" ) | command cmp -l -- /dev/zero - 2>/dev/null | yf_bin2hex_read_octal
-	return $?
-)
-yf_hex2bin()
-(
-	yf_hex2bin_read_octal()
-	{
-		i=1
-		h=1
-		z=0
-		while read p l o; do
-			[ $i -lt $p ] && return 1
-			i=$(( i + 1 ))
-			if [ $o -eq 11 ] || [ $o -eq 12 ] || [ $o -eq 15 ] || [ $o -eq 40 ]; then
-				[ $h -eq 1 ] && continue || return 1
-			fi
-			if [ $o -ge 60 ] && [ $o -le 67 ]; then
-				c=$(( o - 60 ))
-			elif [ $o -ge 70 ] && [ $o -le 71 ]; then
-				c=$(( o - 62 ))
-			elif [ $o -ge 101 ] && [ $o -le 106 ]; then
-				c=$(( o - 91 ))
-			elif [ $o -ge 141 ] && [ $o -le 146 ]; then
-				c=$(( o - 131 ))
-			else
-				return 1
-			fi
-			if [ $h -eq 0 ]; then
-				v=$(( v + c ))
-				if [ $v -eq 0 ]; then
-					z=$(( z + 1 ))
-				else
-					if [ $z -gt 0 ]; then
-						dd if=/dev/zero bs=$z count=1 2>/dev/null
-						z=0
-					fi
-					printf "%b" "\0$(( v >> 6 ))$(( ( v >> 3 ) & 7 ))$(( v & 7 ))"
-				fi
-				h=1
-			else
-				v=$(( c << 4 ))
-				h=0
-			fi
-		done
-		[ $z -gt 0 ] && dd if=/dev/zero bs=$z count=1 2>/dev/null
-		return 0
-	}
-
-	command cmp -l -- /dev/zero - 2>/dev/null | yf_hex2bin_read_octal
-	return $?
-)
-yf_hex2dec()
-(
-	val="$1"
-	out=0
-	while [ ${#val} -gt 0 ]; do
-		byte=$(yf_substring "$val" 0 2)
-		val="$(yf_substring "$val" 2)"
-		out=$(( ( out << 8 ) + 0x$byte ))
-	done
-	printf "%u" "$out"
-	return 0
-)
-yf_index()
-(
-	string="$1"
-	char="$2"
-	[ ${#string} -eq 0 ] && return 1
-	[ ${#char} -ne 1 ] && return 1
-	tv="${string%${char}*}"
-	[ "$tv" = "$string" ] && l=0 || l=$(( ${#tv} + 1 ))
-	printf "%d" $l
-	return 0
-)
-yf_is_decimal()
-(
-	in="$(printf "$1" | sed -e 's|[0-9]||g')"
-	[ ${#in} -gt 0 ] && return 1
-	return 0
-)
-yf_mktemp()
-(
-	name="$(date +%s)_$$"
-	tmp="$TMP"
-	[ "$1" = "-d" ] && dir=1 || dir=0
-	[ "$1" = "-p" ] && tmp="$2"
-	[ -z "$tmp" ] && tmp="/tmp"
-	name="$tmp/$name"
-	name="${name}_$(yf_random_string 8)"
-	if [ $dir -eq 1 ]; then
-		while [ -d "$name" ]; do
-			name="${name%_*}_$(yf_random_string 8)"
-		done
-		mkdir -p "$name" 2>/dev/null
-	else
-		touch "$name" 2>/dev/null
-	fi
-	printf "$name"
-)
-yf_random_string()
-(
-	yf_random_string_read_octals()
-	{
-		yf_random_string_read_octals_print()
-		{
-			[ $2 -gt 0 ] || return
-			[ $2 -eq 1 ] && l=1 || l=2
-			printf "%0${l}x" "$1"
-		}
-		len=$1
-		i=0
-		while read j zero val; do
-			i=$(( i + 1 ))
-			if [ $j -gt $i ]; then
-				while [ $i -lt $j ]; do
-					yf_random_string_read_octals_print "$v" "$len"
-					len=$(( len - 2 ))
-					i=$(( i + 1 ))
-				done
-			else
-				v=0
-				while [ ${#val} -gt 0 ]; do
-					v=$(( ( v << 3 ) + $(expr -- "$val" : "\([0-9]\).*") ))
-					val="$(expr -- "$val" : "[0-9]\([0-9]*\)")"
-				done
-				yf_random_string_read_octals_print "$v" "$len"
-				len=$(( len - 2 ))
-			fi
-			[ $len -lt 0 ] && break
-			[ $i -gt 128 ] && break
-		done
-	}
-	len="${1:-16}"
-	size=$(( ( len + 1 ) / 2 ))
-	dd if=/dev/urandom bs=$size count=1 2>/dev/null | cmp -l -- /dev/zero - 2>/dev/null | yf_random_string_read_octals $len
-	return 0
-)
-yf_substring()
-(
-	in="$1"
-	start="$2"
-	len="$3"
-	[ ${#in} -lt $start ] && return 0
-	[ -z $len ] || [ $len -gt $(( ${#in} - start )) ] && len=$(( ${#in} - start ))
-	len="\{$len\}"
-	[ $start -gt 0 ] && mask=".\{$start\}\(.$len\).*" || mask="\(.$len\).*"
-	expr -- "$in" : "$mask"
-	return 0
-)
-#######################################################################################################
-#                                                                                                     #
-# compute the md5 digest of the data from STDIN, write hexadecimal string to STDOUT                   #
-#                                                                                                     #
-#######################################################################################################
-digest()
-{
-	openssl dgst -md5 | sed -n -e "s|(stdin)= \(.*\)|\1|p"
-}
-#######################################################################################################
-#                                                                                                     #
-# decode a Base32 encoded value from STDIN to a hexadecimal string on STDOUT                          #
-#                                                                                                     #
-#######################################################################################################
-b32dec()
-{
-	yf_base32_decode | yf_bin2hex
-}
-#######################################################################################################
-#                                                                                                     #
-# decode a Base32 encoded value from STDIN to a hexadecimal string on STDOUT                          #
-#                                                                                                     #
-#######################################################################################################
-aes_decrypt()
-{
-	if [ "$1" = "-x" ]; then
-		reader="cat"
-		writer="cat"
-		shift
-	else
-		reader="yf_hex2bin"
-		writer="yf_bin2hex"
-	fi
-	$reader | openssl enc -d ${3:--aes-256-cbc} -K "$1" -iv "$2" 2>/dev/null | $writer
-}
-#######################################################################################################
-#                                                                                                     #
-# check parameters and run the requested function                                                     #
+# check parameters                                                                                    #
 #                                                                                                     #
 #######################################################################################################
 $__help_option__
 $__version_option__
 $__debug_option__
-$__options_end__
-if [ $# -lt 1 ]; then
-	__emsg "Missing at least one argument, the function to execute."
+while [ $# -gt 0 ]; do
+	__is_option "$1" || break
+	if __check_option "$1" "-a" "--alt-env" >/dev/null; then
+		if [ ${#2} -eq 0 ] || __is_option "$2"; then
+			__emsg "Missing file name after option '%s'." "$1"
+			exit 1
+		else
+			altenv="$2"
+			shift 2
+			continue
+		fi
+	fi
+	__is_last_option "$1" && shift && break
+	__emsg "Unknown option '%s'." "$1" && exit 1
+done
+#######################################################################################################
+#                                                                                                     #
+# check environment                                                                                   #
+#                                                                                                     #
+#######################################################################################################
+$__set_base_dir__
+$__check_required_commands__
+$__check_required_scripts__
+#######################################################################################################
+#                                                                                                     #
+# create temporary directory                                                                          #
+#                                                                                                     #
+#######################################################################################################
+td="$("$crypto" mktemp -d)"
+if [ ${#td} -eq 0 ]; then
+	__emsg "Error creating a temporary directory."
 	exit 1
 fi
-rc=0
-function="$1"
-shift
-case "$function" in
-	("aes_decrypt")
-		__check_terminal 0 && exit 1
-		if [ ${#2} -eq 0 ]; then
-			__emsg "Missing key and/or IV argument."
-			exit 1
-		fi
-		if [ "$2" = "-x" ] && [ ${#3} -eq 0 ]; then
-			__emsg "Missing key and/or IV argument."
-			exit 1
-		fi
-		aes_decrypt $@
-		rc=$?
-		;;
-	("digest")
-		__check_terminal 0 && exit 1
-		if [ ${#1} -gt 0 ] && [ "$1" = "-x" ]; then
-			yf_hex2bin | digest
-		else
-			digest
-		fi
-		rc=$?
-		;;
-	("b32dec")
-		__check_terminal 0 && exit 1
-		b32dec
-		rc=$?
-		;;
-	("hexdec")
-		__check_terminal 0 && exit 1
-		yf_hex2bin
-		rc=$?
-		;;
-	("hexenc")
-		__check_terminal 0 && exit 1
-		yf_bin2hex
-		rc=$?
-		;;
-	("hex2dec")
-		__check_terminal 0 && exit 1
-		yf_hex2dec $(cat)
-		rc=$?
-		;;
-	("mktemp")
-		yf_mktemp $@
-		rc=$?
-		;;
-	(*)
-		__emsg "Unknown function '%s' specified." "$function"
-		rc=1
-		;;
-esac
+trap "exit 1" INT HUP
+trap "rm -r $td 2>/dev/null" EXIT
 #######################################################################################################
 #                                                                                                     #
-# no housekeeping needed                                                                              #
+# check parameters                                                                                    #
 #                                                                                                     #
 #######################################################################################################
-exit $rc
+[ $# -eq 0 ] && device=1 || device=0
+[ $# -eq 1 ] && password=1 || password=0
+[ $# -eq 2 ] && mimicry=1 || mimicry=0
+if [ $# -gt 2 ]; then
+	__emsg "Unexpected number of parameters."
+	exit 1
+fi
+#######################################################################################################
+#                                                                                                     #
+# check input file                                                                                    #
+#                                                                                                     #
+#######################################################################################################
+__check_terminal 0 "You should provide the content of a CRYPTEDBINFILE entry there." && exit 1
+#######################################################################################################
+#                                                                                                     #
+# get the password to decipher the random key entry                                                   #
+#                                                                                                     #
+#######################################################################################################
+if [ $device -eq 1 ]; then
+	key="$("$password_from_device" --export ${altenv:+-a} "$altenv" 2>/dev/null)"
+	if [ ${#key} -eq 0 ]; then
+		__emsg "Error reading device variables, are we really on a FRITZ!Box device?"
+		exit 1
+	fi
+elif [ $password -eq 1 ]; then
+	key="$($user_password "$1")"
+	if [ ${#key} -eq 0 ]; then
+		__emsg "Error creating password hash as decipher key."
+		exit 1
+	fi
+else
+	key="$($device_password "$1" "$2")"
+	if [ ${#key} -eq 0 ]; then
+		__emsg "Error creating the device value based password hash as decipher key."
+		exit 1
+	fi
+fi
+__debug "computed/specified key value is '%s'\n" "$key"
+#######################################################################################################
+#                                                                                                     #
+# try to decrypt the file                                                                             #
+#                                                                                                     #
+#######################################################################################################
+while read line; do
+	printf "%s\n" "$line" | "$crypto" hexdec >>"$td/encryptedbinfile"
+done
+"$crypto" aes_decrypt -x "$key" 00000000000000000000000000000000 -aes-256-ecb >"$td/decryptedbinfile" <"$td/encryptedbinfile"
+#######################################################################################################
+#                                                                                                     #
+# check size                                                                                          #
+#                                                                                                     #
+#######################################################################################################
+fileSize=$(stat -c %s "$td/decryptedbinfile")
+__debug "size of decrypted raw file: %u\n" $fileSize
+[ $fileSize -eq 0 ] && exit 1
+#######################################################################################################
+#                                                                                                     #
+# check 32 bytes at the end                                                                           #
+#                                                                                                     #
+#######################################################################################################
+data="$(dd if="$td/decryptedbinfile" bs=16 skip=$(( ( fileSize / 16 ) - 1)) 2>/dev/null | "$crypto" hexenc)"
+hdr="$(expr "$data" : "\(.\{24\}\).*")"
+size="$(expr "$data" : ".\{24\}\(.\{8\}\).*")"
+chk="$(expr "$data" : ".\{32\}\(.*\)")"
+if ! [ "$hdr" = "41564d000000000000000000" ]; then
+	__debug "decrypted data at end of file: %s\n" "$data"
+	__emsg "Error decrpyting file, please check the password."
+	exit 1
+fi
+dataSize="$(printf "%s\n" "$size" | "$crypto" hex2dec)"
+dd if="$td/decryptedbinfile" bs=1 skip=4 count=$dataSize 2>/dev/null
+exit $?
+#######################################################################################################
+#                                                                                                     #
+# no housekeeping needed, temporary data will be cleaned up by our trap command above                 #
+#                                                                                                     #
+#######################################################################################################
+exit 0
 #######################################################################################################
 #                                                                                                     #
 # end of script                                                                                       #
