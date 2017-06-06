@@ -38,6 +38,14 @@ config FREETZ_PACKAGE_DECODER_DECODE_EXPORT
 		It's a replacement for 'decode_secrets' with automatic handling of the special
 		encryption for the export password.
 
+config FREETZ_PACKAGE_DECODER_DECODE_CRYPTEDBINFILE
+	depends on FREETZ_PACKAGE_DECODER
+	bool "decode_cryptedbinfile - decrypt data portion of encrypted file sections within an export file"
+	default n
+	help
+		This is a filter and decrypts the content (hexadecimal strings) from a CRYPTEDBINFILE
+		entry in an exported settings file.                                    
+
 config FREETZ_PACKAGE_DECODER_DECODE_SECRET
 	depends on FREETZ_PACKAGE_DECODER
 	bool "decode_secret - decrypt a single value"

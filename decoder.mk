@@ -33,11 +33,12 @@ endif
 ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_EXPORT)),y)
 $(PKG)_SYMLINKS += decode_export
 endif
+ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_CRYPTEDBINFILE)),y)
+$(PKG)_SYMLINKS += decode_cryptedbinfile
+endif
 ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_PASSWORDS)),y)
 $(PKG)_SYMLINKS += decode_passwords
 endif
-
-$(PKG)_LIBS = -lcrypto
 
 ifeq ($(strip $(FREETZ_PACKAGE_DECODER_STATIC)),y)
 $(PKG)_LINK_STATIC = 1
