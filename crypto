@@ -72,6 +72,8 @@ usage_text()
 	__nl; __bold "hexdec"; __indent_on
 	__nl "The hexadecimal string from STDIN is converted to its binary content and the result"
 	__nl "is written to STDOUT (hexadecimal to binary).\n"; __indent_off
+	__nl; __bold "hexenc"; __indent_on
+	__nl "The binary data from STDIN is converted to a hexadecimal string on STDOUT.\n"; __indent_off
 	__nl; __bold "hex2dec"; __indent_on
 	__nl "The hexadecimal string from STDIN is converted to its decimal value (as a string)"
 	__nl "on STDOUT (hexadecimal to decimal).\n"; __indent_off
@@ -538,6 +540,11 @@ case "$function" in
 	("hexdec")
 		__check_terminal 0 && exit 1
 		yf_hex2bin
+		rc=$?
+		;;
+	("hexenc")
+		__check_terminal 0 && exit 1
+		yf_bin2hex
 		rc=$?
 		;;
 	("hex2dec")
