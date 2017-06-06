@@ -49,7 +49,7 @@ bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE
 	cipherSize = base32ToBinary(cipherText, (size_t) -1, (char *) cipherBuffer, cipherBufSize + *cipher_blockSize);
 	
 	localCtx = (ctx ? ctx : EVP_CIPHER_CTX_new());
-	CipherInit(localCtx, key, cipherBuffer);
+	CipherInit(localCtx, CipherTypeValue, key, cipherBuffer, false);
 	verboseMessage("found cipher text '%s' -> ", cipherText);
 	if (!(cipherSize % *cipher_blockSize))
 		cipherSize++;
@@ -290,6 +290,79 @@ bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * mac
 	*hashSize = *digest_blockSize;
 	DigestFinal(ctx, hash);
 	ctx = DigestCleanup(ctx);
+
+	return !isAnyError();
+}
+
+// decrypt a binary encrypted file (CRYPTEDBINFILE)
+
+bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key)
+{
+	char *				decryptedBuffer = malloc(inputSize + *cipher_blockSize);
+	CipherContext *		ctx = EVP_CIPHER_CTX_new();
+	char *				current = decryptedBuffer;
+	size_t				outSize = 0;
+	size_t				ivLen = *cipher_ivLen;
+	char * 				iv = (char *) malloc(ivLen);
+	size_t				dataSize = 0;
+	size_t				offset = 0;
+
+	if (!ctx)
+		return false;
+
+	if (!decryptedBuffer)
+	{
+		setError(NO_MEMORY);
+		return false;
+	}
+
+	memset(iv, 0, ivLen);
+	CipherInit(ctx, CipherTypeFile, key, iv, false);
+	outSize = inputSize + *cipher_blockSize;
+	CipherUpdate(ctx, decryptedBuffer, &outSize, input, inputSize + *cipher_blockSize);
+	dataSize += outSize;
+	CipherFinal(ctx, decryptedBuffer, &outSize);
+	dataSize += outSize;
+	CipherCleanup(ctx);
+	offset = (isError(OSSL_CIPHER_ERR) ? 0 : *cipher_keyLen);
+	resetError();
+
+	current = decryptedBuffer + dataSize - *cipher_blockSize - offset;
+	if (*(current) == 'A' && *(current + 1) == 'V' && *(current + 2) == 'M')
+	{
+		current += 3;
+		for (int i = 0; i < 12 - 3; i++)
+		{
+			if (*(current + i) != 0)
+			{
+				setError(DECRYPT_ERR);
+				break;
+			}
+		}
+	}
+	else
+		setError(DECRYPT_ERR);
+
+	if (!isAnyError())
+	{
+		current = decryptedBuffer + dataSize - *cipher_blockSize - offset + 12;
+
+		size_t	dataSize =	(*((unsigned char *) current) << 24) +
+							(*((unsigned char *) current + 1) << 16) +
+							(*((unsigned char *) current + 2) << 8) +
+							(*((unsigned char *) current + 3));
+
+		if (dataSize)
+		{
+			if (out && (fwrite(decryptedBuffer + 4, dataSize, 1, out) != 1))
+				setError(WRITE_FAILED);
+			if (outBuffer)
+				memcpy(outBuffer, decryptedBuffer + 4, dataSize);
+		}
+	}
+
+	clearMemory(decryptedBuffer, inputSize, true);
+	clearMemory(iv, ivLen, true);
 
 	return !isAnyError();
 }

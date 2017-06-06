@@ -138,6 +138,14 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		foundOffset = offset;
 		memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
 
+		if (valueSize > 80)
+		{
+			errorMessage("Invalid length of data (%u) in the '%s' entry. Expected value is 80.\a\n", (uint32_t) valueSize, EXPORT_PASSWORD_NAME);
+			setError(INV_DATA_SIZE);
+			inputFile = memoryBufferFreeChain(inputFile);
+			return EXIT_FAILURE;
+		}
+
 		char *			copy;
 		char *			cipherText = (char *) malloc(valueSize + 1);
 		bool			passwordIsCorrect = false;
@@ -200,5 +208,5 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	inputFile = memoryBufferFreeChain(inputFile);
 
-	return !isAnyError();
+	return (isAnyError() ? EXIT_FAILURE : EXIT_SUCCESS);
 }

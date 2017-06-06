@@ -36,6 +36,7 @@ commandEntry_t **	commandsTable[] = {
 	&decsngl_command,
 	&decfile_command,
 	&decexp_command,
+	&deccb_command,
 
 #ifdef FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG
 	&decfos_command,

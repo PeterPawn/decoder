@@ -62,6 +62,8 @@ typedef enum {
 	DECODER_ERROR_DECRYPT_ERR,
 	// STDIN file looks invalid and not like an export file 
 	DECODER_ERROR_INVALID_FILE,
+	// invalid length of second stage key entry
+	DECODER_ERROR_INV_DATA_SIZE,
 } decoder_error_t;
 
 #ifndef ERRORS_C

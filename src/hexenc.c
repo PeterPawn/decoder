@@ -99,10 +99,11 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	while ((read = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
 	{
-		char		output[(sizeof(buffer) * 2) + 1]; /* one more byte for optional end of string */
+		char		output[(sizeof(buffer) * 2) + 2]; /* one more byte for optional end of string */
 		size_t		outputSize = binaryToHexadecimal(buffer, read, output, sizeof(output) - 1);
 		
 		if (outputSize == 0) break;
+		resetError();
 		
 		uint32_t	toWrite = outputSize;
 		char *		out = output;

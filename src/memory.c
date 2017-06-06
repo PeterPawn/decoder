@@ -99,6 +99,46 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 	return top;
 }
 
+// compute the size of data stored in a memory buffer chain
+
+EXPORTED 	size_t	memoryBufferDataSize(memoryBuffer_t * top)
+{
+	size_t			size = 0;
+	memoryBuffer_t	*current = top;
+
+	while (current)
+	{
+		size += current->used;
+		current = current->next;
+	}
+
+	return size;
+}
+
+// consolidate the data from the specified buffer chain into a single buffer
+// even if data is already in a single buffer, a copy will be created
+
+EXPORTED	memoryBuffer_t *	memoryBufferConsolidateData(memoryBuffer_t * start)
+{
+	size_t			size = memoryBufferDataSize(start);
+	memoryBuffer_t	*current = start;
+	memoryBuffer_t	*new = memoryBufferNew(size);
+
+	if (!new) return NULL;
+
+	char *			out = new->data;
+
+	while (current)
+	{
+		memcpy(out, current->data, current->used);
+		out += current->used;
+		current = current->next;
+	}
+	new->used = size;
+
+	return new;
+}
+
 // find a string in the buffer chain, handles crossing buffer borders
 
 EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset, char *find, size_t findSize, bool *split)
@@ -229,7 +269,7 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 
 EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out)
 {
-	CipherContext 		*ctx = CipherInit(NULL, NULL, NULL);
+	CipherContext 		*ctx = CipherInit(NULL, CipherTypeValue, NULL, NULL, false);
 	memoryBuffer_t 		*currentBuffer = *buffer;
 	size_t				currentOffset = offset;
 	

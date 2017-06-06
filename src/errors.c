@@ -48,6 +48,7 @@ static char *				__decoder_error_text__[] = {
 	"unable to open device environment",
 	"decryption failed",
 	"not an export file",
+	"invalid data size",
 };
 
 // functions

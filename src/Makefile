@@ -15,7 +15,7 @@ MAIN = decoder
 FILES = errors output base32 base64 hex encryption memory functions crypto
 COMMANDS = b32dec b32enc b64dec b64enc hexdec hexenc
 COMMANDS += userpw devpw pwfrdev
-COMMANDS += decsngl decfile decexp
+COMMANDS += decsngl decfile decexp deccb
 HFILES = common 
 #
 # source files
@@ -99,7 +99,7 @@ $(OBJS): Makefile $(SRCS) $(HDRS)
 $(MAIN_SRC:%.c=%.o): Makefile $(OBJS) $(MAIN_SRC)
 #
 $(BINARY): $(OBJS) $(MAIN_SRC:%.c=%.o)
-	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$?)  
+	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) -L. $(LIBS) -o $@ $^
 #
 strip:	$(BINARY)
 	$(STRIP) $(BINARY)

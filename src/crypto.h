@@ -27,7 +27,8 @@
 
 #define CipherContext			EVP_CIPHER_CTX
 #define DigestContext			EVP_MD_CTX
-#define CipherType				EVP_aes_256_cbc()
+#define CipherTypeValue			EVP_aes_256_cbc()
+#define CipherTypeFile 			EVP_aes_256_ecb()
 #define DigestType				EVP_md5()
 #define MAX_DIGEST_SIZE			EVP_MAX_MD_SIZE
 
@@ -45,9 +46,10 @@ extern size_t *	digest_blockSize;
 // cipher and digest functions
 
 void			CipherSizes();
-CipherContext *	CipherInit(CipherContext * ctx, char * key, char * iv);
+CipherContext *	CipherInit(CipherContext * ctx, const EVP_CIPHER * type, char * key, char * iv, bool padding);
 CipherContext *	CipherCleanup(CipherContext * ctx);
 bool			CipherUpdate(CipherContext * ctx, char *output, size_t *outputSize, char *input, size_t inputSize);
+bool			CipherFinal(CipherContext * ctx, char *output, size_t *outputSize);
 
 void			DigestSizes(void);
 DigestContext *	DigestInit();

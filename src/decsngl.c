@@ -148,7 +148,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		return EXIT_FAILURE;
 	}
 
-	CipherContext 		*ctx = CipherInit(NULL, keyBuffer, secretBuffer);
+	CipherContext 		*ctx = CipherInit(NULL, CipherTypeValue, keyBuffer, secretBuffer, false);
 	
 	if (!(secretSize % 16))
 		secretSize++;

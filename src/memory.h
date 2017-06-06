@@ -39,8 +39,10 @@ typedef struct memoryBuffer {
 
 memoryBuffer_t *	memoryBufferNew(size_t size);
 memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start);
+memoryBuffer_t *	memoryBufferConsolidateData(memoryBuffer_t *start);
 
 memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize);
+size_t				memoryBufferDataSize(memoryBuffer_t *top);
 bool				memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out);
 
 char *				memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset, char *find, size_t findSize, bool *split);

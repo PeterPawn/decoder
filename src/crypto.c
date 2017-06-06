@@ -38,14 +38,14 @@ EXPORTED	size_t	*digest_blockSize = &__digest_blockSize;
 
 EXPORTED	void	CipherSizes()
 {
-	*cipher_keyLen = EVP_CIPHER_key_length(CipherType);
-	*cipher_ivLen = EVP_CIPHER_iv_length(CipherType);
-	*cipher_blockSize = EVP_CIPHER_block_size(CipherType);
+	*cipher_keyLen = EVP_CIPHER_key_length(CipherTypeValue);
+	*cipher_ivLen = EVP_CIPHER_iv_length(CipherTypeValue);
+	*cipher_blockSize = EVP_CIPHER_block_size(CipherTypeValue);
 }
 
 // initialize a cipher context
 
-EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, char * key, char * iv)
+EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, const EVP_CIPHER * type, char * key, char * iv, bool padding)
 {
 	CipherContext	*cipherCTX = NULL;
 
@@ -65,8 +65,11 @@ EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, char * key, char * iv)
 	}
 	if (!key && !iv)
 		return cipherCTX;
-	if (EVP_DecryptInit_ex(cipherCTX, CipherType, NULL, (unsigned char *) key, (unsigned char *) iv))
+	if (EVP_DecryptInit_ex(cipherCTX, (EVP_CIPHER *) type, NULL, (unsigned char *) key, (unsigned char *) iv))
+	{
+		EVP_CIPHER_CTX_set_padding(ctx, padding);
 		return cipherCTX;
+	}
 	returnError(OSSL_CIPHER_ERR, NULL);
 }
 
@@ -88,6 +91,20 @@ EXPORTED	bool	CipherUpdate(CipherContext * ctx, char *output, size_t *outputSize
 	if (!ctx)
 		return false;
 	if (!EVP_DecryptUpdate(ctx, (unsigned char *) output, (int *) outputSize, (unsigned char *) input, inputSize))
+	{
+		setError(OSSL_CIPHER_ERR);
+		return false;
+	}
+	return true;
+}
+
+// finalize a decryption
+
+EXPORTED	bool	CipherFinal(CipherContext * ctx, char *output, size_t *outputSize)
+{
+	if (!ctx)
+		return false;
+	if (!EVP_DecryptFinal_ex(ctx, (unsigned char *) output, (int *) outputSize))
 	{
 		setError(OSSL_CIPHER_ERR);
 		return false;

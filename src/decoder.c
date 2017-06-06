@@ -39,13 +39,16 @@ int main(int argc, char** argv)
 	int					argumentOffset = 0;
 	char * 				fname;
 	char * 				ename;
-	char 				enameLong[PATH_MAX];
+	char 				enameLong[PATH_MAX+1];
+	size_t				linkSize;
 	
-	if (readlink("/proc/self/exe", enameLong, PATH_MAX) == -1)
+	if ((linkSize = readlink("/proc/self/exe", enameLong, PATH_MAX)) == (size_t) -1)
 	{
 		errorMessage("Unable to get executable name from procfs.\a\n");
 		exit(EXIT_FAILURE);
 	}
+	enameLong[PATH_MAX] = 0;
+	enameLong[linkSize] = 0;
 	if (argumentCount == 0)
 	{
 		errorMessage("Unable to get invocation name from arguments.\a\n");
@@ -84,7 +87,7 @@ int main(int argc, char** argv)
 		int exitCode = (*current->ep)(argumentCount, arguments, argumentOffset, current);
 		if (exitCode == EXIT_SUCCESS)
 		{
-			if (isatty(1))
+			if (isatty(1) && !isAnyError())
 				fprintf(stdout, "\n");
 		}
 		EVP_cleanup();

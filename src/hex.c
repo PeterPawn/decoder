@@ -35,8 +35,6 @@ size_t 	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t 
 	uint32_t		value = 0;
 	bool			high = true;
 	
-	if (inSize & 1)
-		returnError(INV_HEX_SIZE, 0);
 	if ((inSize / 2) > outputSize)
 		returnError(BUF_TOO_SMALL, (inSize / 2));
 	while (offset < inSize && outOffset < outputSize)
@@ -55,6 +53,8 @@ size_t 	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t 
 		{
 			c -= '0';
 		}
+		else if (isspace(c))
+			continue;
 		else
 		{
 			returnError(INV_HEX_DATA, 0);
@@ -71,6 +71,8 @@ size_t 	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t 
 			*(output + outOffset++) = value;
 		}
 	}
+	if (!high)
+		returnError(INV_HEX_SIZE, 0);
 	return outOffset;
 }
 

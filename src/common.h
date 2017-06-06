@@ -65,5 +65,6 @@
 #include "decsngl.h"
 #include "decfile.h"
 #include "decexp.h"
+#include "deccb.h"
 
 #endif
