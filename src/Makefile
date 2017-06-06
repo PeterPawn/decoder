@@ -48,6 +48,7 @@ SYMLINK_TARGETS += decode_export
 SYMLINK_TARGETS += decode_secrets
 SYMLINK_TARGETS += decode_secret
 SYMLINK_TARGETS += decode_passwords
+SYMLINK_TARGETS += decode_cryptedbinfile
 ifeq ($(FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG), y)
 SYMLINK_TARGETS += decrypt-fritzos-cfg
 endif
