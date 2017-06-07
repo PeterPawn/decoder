@@ -54,15 +54,21 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 #define help_option()					case 'h':\
 											__usage(true);\
-											exit(EXIT_FAILURE)
+											return EXIT_FAILURE
 
 #define getopt_message_displayed()		case '?':\
 											__usage(false);\
-											exit(EXIT_FAILURE);
+											return EXIT_FAILURE
+
+#define getopt_argument_missing()		case ':':\
+											errorMessage("Missing value after option '%s'.\n", getopt_option_name());\
+											return EXIT_FAILURE
+
+#define getopt_option_name()			optionsString((optIndex ? optopt : 0), (optIndex ? NULL : options_long[optIndex].name))
 
 #define isVerbose()						(__getVerbosity() == VERBOSITY_VERBOSE)
 
-#define errorMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) fprintf(stderr, ##__VA_ARGS__)
+#define errorMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\a")
 
 #define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) fprintf(stderr, ##__VA_ARGS__)
 
@@ -70,8 +76,9 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 // function prototypes
 
-EXPORTED	char *						wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint32_t *toWrite, char *output);
-EXPORTED	decoder_verbosity_t			__getVerbosity(void);
-EXPORTED	void						__setVerbosity(decoder_verbosity_t verbosity);
+char *									wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint32_t *toWrite, char *output);
+char *									optionsString(int option, const char * longOption);
+decoder_verbosity_t						__getVerbosity(void);
+void									__setVerbosity(decoder_verbosity_t verbosity);
 
 #endif

@@ -273,7 +273,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 	*hashSize = *digest_blockSize;
 	DigestFinal(ctx, hash);
 	ctx = DigestCleanup(ctx);
-	
+
 	return !isAnyError();
 }
 

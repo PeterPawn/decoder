@@ -27,7 +27,7 @@
 
 #define	URLADER_ENV_PATH		"/proc/sys/urlader/environment"
 
-// environment file functions 
+// environment file functions
 
 char *				getEnvironmentPath(void);
 void				setEnvironmentPath(char * path);

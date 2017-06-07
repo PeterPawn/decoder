@@ -23,6 +23,8 @@
 
 #include "common.h"
 
+#define	DEFAULT_MEMORY_BUFFER_SIZE		8 * 1024
+
 // memory structure for file buffering
 
 // STDIN to memory structures
@@ -36,6 +38,8 @@ typedef struct memoryBuffer {
 } memoryBuffer_t;
 
 // function prototypes
+
+void				memoryBufferSetSize(size_t size);
 
 memoryBuffer_t *	memoryBufferNew(size_t size);
 memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start);

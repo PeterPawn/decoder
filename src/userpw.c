@@ -20,18 +20,20 @@
 #define USERPW_C
 
 #include "common.h"
+#include "userpw_usage.c"
 
-static commandEntry_t 		__userpw_command = { .name = "user_password", .ep = &userpw_entry, .usage = &userpw_usage };
+static commandEntry_t 		__userpw_command = { .name = "user_password", .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	userpw_command = &__userpw_command;
 
-// display usage help
+// statics
 
-void 	userpw_usage(bool help)
-{
-	errorMessage("help for user_password\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+static	char *			errorDigestComputation = "Error computing digest value.\n";
+static	char *			errorPasswordMissing = "Missing password on command line.\n";
+//// end ////
+//// verbose messages ////
+static	char *			verbosePasswordHash = "user password converted to key 0x%s\n";
 
 // 'user_password' function - compute the password hash for export files with a user-specified password
 
@@ -73,7 +75,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (optind >= (argc - argo))
 		{
-			errorMessage("Missing password on command line.\a\n");
+			errorMessage(errorPasswordMissing);
 			__usage(false);
 			return EXIT_FAILURE;
 		}
@@ -82,7 +84,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 	else
 	{
-		errorMessage("Missing password on command line.\a\n");
+		errorMessage(errorPasswordMissing);
 		__usage(false);
 		return EXIT_FAILURE;
 	}
@@ -91,17 +93,18 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if ((hashLen = Digest(password, strlen(password), hash, hashLen)) == 0)
 	{
-		errorMessage("Error computing digest value.\a\n");
+		errorMessage(errorDigestComputation);
 		return EXIT_FAILURE;
 	}
 
 	hexLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
 	hex[hexLen] = 0;
-	verboseMessage("user password converted to key 0x%s\n", hex);
+	verboseMessage(verbosePasswordHash, hex);
 	if (hexOutput)
 	{
 		outLen = hexLen;
 		out = hex;
+		entry->finalNewlineOnTTY = true;
 	}
 	else
 	{
@@ -110,8 +113,9 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 	if (fwrite(out, outLen, 1, stdout) != 1)
 	{
-		errorMessage("Write to STDOUT failed.\a\n");
+		setError(WRITE_FAILED);
+		errorMessage(errorWriteFailed);
 	}
 
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

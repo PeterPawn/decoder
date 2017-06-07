@@ -23,6 +23,13 @@
 
 // memory buffer oriented functions
 
+static	size_t		memoryBufferSize = DEFAULT_MEMORY_BUFFER_SIZE;
+
+EXPORTED	void	memoryBufferSetSize(size_t newSize)
+{
+	memoryBufferSize = newSize;
+}
+
 // create a new buffer
 
 EXPORTED	memoryBuffer_t *	memoryBufferNew(size_t size)
@@ -64,7 +71,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 	size_t			read;
 	size_t			toRead;
 
-	allocSize = (chunkSize > 0 ? chunkSize : 8 * 1024);
+	allocSize = (chunkSize != (size_t) -1 ? chunkSize : memoryBufferSize);
 	allocSize += sizeof(memoryBuffer_t);
 	top = memoryBufferNew(allocSize);
 	curr = top;

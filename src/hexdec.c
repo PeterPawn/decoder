@@ -20,18 +20,20 @@
 #define HEXDEC_C
 
 #include "common.h"
+#include "hexdec_usage.c"
 
 static commandEntry_t 		__hexdec_command = { .name = "hexdec", .ep = &hexdec_entry, .usage = &hexdec_usage };
 EXPORTED commandEntry_t *	hexdec_command = &__hexdec_command;
 
-// display usage help
+// statics
 
-void 	hexdec_usage(bool help)
-{
-	errorMessage("help for hexdec\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+static	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
+static	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
+static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
+static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
+//// end ////
 
 // 'hexdec' function - decode hexadecimal presentation of data from STDIN to STDOUT
 
@@ -66,12 +68,12 @@ int hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	while ((read = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
 	{
-		char	withoutSpaces[sizeof(buffer)];
-		size_t	used = 0;
-		char *	in;
-		char *	out;
-		int		i;
-		size_t	more = read;
+		char			withoutSpaces[sizeof(buffer)];
+		size_t			used = 0;
+		char *			in;
+		char *			out;
+		int				i;
+		size_t			more = read;
 
 		in = buffer;
 		out = withoutSpaces;
@@ -106,26 +108,25 @@ int hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	{
 		if (isError(WRITE_FAILED))
 		{
-			errorMessage("Write to STDOUT failed.\a\n");
+			errorMessage(errorWriteFailed);
 		}
 		else if (isError(INV_HEX_DATA))
 		{
-			errorMessage("Invalid hexadecimal data value encountered on STDIN.\a\n");
+			errorMessage(errorInvalidHexValue);
 		}
 		else if (isError(INV_HEX_SIZE))
 		{
-			errorMessage("Invalid hexadecimal data size encountered on STDIN.\a\n");
+			errorMessage(errorInvalidHexSize);
 		}
 		else if (isError(INV_B64_ENC_SIZE))
 		{
-			errorMessage("Invalid data size encountered on STDIN.\a\n");
+			errorMessage(errorInvalidDataSize);
 		}
 		else
 		{
-			errorMessage("Unexpected error %d (%s) encountered.\a\n", getError(), getErrorText(getError()));
+			errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
 		}
-		exit(EXIT_FAILURE);
 	}
 
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

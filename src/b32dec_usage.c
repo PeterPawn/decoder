@@ -17,36 +17,11 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef FUNCTIONS_H
+// display usage help
 
-#define FUNCTIONS_H
-
-#include "common.h"
-
-// data types for internal routing to requested function
-
-typedef struct commandEntry commandEntry_t;
-
-void (*usageScreen)(void);
-
-typedef struct commandEntry {
-	char			*name;
-	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry);
-	void			(*usage)(bool help);
-	bool			usesCrypto;
-	bool			finalNewlineOnTTY;
-} commandEntry_t;
-
-#ifndef FUNCTIONS_C
-
-// function table
-
-extern commandEntry_t *	*commandsTable;
-
-#endif
-
-// function definitions  
-
-commandEntry_t *	getCommandEntry(int index);
-
-#endif
+void 	b32dec_usage(bool help)
+{
+	errorMessage("help for b32dec\n");
+	if (help)
+		errorMessage("option --help used\n");
+}

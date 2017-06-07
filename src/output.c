@@ -67,3 +67,14 @@ EXPORTED	char * 				wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *char
 	}
 	return out;
 }
+
+static		char				optionString[16];
+
+EXPORTED	char *				optionsString(int option, const char * longOption)
+{
+	if (longOption)
+		snprintf(optionString, sizeof(optionString), "--%s", longOption);
+	else
+		snprintf(optionString, sizeof(optionString), "-%c", option);
+	return optionString;
+}

@@ -20,18 +20,19 @@
 #define DEVPW_C
 
 #include "common.h"
+#include "devpw_usage.c"
 
-static commandEntry_t 		__devpw_command = { .name = "device_password", .ep = &devpw_entry, .usage = &devpw_usage };
+static commandEntry_t 		__devpw_command = { .name = "device_password", .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	devpw_command = &__devpw_command;
 
-// display usage help
+// statics
 
-void 	devpw_usage(bool help)
-{
-	errorMessage("help for device_password\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+static	char *			errorPasswordMissing = "Missing password on command line.\n";
+static	char *			errorMissingSerialMac = "At least two arguments (serial and maca) are required.\n";
+static	char *			errorMissingArguments = "Missing arguments on command line.\n";
+//// end ////
 
 // 'device_password' function - compute the password hash from the specified device properties
 
@@ -75,15 +76,15 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (optind >= (argc - argo))
 		{
-			errorMessage("Missing password on command line.\a\n");
+			errorMessage(errorPasswordMissing);
 			return EXIT_FAILURE;
 		}
 		else
 		{
-			int		i = optind + argo;
-			int		index = 0;
+			int			i = optind + argo;
+			int			index = 0;
 
-			char *	*arguments[] = {
+			char *		*arguments[] = {
 				&serial,
 				&maca,
 				&wlanKey,
@@ -99,7 +100,7 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			}
 			if (!maca)
 			{
-				errorMessage("At least two arguments (serial and maca) are required.\a\n");
+				errorMessage(errorMissingSerialMac);
 				__usage(false);
 				return EXIT_FAILURE;
 			}
@@ -107,7 +108,7 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 	else
 	{
-		errorMessage("Missing arguments on command line.\a\n");
+		errorMessage(errorMissingArguments);
 		__usage(false);
 		return EXIT_FAILURE;
 	}
@@ -120,6 +121,7 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		{
 			outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
 			out = hex;
+			entry->finalNewlineOnTTY = true;
 		}
 		else
 		{
@@ -128,11 +130,10 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (fwrite(out, outLen, 1, stdout) != 1)
 		{
-			errorMessage("Write to STDOUT failed.\a\n");
+			setError(WRITE_FAILED);
+			errorMessage(errorWriteFailed);
 		}
 	}
-	else
-		return EXIT_FAILURE;
 
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

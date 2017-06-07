@@ -20,22 +20,23 @@
 #define B32DEC_C
 
 #include "common.h"
+#include "b32dec_usage.c"
 
 static commandEntry_t 		__b32dec_command = { .name = "b32dec", .ep = &b32dec_entry, .usage = &b32dec_usage };
 EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
 
-// display usage help
+// statics
 
-void 	b32dec_usage(bool help)
-{
-	errorMessage("help for b32dec\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorInvalidValue = "Invalid data value encountered on STDIN.\n";
+static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
+static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+//// end ////
 
 // 'b32dec' function - decode Base32 encoded data from STDIN to STDOUT
 
-void 	b32dec_output(char * base32, bool hexOutput)
+int 	b32dec_output(char * base32, bool hexOutput)
 {
 	char				binary[5];
 	size_t				binarySize = base32ToBinary(base32, (size_t) -1, binary, sizeof(binary));
@@ -47,17 +48,17 @@ void 	b32dec_output(char * base32, bool hexOutput)
 	{
 		if (isError(INV_B32_DATA))
 		{
-			errorMessage("Invalid data value encountered on STDIN.\a\n");
+			errorMessage(errorInvalidValue);
 		}
 		else if (isError(INV_B32_SIZE))
 		{
-			errorMessage("Invalid data size encountered on STDIN.\a\n");
+			errorMessage(errorInvalidDataSize);
 		}
 		else
 		{
-			errorMessage("Unexpected error %d (%s) encountered.\a\n", getError(), getErrorText(getError()));
+			errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
 		}
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 	if (hexOutput)
 	{
@@ -72,9 +73,11 @@ void 	b32dec_output(char * base32, bool hexOutput)
 	if (fwrite(out, outSize, 1, stdout) != 1)
 	{
 		setError(WRITE_FAILED);
-		errorMessage("Write to STDOUT failed.\a\n");
-		exit(EXIT_FAILURE);
+		errorMessage(errorWriteFailed);
+		return EXIT_FAILURE;
 	}
+
+	return EXIT_SUCCESS;
 }
 
 int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
@@ -102,6 +105,7 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			{
 				case 'x':
 					hexOutput = true;
+					entry->finalNewlineOnTTY = true;
 					break;
 
 				check_verbosity_options_short();
@@ -124,8 +128,11 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			base32[convUsed++] = *input;
 			if (convUsed == 8)
 			{
+				int		result;
+
 				base32[convUsed] = 0;
-				b32dec_output(base32, hexOutput);
+				if ((result = b32dec_output(base32, hexOutput)))
+					return result;
 				convUsed = 0;
 			}
 		}
@@ -134,8 +141,8 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (convUsed > 0) /* remaining data exist */
 	{
 		base32[convUsed] = 0;
-		b32dec_output(base32, hexOutput);
+		return b32dec_output(base32, hexOutput);
 	}
 	
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

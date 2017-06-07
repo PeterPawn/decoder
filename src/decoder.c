@@ -20,15 +20,15 @@
 #define DECODER_C
 
 #include "decoder.h"
+#include "decoder_usage.c"
 
-// display usage help
+// statics
 
-void	main_usage(bool help)
-{
-	errorMessage("decoder for AVM's cipher implementation\n");
-	if (help)
-		errorMessage("help option used");
-}
+//// error messages ////
+static	char *			errorExecutableName = "Unable to get executable name from procfs.\n";
+static	char *			errorInvocationName = "Unable to get invocation name from arguments.\n";
+static	char *			errorInvalidFunction = "Unknown function '%s' for '%s' binary.\n";
+//// end ////
 
 // main entry point for each call
 
@@ -44,14 +44,14 @@ int main(int argc, char** argv)
 	
 	if ((linkSize = readlink("/proc/self/exe", enameLong, PATH_MAX)) == (size_t) -1)
 	{
-		errorMessage("Unable to get executable name from procfs.\a\n");
+		errorMessage(errorExecutableName);
 		exit(EXIT_FAILURE);
 	}
 	enameLong[PATH_MAX] = 0;
 	enameLong[linkSize] = 0;
 	if (argumentCount == 0)
 	{
-		errorMessage("Unable to get invocation name from arguments.\a\n");
+		errorMessage(errorInvocationName);
 		exit(EXIT_FAILURE);
 	}
 	ename = basename(strdup(enameLong));
@@ -69,6 +69,19 @@ int main(int argc, char** argv)
 	else
 	{
 		main_usage(false);
+
+#if DEBUG == 1
+		fprintf(stderr, "\n\n");
+
+		int				i=0;
+		commandEntry_t	*current = getCommandEntry(i);
+		while (current)
+		{
+			fprintf(stderr, "command=%s, ep=0x%08llx, usage=0x%08llx, usesCrypto=%u, finalNewlineOnTTY=%u\n", current->name, (long long unsigned int) current->ep, (long long unsigned int) current->usage, current->usesCrypto, current->finalNewlineOnTTY);
+			current = getCommandEntry(++i);
+		}
+#endif
+
 		exit(EXIT_FAILURE);
 	}
 
@@ -82,21 +95,22 @@ int main(int argc, char** argv)
 			current = getCommandEntry(++i);
 			continue;
 		}
-		if (i >= 6) EncryptionInit();
+		if (current->usesCrypto) EncryptionInit();
 		arguments[0] = ename;
+		opterr = 0;
 		int exitCode = (*current->ep)(argumentCount, arguments, argumentOffset, current);
 		if (exitCode == EXIT_SUCCESS)
 		{
-			if (isatty(1) && !isAnyError())
+			if (current->finalNewlineOnTTY && isatty(1) && !isAnyError())
 				fprintf(stdout, "\n");
 		}
-		EVP_cleanup();
+		if (current->usesCrypto) EVP_cleanup();
 		exit(exitCode);
 	}
 
 	if (!current)
 	{
-		errorMessage("Unknown function '%s' for '%s' binary.\a\n\n", fname, enameLong);
+		errorMessage(errorInvalidFunction, fname, enameLong);
 		main_usage(false);
 	}
 

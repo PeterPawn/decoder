@@ -61,9 +61,9 @@ EXPORTED	memoryBuffer_t *	getEnvironmentFile(void)
 		errorMessage(openErrorMessage);
 		environErrorCommon();
 		setError(URLADER_ENV_ERR);
-		return NULL;	
+		return NULL;
 	}
-	
+
 	memoryBuffer_t *	env = memoryBufferReadFile(environment, -1);
 	fclose(environment);
 
@@ -83,8 +83,8 @@ EXPORTED	memoryBuffer_t *	getEnvironmentFile(void)
 	}
 
 	size_t				offset = 0;
-	
-	// replace newlines with end of strings for easier access	
+
+	// replace newlines with end of strings for easier access
 
 	while (offset < env->used)
 	{
@@ -99,7 +99,7 @@ EXPORTED	memoryBuffer_t *	getEnvironmentFile(void)
 EXPORTED	char *	getEnvironmentValue(memoryBuffer_t * environ, char * name)
 {
 	memoryBuffer_t *	env = (environ ? environ : getEnvironmentFile());
-	
+
 	if (!env)
 		return NULL;
 
@@ -121,6 +121,6 @@ EXPORTED	char *	getEnvironmentValue(memoryBuffer_t * environ, char * name)
 
 	if (!environ)
 		memoryBufferFreeChain(env);
-	
+
 	return value;
 }

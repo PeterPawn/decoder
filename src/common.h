@@ -35,6 +35,7 @@
 #include <getopt.h>
 #include <inttypes.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
@@ -49,6 +50,8 @@
 #include "functions.h"
 #include "memory.h"
 #include "output.h"
+#include "options.h"
+#include "environ.h"
 
 #include "crypto.h"
 #include "encryption.h"

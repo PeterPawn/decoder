@@ -99,7 +99,7 @@ char *	getErrorText(decoder_error_t err);
 // options check default
 
 #define invalid_option(opt)				default:\
-											errorMessage("Invalid option '%c' specified.\a\n", (char) opt);\
-											exit(EXIT_FAILURE)
+											errorMessage("Invalid option '%c' specified.\n", (char) opt);\
+											return EXIT_FAILURE
 
 #endif

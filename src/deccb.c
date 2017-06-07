@@ -20,18 +20,18 @@
 #define DECCB_C
 
 #include "common.h"
+#include "deccb_usage.c"
 
-static commandEntry_t 		__deccb_command = { .name = "decode_cryptedbinfile", .ep = &deccb_entry, .usage = &deccb_usage };
+static commandEntry_t 		__deccb_command = { .name = "decode_cryptedbinfile", .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
 
-// display usage help
+// statics
 
-void 	deccb_usage(bool help)
-{
-	errorMessage("help for decode_cryptedbinfile\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorDecryptFileData = "Unable to decrypt file data.\n";
+static	char *			errorReadToMemory = "Error reading data into memory.\n";
+static	char *			errorNoMemory = "Memory allocation error.\n";
+//// end ////
 
 // 'decode_crypedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT
 
@@ -64,10 +64,10 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (optind < argc)
 		{
-			int		i = optind + argo;
-			int		index = 0;
+			int			i = optind + argo;
+			int			index = 0;
 
-			char *	*arguments[] = {
+			char *		*arguments[] = {
 				&serial,
 				&maca,
 				NULL
@@ -86,7 +86,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	CipherSizes();
 
-	char			key[*cipher_keyLen];
+	char				key[*cipher_keyLen];
 
 	memset(key, 0, *cipher_keyLen);
 
@@ -110,13 +110,13 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		memcpy(key, hash, *cipher_ivLen);
 	}
 
-	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, 8 * 1024);
+	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, -1);
 	
 	if (!inputFile)
 	{
 		if (!isAnyError()) /* empty input file */
 			return EXIT_SUCCESS;	
-		errorMessage("Error reading STDIN to memory.\a\n");
+		errorMessage(errorReadToMemory);
 		return EXIT_FAILURE;
 	}
 
@@ -125,7 +125,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		memoryBuffer_t	*consolidated = memoryBufferConsolidateData(inputFile);
 		if (!consolidated)
 		{
-			errorMessage("Error allocating memory.\a\n");
+			errorMessage(errorNoMemory);
 			inputFile = memoryBufferFreeChain(inputFile);
 			return EXIT_FAILURE;
 		}
@@ -143,7 +143,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (!binBuffer)
 	{
 		setError(NO_MEMORY);
-		errorMessage("Error allocating memory.\a\n");
+		errorMessage(errorNoMemory);
 		inputFile = memoryBufferFreeChain(inputFile);
 		return EXIT_FAILURE;
 	}
@@ -155,7 +155,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	{
 		DecryptFile(binBuffer, binSize, stdout, NULL, key);
 		if (isError(DECRYPT_ERR))
-			errorMessage("Unable to decrypt file data.\a\n");
+			errorMessage(errorDecryptFileData);
 	}
 
 	binBuffer = clearMemory(binBuffer, (hexSize / 2), true);

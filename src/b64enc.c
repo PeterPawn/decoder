@@ -20,18 +20,19 @@
 #define B64ENC_C
 
 #include "common.h"
+#include "b64enc_usage.c"
 
-static commandEntry_t 		__b64enc_command = { .name = "b64enc", .ep = &b64enc_entry, .usage = &b64enc_usage };
+static commandEntry_t 		__b64enc_command = { .name = "b64enc", .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	b64enc_command = &__b64enc_command;
 
-// display usage help
-
-void 	b64enc_usage(bool help)
-{
-	errorMessage("help for b64enc\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
+static	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
+static	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
+static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+static	char *			errorInvalidWidth = "Invalid line size '%s' specified for -w option.\n";
+//// end ////
 
 // 'b64enc' function - encode binary data from STDIN to Base64 encoded on STDOUT
 
@@ -91,7 +92,7 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 						lineSize = strtoul(startString, &endString, 10);
 						if (*startString && strlen(endString))
 						{
-							errorMessage("Invalid line size '%s' specified for -w option.\a\n", startString);
+							errorMessage(errorInvalidWidth, startString);
 							return(EXIT_FAILURE);
 						}
 						else
@@ -172,26 +173,25 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	{
 		if (isError(WRITE_FAILED))
 		{
-			errorMessage("Write to STDOUT failed.\a\n");
+			errorMessage(errorWriteFailed);
 		}
 		else if (isError(INV_HEX_DATA))
 		{
-			errorMessage("Invalid hexadecimal data value encountered on STDIN.\a\n");
+			errorMessage(errorInvalidHexValue);
 		}
 		else if (isError(INV_HEX_SIZE))
 		{
-			errorMessage("Invalid hexadecimal data size encountered on STDIN.\a\n");
+			errorMessage(errorInvalidHexSize);
 		}
 		else if (isError(INV_B64_ENC_SIZE))
 		{
-			errorMessage("Invalid data size encountered on STDIN.\a\n");
+			errorMessage(errorInvalidDataSize);
 		}
 		else
 		{
-			errorMessage("Unexpected error %d (%s) encountered.\a\n", getError(), getErrorText(getError()));
+			errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
 		}
-		exit(EXIT_FAILURE);
 	}
 
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

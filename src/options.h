@@ -17,36 +17,28 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef FUNCTIONS_H
+#ifndef OPTIONS_H
 
-#define FUNCTIONS_H
+#define OPTIONS_H
 
-#include "common.h"
+// helper macros
 
-// data types for internal routing to requested function
+#define altenv_options_long				{ "alt-env", required_argument, NULL, 'a' }
 
-typedef struct commandEntry commandEntry_t;
+#define altenv_options_short			"a:"
 
-void (*usageScreen)(void);
+#define check_altenv_options_short()	case 'a':\
+											if ((altEnv = setAlternativeEnvironment(optarg)) == false)\
+												return EXIT_FAILURE;\
+											break
 
-typedef struct commandEntry {
-	char			*name;
-	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry);
-	void			(*usage)(bool help);
-	bool			usesCrypto;
-	bool			finalNewlineOnTTY;
-} commandEntry_t;
+#define altenv_verbose_message()		if (altEnv)\
+											verboseMessage("using alternative environment path '%s'\n", getEnvironmentPath())
 
-#ifndef FUNCTIONS_C
+// function prototypes
 
-// function table
-
-extern commandEntry_t *	*commandsTable;
-
-#endif
-
-// function definitions  
-
-commandEntry_t *	getCommandEntry(int index);
+bool									setAlternativeEnvironment(char * newEnvironment);
+bool									checkLastArgumentIsInputFile(char * name);
+void									warnAboutExtraArguments(char ** argv, int i);
 
 #endif

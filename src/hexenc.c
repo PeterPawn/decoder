@@ -20,18 +20,18 @@
 #define HEXENC_C
 
 #include "common.h"
+#include "hexenc_usage.c"
 
-static commandEntry_t 		__hexenc_command = { .name = "hexenc", .ep = &hexenc_entry, .usage = &hexenc_usage };
+static commandEntry_t 		__hexenc_command = { .name = "hexenc", .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
 
-// display usage help
+// statics
 
-void 	hexenc_usage(bool help)
-{
-	errorMessage("help for hexenc\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+static	char *			errorInvalidWidth = "Invalid line size '%s' specified for -w option.\n";
+//// end ////
 
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT
 
@@ -79,7 +79,7 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 						lineSize = strtoul(startString, &endString, 10);
 						if (*startString && strlen(endString))
 						{
-							errorMessage("Invalid line size '%s' specified for -w option.\a\n", startString);
+							errorMessage(errorInvalidWidth, startString);
 							return(EXIT_FAILURE);
 						}
 						else
@@ -99,14 +99,14 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	while ((read = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
 	{
-		char		output[(sizeof(buffer) * 2) + 2]; /* one more byte for optional end of string */
-		size_t		outputSize = binaryToHexadecimal(buffer, read, output, sizeof(output) - 1);
+		char			output[(sizeof(buffer) * 2) + 2]; /* one more byte for optional end of string */
+		size_t			outputSize = binaryToHexadecimal(buffer, read, output, sizeof(output) - 1);
 		
 		if (outputSize == 0) break;
 		resetError();
 		
-		uint32_t	toWrite = outputSize;
-		char *		out = output;
+		uint32_t		toWrite = outputSize;
+		char *			out = output;
 
 		out = wrapOutput(wrapLines, lineSize, &charsOnLine, &toWrite, out);
 		if (isAnyError())
@@ -129,14 +129,13 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	{
 		if (isError(WRITE_FAILED))
 		{
-			errorMessage("Write to STDOUT failed.\a\n");
+			errorMessage(errorWriteFailed);
 		}
 		else
 		{
-			errorMessage("Unexpected error %d (%s) encountered.\a\n", getError(), getErrorText(getError()));
+			errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
 		}
-		exit(EXIT_FAILURE);
 	}
 
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

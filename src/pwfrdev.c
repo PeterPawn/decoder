@@ -20,19 +20,16 @@
 #define PWFRDEV_C
 
 #include "common.h"
+#include "pwfrdev_usage.c"
 
-static commandEntry_t 		__pwfrdev_command = { .name = "password_from_device", .ep = &pwfrdev_entry, .usage = &pwfrdev_usage };
+static commandEntry_t 		__pwfrdev_command = { .name = "password_from_device", .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	pwfrdev_command = &__pwfrdev_command;
 
-// display usage help
+// statics
 
-void 	pwfrdev_usage(bool help)
-{
-	errorMessage("help for password_from_device\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
-
+//// error messages ////
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+//// end ////
 
 // 'password_from_device' function - compute the password hash from the current device properties
 
@@ -45,6 +42,7 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char				hex[(sizeof(hash) * 2) + 1];
 	char *				out;
 	size_t				outLen;
+	bool				altEnv = false;
 
 	if (argc > argo + 1)
 	{
@@ -53,10 +51,11 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 		static struct option options_long[] = {
 			verbosity_options_long,
+			altenv_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
 			{ "for-export", no_argument, NULL, 'e' },
 		};
-		char *			options_short = "xe" verbosity_options_short;
+		char *			options_short = ":" "xe" altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -70,6 +69,7 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					forExport = true;
 					break;
 
+				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
 				getopt_message_displayed();
@@ -80,6 +80,8 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	resetError();
 
+	altenv_verbose_message();
+
 	keyFromDevice(hash, &hashLen, forExport);
 	
 	if (!isAnyError())
@@ -88,6 +90,7 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		{
 			outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
 			out = hex;
+			entry->finalNewlineOnTTY = true;
 		}
 		else
 		{
@@ -96,9 +99,10 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (fwrite(out, outLen, 1, stdout) != 1)
 		{
-			errorMessage("Write to STDOUT failed.\a\n");
+			setError(WRITE_FAILED);
+			errorMessage(errorWriteFailed);	
 		}
 	}
 	
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

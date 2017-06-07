@@ -20,22 +20,23 @@
 #define B64DEC_C
 
 #include "common.h"
+#include "b64dec_usage.c"
 
 static commandEntry_t 		__b64dec_command = { .name = "b64dec", .ep = &b64dec_entry, .usage = &b64dec_usage };
 EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 
-// display usage help
+// statics
 
-void 	b64dec_usage(bool help)
-{
-	errorMessage("help for b64dec\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorInvalidValue = "Invalid data value encountered on STDIN.\n";
+static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
+static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
+static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+//// end ////
 
 // 'b64dec' function - decode Base64 encoded data from STDIN to STDOUT
 
-void	b64dec_output(char * base64, bool hexOutput, bool pad)
+int		b64dec_output(char * base64, bool hexOutput, bool pad)
 {
 	char				binary[3];
 	size_t				binarySize = base64ToBinary(base64, (size_t) -1, binary, sizeof(binary), pad);
@@ -47,17 +48,17 @@ void	b64dec_output(char * base64, bool hexOutput, bool pad)
 	{
 		if (isError(INV_B64_DATA))
 		{
-			errorMessage("Invalid data value encountered on STDIN.\a\n");
+			errorMessage(errorInvalidValue);
 		}
 		else if (isError(INV_B64_SIZE))
 		{
-			errorMessage("Invalid data size encountered on STDIN.\a\n");
+			errorMessage(errorInvalidDataSize);
 		}
 		else
 		{
-			errorMessage("Unexpected error %d (%s) encountered.\a\n", getError(), getErrorText(getError()));
+			errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
 		}
-		exit(EXIT_FAILURE);
+		return EXIT_FAILURE;
 	}
 	if (hexOutput)
 	{
@@ -72,9 +73,11 @@ void	b64dec_output(char * base64, bool hexOutput, bool pad)
 	if (fwrite(out, outSize, 1, stdout) != 1)
 	{
 		setError(WRITE_FAILED);
-		errorMessage("Write to STDOUT failed.\a\n");
-		exit(EXIT_FAILURE);
+		errorMessage(errorWriteFailed);
+		return EXIT_FAILURE;
 	}
+
+	return EXIT_SUCCESS;
 }
 
 int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
@@ -104,6 +107,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			{
 				case 'x':
 					hexOutput = true;
+					entry->finalNewlineOnTTY = true;
 					break;
 
 				case 'p':
@@ -130,8 +134,11 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			base64[convUsed++] = *input;
 			if (convUsed == 4)
 			{
+				int		result;
+
 				base64[convUsed] = 0;
-				b64dec_output(base64, hexOutput, padOutput);
+				if ((result = b64dec_output(base64, hexOutput, padOutput)))
+					return result;
 				convUsed = 0;
 			}
 		}
@@ -140,8 +147,8 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (convUsed > 0) /* remaining data exist */
 	{
 		base64[convUsed] = 0;
-		b64dec_output(base64, hexOutput, padOutput);
+		return b64dec_output(base64, hexOutput, padOutput);
 	}
 	
-	return EXIT_SUCCESS;
+	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

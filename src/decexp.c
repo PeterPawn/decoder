@@ -20,18 +20,22 @@
 #define DECEXP_C
 
 #include "common.h"
+#include "decexp_usage.c"
 
-static commandEntry_t 		__decexp_command = { .name = "decode_export", .ep = &decexp_entry, .usage = &decexp_usage };
+static commandEntry_t 		__decexp_command = { .name = "decode_export", .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
 
-// display usage help
+// statics
 
-void 	decexp_usage(bool help)
-{
-	errorMessage("help for decode_export\n");
-	if (help)
-		errorMessage("option --help used\n");
-}
+//// error messages ////
+static	char *			errorReadToMemory = "Error reading data into memory.\n";
+static	char *			errorInvalidFirstStageLength = "Invalid length of data (%u) in the '%s' entry. Expected value is 80.\n";
+static	char *			errorDecryptionFailed =  "Decryption failed with the specified arguments.\n";	
+static	char *			errorNoPasswordEntry = "Unable to find the password entry in the provided file.\nIs this really an export file?\n";
+//// end ////
+//// verbose messages ////
+static	char *			verboseUsingKey = "using key 0x%s for decryption\n";
+//// end ////
 
 // 'decode_export' function - decode all secret values from the export file on STDIN and copy it with replaced values to STDOUT
 
@@ -41,6 +45,8 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	size_t				hashLen = sizeof(hash);
 	char *				serial = NULL;
 	char *				maca = NULL;
+	bool				altEnv = false;
+	bool				tty = false;
 
 	if (argc > argo + 1)
 	{
@@ -48,14 +54,21 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
+			{ "tty", no_argument, NULL, 't' },
+			altenv_options_long,
 			verbosity_options_long,
 		};
-		char *			options_short = verbosity_options_short;
+		char *			options_short = ":" "t" altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
 			switch (opt)
 			{
+				case 't':
+						tty = true;
+						break;
+
+				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
 				getopt_message_displayed();
@@ -64,10 +77,10 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (optind < argc)
 		{
-			int		i = optind + argo;
-			int		index = 0;
+			int			i = optind + argo;
+			int			index = 0;
 
-			char *	*arguments[] = {
+			char *		*arguments[] = {
 				&serial,
 				&maca,
 				NULL
@@ -75,18 +88,36 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 			while (argv[i])
 			{
+				if (!argv[i + 1])
+				{
+					if (isatty(0) && !tty)
+					{
+						if (checkLastArgumentIsInputFile(argv[i]))
+							break;
+					}
+				}
 				*(arguments[index++]) = argv[i++];
 				if (!arguments[index])
+				{
+					if (argv[i])
+					{
+						if (checkLastArgumentIsInputFile(argv[i]))
+							i++;
+					}
+					warnAboutExtraArguments(argv,i);
 					break;
+				}
 			}
 		}
 	}
 
 	resetError();
 
+	altenv_verbose_message();
+
 	CipherSizes();
 
-	char			key[*cipher_keyLen];
+	char				key[*cipher_keyLen];
 
 	memset(key, 0, *cipher_keyLen);
 
@@ -110,13 +141,13 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		memcpy(key, hash, *cipher_ivLen);
 	}
 
-	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, 8 * 1024);
+	memoryBuffer_t		*inputFile = memoryBufferReadFile(stdin, -1);
 	
 	if (!inputFile)
 	{
 		if (!isAnyError()) /* empty input file */
 			return EXIT_SUCCESS;	
-		errorMessage("Error reading STDIN to memory.\a\n");
+		errorMessage(errorReadToMemory);
 		return EXIT_FAILURE;
 	}
 
@@ -140,7 +171,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 		if (valueSize > 80)
 		{
-			errorMessage("Invalid length of data (%u) in the '%s' entry. Expected value is 80.\a\n", (uint32_t) valueSize, EXPORT_PASSWORD_NAME);
+			errorMessage(errorInvalidFirstStageLength, (uint32_t) valueSize, EXPORT_PASSWORD_NAME);
 			setError(INV_DATA_SIZE);
 			inputFile = memoryBufferFreeChain(inputFile);
 			return EXIT_FAILURE;
@@ -168,7 +199,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			size_t		hexLen = binaryToHexadecimal(key, *cipher_keyLen - *cipher_ivLen, hex, (MAX_DIGEST_SIZE * 2) + 1);
 
 			hex[hexLen] = 0;
-			verboseMessage("using key 0x%s for decryption\n", hex);
+			verboseMessage(verboseUsingKey, hex);
 
 			cipherText = clearMemory(cipherText, valueSize + 1, true);
 			current = inputFile;
@@ -194,12 +225,12 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		else
 		{
 			setError(DECRYPT_ERR);
-			errorMessage("Decryption failed with the specified arguments.\a\n");	
+			errorMessage(errorDecryptionFailed);
 		}
 	}
 	else
 	{
-		errorMessage("Unable to find the password entry in the provided file.\nIs this really an export file?\a\n");
+		errorMessage(errorNoPasswordEntry);
 		setError(INVALID_FILE);
 	}
 
