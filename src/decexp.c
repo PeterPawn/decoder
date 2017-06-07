@@ -29,7 +29,7 @@ EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
 
 //// error messages ////
 static	char *			errorReadToMemory = "Error reading data into memory.\n";
-static	char *			errorInvalidFirstStageLength = "Invalid length of data (%u) in the '%s' entry. Expected value is 80.\n";
+static	char *			errorInvalidFirstStageLength = "Invalid length of data (%u) in the '%s' entry. Expected value is 104.\n";
 static	char *			errorDecryptionFailed =  "Decryption failed with the specified arguments.\n";	
 static	char *			errorNoPasswordEntry = "Unable to find the password entry in the provided file.\nIs this really an export file?\n";
 //// end ////
@@ -169,7 +169,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		foundOffset = offset;
 		memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
 
-		if (valueSize > 80)
+		if (valueSize != 104)
 		{
 			errorMessage(errorInvalidFirstStageLength, (uint32_t) valueSize, EXPORT_PASSWORD_NAME);
 			setError(INV_DATA_SIZE);
