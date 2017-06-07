@@ -100,7 +100,7 @@ int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		if (fwrite(out, outLen, 1, stdout) != 1)
 		{
 			setError(WRITE_FAILED);
-			errorMessage(errorWriteFailed);	
+			errorMessage(errorWriteFailed);
 		}
 	}
 	

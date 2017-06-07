@@ -106,9 +106,9 @@ $(BINARY): $(OBJS) $(MAIN_SRC:%.c=%.o)
 strip:	$(BINARY)
 	$(STRIP) $(BINARY)
 #
-install: install_$(BINARY) $(SYMLINK_TARGETS)
+install: install_$(BINARY) install-links
 #
-install_$(BINARY): $(BINARY) $(STRIP_BINARY)
+install_$(BINARY): $(BINARY) strip
 	$(INSTALL) -d $(DESTDIR)
 	$(INSTALL) $(BINARY) $(DESTDIR)
 #

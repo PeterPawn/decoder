@@ -43,7 +43,7 @@ EXPORTED	bool	checkLastArgumentIsInputFile(char * name)
 
 	if (stat(name, &st))
 		return false;
-	
+
 	verboseMessage("redirecting STDIN to file '%s'\n", name);
 	freopen(name, "r", stdin);
 
