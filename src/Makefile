@@ -12,7 +12,7 @@ BINARY:=$(BASENAME)
 # files
 #
 MAIN = decoder
-FILES = errors output base32 base64 hex encryption memory functions crypto
+FILES = errors output base32 base64 hex encryption memory functions crypto options environ
 COMMANDS = b32dec b32enc b64dec b64enc hexdec hexenc
 COMMANDS += userpw devpw pwfrdev
 COMMANDS += decsngl decfile decexp deccb
@@ -21,6 +21,7 @@ HFILES = common
 # source files
 #
 SRCS = $(addsuffix .c, $(FILES) $(COMMANDS))
+SRCS += $(addsuffix _usage.c, $(COMMANDS))
 OBJS = $(addsuffix .o, $(FILES) $(COMMANDS))
 HDRS = $(addsuffix .h, $(FILES) $(COMMANDS) $(HFILES) $(MAIN))
 MAIN_SRC = $(addsuffix .c, $(MAIN))

@@ -21,15 +21,11 @@
 
 #include "common.h"
 
-// environment file name
-
-static char *		environmentFileName = URLADER_ENV_PATH;
-
 // FRITZ!OS specific crypto functions
 
 // initialize static variables
 
-void	EncryptionInit(void)
+EXPORTED	void	EncryptionInit(void)
 {
 	DigestSizes();
 	CipherSizes();
@@ -37,7 +33,7 @@ void	EncryptionInit(void)
 
 // decrypt a Base32 value using the specified key
 
-bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped)
+EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped)
 {
 	size_t			cipherBufSize = base32ToBinary(cipherText, valueSize, NULL, 0);
 	size_t			cipherSize;
@@ -123,7 +119,7 @@ bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE
 
 // re-compute and compare the cleartext digest for the specified buffer
 
-bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string)
+EXPORTED	bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string)
 {
 	char			hash[MAX_DIGEST_SIZE];
 	size_t			hashLen = sizeof(hash);
@@ -149,154 +145,9 @@ bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * d
 	return dataLen;
 }
 
-// password generation from device properties
-
-bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
-{
-	FILE *				environment = fopen(environmentFileName, "r");
-
-	if (!environment)
-	{
-		errorMessage("Error opening environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", environmentFileName);
-		return false;	
-	}
-	
-	memoryBuffer_t *	env = memoryBufferReadFile(environment, 8 * 1024);
-
-	fclose(environment);
-
-	if (!env)
-	{
-		errorMessage("Error reading environment file on procfs (%s).\n\nAre we really running on a FRITZ!OS device?\a\n", environmentFileName);
-		return false;
-	}
-
-	DigestContext	 	*ctx = DigestInit();
-
-	struct variables {
-		char *			name;
-		char *			show;
-		char *			append;
-		bool			errorIfMissing;
-		bool			export;
-	}					envVariables[] = {
-						{ .name = URLADER_SERIAL_NAME"\t", .show = URLADER_SERIAL_NAME, .append = "\n", .errorIfMissing = true, .export = true },
-						{ .name = URLADER_MACA_NAME"\t", .show = URLADER_MACA_NAME, .append = "\n", .errorIfMissing = true, .export = true },
-						{ .name = URLADER_WLANKEY_NAME"\t", .show = URLADER_WLANKEY_NAME, .append = NULL, .errorIfMissing = true, .export = false },
-						{ .name = URLADER_TR069PP_NAME"\t", .show = URLADER_TR069PP_NAME, .append = NULL, .errorIfMissing = false, .export = false },
-						{ .name = NULL, .show = NULL, .append = NULL, .errorIfMissing = false },
-	};
-	struct variables 	*var = envVariables;
-
-	while (var && var->name)
-	{
-		memoryBuffer_t	*currentBuffer = env;
-		size_t			currentOffset = 0;
-		char *			name;
-		bool			split;
-	
-		name = memoryBufferFindString(&currentBuffer, &currentOffset, var->name, strlen(var->name), &split);
-		if (name)
-		{	
-			char *		value = memoryBufferAdvancePointer(&currentBuffer, &currentOffset, strlen(var->name));
-			char *		curr = value;
-			size_t		valueSize = 0;
-
-			verboseMessage("found device property '%s' with value '", var->show);
-			while (currentBuffer && *curr != '\n') 
-			{
-				if (currentBuffer->used <= currentOffset) /* next buffer */
-				{
-					if (currentBuffer->next)
-					{
-						DigestUpdate(ctx, value, valueSize);
-						if (isVerbose())
-						{
-							while (*value != '\n' && valueSize > 0)
-							{
-								verboseMessage("%c", *value);
-								value++;
-								valueSize--;
-							}
-							verboseMessage("'\n");
-						}
-						currentBuffer = currentBuffer->next;
-						value = currentBuffer->data;
-						valueSize = 0;
-						curr = value;
-					}
-					else
-						break;
-				}
-				else
-				{
-					curr++;
-					currentOffset++;
-					valueSize++;
-				}
-			}
-			DigestUpdate(ctx, value, valueSize);
-			if (var->append)
-				DigestUpdate(ctx, var->append, strlen(var->append));
-			if (isVerbose())
-			{
-				while (*value != '\n' && valueSize > 0)
-				{
-					verboseMessage("%c", *value);
-					value++;
-					valueSize--;
-				}
-				verboseMessage("'\n");
-			}
-		}
-		else
-		{
-			if (var->errorIfMissing == true)
-			{
-				errorMessage("Unable to read variable '%s' from environment file on procfs(%s).\n\nAre we really running on a FRITZ!OS device?\a\n", var->show, environmentFileName);
-				setError(URLADER_ENV_ERR);
-				break;
-			}
-			verboseMessage("device property '%s' does not exist.\n", var->show);
-		}
-		var++;
-		if (forExport && !var->export)
-			break;
-	}
-
-	env = memoryBufferFreeChain(env);
-
-	*hashSize = *digest_blockSize;
-	DigestFinal(ctx, hash);
-	ctx = DigestCleanup(ctx);
-	
-	return !isAnyError();
-}
-
-// password generation from properties
-
-bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase)
-{
-	DigestContext	 	*ctx = DigestInit();
-
-	DigestUpdate(ctx, serial, strlen(serial));
-	DigestUpdate(ctx, "\n", 1);
-	DigestUpdate(ctx, maca, strlen(maca));
-	DigestUpdate(ctx, "\n", 1);
-	if (wlanKey && *wlanKey)
-		DigestUpdate(ctx, wlanKey, strlen(wlanKey));
-	if (tr069Passphrase && *tr069Passphrase)
-		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
-	*hashSize = *digest_blockSize;
-	DigestFinal(ctx, hash);
-	ctx = DigestCleanup(ctx);
-
-	return !isAnyError();
-}
-
 // decrypt a binary encrypted file (CRYPTEDBINFILE)
 
-bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key)
+EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key)
 {
 	char *				decryptedBuffer = malloc(inputSize + *cipher_blockSize);
 	CipherContext *		ctx = EVP_CIPHER_CTX_new();
@@ -363,6 +214,131 @@ bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, c
 
 	clearMemory(decryptedBuffer, inputSize, true);
 	clearMemory(iv, ivLen, true);
+
+	return !isAnyError();
+}
+
+EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
+{
+	memoryBuffer_t *	env = getEnvironmentFile();
+
+	if (!env)
+		return false;
+
+	DigestContext	 	*ctx = DigestInit();
+
+	struct variables {
+		char *			name;
+		char *			show;
+		char *			append;
+		bool			errorIfMissing;
+		bool			export;
+	}					envVariables[] = {
+						{ .name = URLADER_SERIAL_NAME, .show = URLADER_SERIAL_NAME, .append = "\n", .errorIfMissing = true, .export = true },
+						{ .name = URLADER_MACA_NAME, .show = URLADER_MACA_NAME, .append = "\n", .errorIfMissing = true, .export = true },
+						{ .name = URLADER_WLANKEY_NAME, .show = URLADER_WLANKEY_NAME, .append = NULL, .errorIfMissing = true, .export = false },
+						{ .name = URLADER_TR069PP_NAME, .show = URLADER_TR069PP_NAME, .append = NULL, .errorIfMissing = false, .export = false },
+						{ .name = NULL, .show = NULL, .append = NULL, .errorIfMissing = false },
+	};
+	struct variables 	*var = envVariables;
+
+	while (var && var->name)
+	{
+		char *			value = getEnvironmentValue(env, var->name);
+
+		if (value)
+		{
+			verboseMessage("found device property '%s' with value '%s'\n", var->show, value);
+			DigestUpdate(ctx, value, strlen(value));
+			if (var->append)
+				DigestUpdate(ctx, var->append, strlen(var->append));
+		}
+		else
+		{
+			if (var->errorIfMissing == true)
+			{
+				errorMessage("device property '%s' is not set\n",  var->show);
+				setError(URLADER_ENV_ERR);
+				break;
+			}
+			verboseMessage("device property '%s' does not exist.\n", var->show);
+		}
+		var++;
+		if (forExport && !var->export)
+			break;
+	}
+
+	env = memoryBufferFreeChain(env);
+
+	*hashSize = *digest_blockSize;
+	DigestFinal(ctx, hash);
+	ctx = DigestCleanup(ctx);
+	
+	return !isAnyError();
+}
+
+// check MAC address format
+
+bool	checkMACAddress(char * mac)
+{
+	int		i = 0;
+	int		j = 0;
+	char *	curr = mac;
+
+	while (*curr != 0)
+	{
+		if (j == 2)
+		{
+			if (*curr != ':')
+				return false;
+			else
+			{
+				j = 0;
+				i += 1;
+			}
+		}
+		else
+		{
+			if ((*curr < '0' || *curr > '9') && (*curr < 'A' || *curr > 'F'))
+				return false;
+			j += 1;
+		}
+		curr++;
+	}
+	if (i == 5 && j == 2) return true;
+
+	return false;
+}
+
+// password generation from properties
+
+EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase)
+{
+	DigestContext	 	*ctx = DigestInit();
+
+	if (strlen(serial) != 16)
+		verboseMessage("the specified serial number '%s' has a wrong length\n", serial);
+	DigestUpdate(ctx, serial, strlen(serial));
+	DigestUpdate(ctx, "\n", 1);
+	if (!checkMACAddress(maca))
+		verboseMessage("the specified MAC address '%s' has a wrong format\n", maca);
+	DigestUpdate(ctx, maca, strlen(maca));
+	DigestUpdate(ctx, "\n", 1);
+	if (wlanKey && *wlanKey)
+	{
+		if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
+			verboseMessage("the specified WLAN key '%s' has an unusual length\n", wlanKey);
+		DigestUpdate(ctx, wlanKey, strlen(wlanKey));
+	}
+	if (tr069Passphrase && *tr069Passphrase)
+	{
+		if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
+			verboseMessage("the specified WLAN key '%s' has an unusual length\n", wlanKey);
+		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
+	}
+	*hashSize = *digest_blockSize;
+	DigestFinal(ctx, hash);
+	ctx = DigestCleanup(ctx);
 
 	return !isAnyError();
 }

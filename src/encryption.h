@@ -25,26 +25,12 @@
 
 // FRITZ!OS environment related settings
 
-#ifdef USE_REAL_PROCFS
-#define	URLADER_ENV_PATH		"/proc/sys/urlader/environment"
-#else
-#define URLADER_ENV_PATH		"/var/env"
-#endif
-
 #define URLADER_SERIAL_NAME		"SerialNumber"
 #define URLADER_MACA_NAME		"maca"
 #define URLADER_WLANKEY_NAME	"wlan_key"
 #define URLADER_TR069PP_NAME	"tr069_passphrase"
 
 #define EXPORT_PASSWORD_NAME	"\nPassword=$$$$"
-
-#ifndef ENCRYPTION_C
-
-// environment file name
-
-extern char *	environmentFileName;
-
-#endif
 
 // decrytion related functions
 
