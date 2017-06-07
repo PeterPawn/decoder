@@ -346,7 +346,6 @@ __debug "size of decrypted raw file: %u\n" $fileSize
 data="$(dd if="$td/decryptedbinfile" bs=16 skip=$(( ( fileSize / 16 ) - 1)) 2>/dev/null | "$crypto" hexenc)"
 hdr="$(expr "$data" : "\(.\{24\}\).*")"
 size="$(expr "$data" : ".\{24\}\(.\{8\}\).*")"
-chk="$(expr "$data" : ".\{32\}\(.*\)")"
 if ! [ "$hdr" = "41564d000000000000000000" ]; then
 	__debug "decrypted data at end of file: %s\n" "$data"
 	__emsg "Error decrpyting file, please check the password."
@@ -354,13 +353,12 @@ if ! [ "$hdr" = "41564d000000000000000000" ]; then
 fi
 dataSize="$(printf "%s\n" "$size" | "$crypto" hex2dec)"
 dd if="$td/decryptedbinfile" bs=1 skip=4 count=$dataSize 2>/dev/null
-exit $?
 #######################################################################################################
 #                                                                                                     #
 # no housekeeping needed, temporary data will be cleaned up by our trap command above                 #
 #                                                                                                     #
 #######################################################################################################
-exit 0
+exit $?
 #######################################################################################################
 #                                                                                                     #
 # end of script                                                                                       #
