@@ -30,15 +30,12 @@ EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
 //// error messages ////
 static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
 static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-static	char *			errorInvalidWidth = "Invalid line size '%s' specified for -w option.\n";
 //// end ////
 
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT
 
 int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
-	bool				wrapLines = false;
-	uint32_t			lineSize = 80;
 	uint32_t			charsOnLine = 0;
 	char				buffer[120];
 	size_t				read = 0;
@@ -49,44 +46,16 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
+			width_options_long,
 			verbosity_options_long,
-			{ "wrap-lines", optional_argument, NULL, 'w' },
 		};
-		char *			options_short = "w" verbosity_options_short;
+		char *			options_short = ":" "w" width_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
 			switch (opt)
 			{
-				case 'w':
-					{
-						char *	endString = NULL;
-						char *	startString;
-
-						wrapLines = true;
-						if (optarg && *optarg)
-						{
-							startString = optarg;	
-						}
-						else
-						{
-							if ((optind + argo) >= argc)
-								break; /* last option, no number present */
-							startString = argv[optind + argo];
-							if (*startString == '-')
-								break; /* next is an option */
-						}
-						lineSize = strtoul(startString, &endString, 10);
-						if (*startString && strlen(endString))
-						{
-							errorMessage(errorInvalidWidth, startString);
-							return(EXIT_FAILURE);
-						}
-						else
-							optind++;
-					}
-					break;
-
+				check_width_options_short();
 				check_verbosity_options_short();
 				help_option();
 				getopt_message_displayed();
@@ -108,7 +77,7 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		uint32_t		toWrite = outputSize;
 		char *			out = output;
 
-		out = wrapOutput(wrapLines, lineSize, &charsOnLine, &toWrite, out);
+		out = wrapOutput(&charsOnLine, &toWrite, out);
 		if (isAnyError())
 			break;
 		
@@ -117,13 +86,10 @@ int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			setError(WRITE_FAILED);
 			break;
 		}
-		if (wrapLines)
-		{
-			charsOnLine += toWrite;
-		}
+		charsOnLine += toWrite;
 	}
-	if (!isAnyError() && wrapLines && (fwrite("\n", 1, 1, stdout) != 1)) /* append newline */
-		setError(WRITE_FAILED);
+	if (!isAnyError())
+		wrapOutput(&charsOnLine, NULL, NULL);
 	
 	if (isAnyError()) 
 	{

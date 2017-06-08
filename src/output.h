@@ -37,6 +37,10 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 #endif
 
+// default values
+
+#define DEFAULT_OUTPUT_LINE_WIDTH		80
+
 // helper macros
 
 #define verbosity_options_long			{ "verbose", no_argument, NULL, 'v' },\
@@ -76,9 +80,13 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 // function prototypes
 
-char *									wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint32_t *toWrite, char *output);
+char *									wrapOutput(uint32_t *charsOnLine, uint32_t *toWrite, char *output);
 char *									optionsString(int option, const char * longOption);
 decoder_verbosity_t						__getVerbosity(void);
 void									__setVerbosity(decoder_verbosity_t verbosity);
+size_t									getOutputLineWidth(void);
+void									setOutputLineWidth(size_t width);
+void									setLineWrap(void);
+bool									getLineWrap(void);
 
 #endif

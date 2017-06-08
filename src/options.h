@@ -35,9 +35,19 @@
 #define altenv_verbose_message()		if (altEnv)\
 											verboseMessage("using alternative environment path '%s'\n", getEnvironmentPath())
 
+#define width_options_long				{ "wrap-lines", optional_argument, NULL, 'w' }
+
+#define width_options_short				"w::"
+
+#define check_width_options_short()		case 'w':\
+											if (setLineWidth(optarg, getopt_option_name()) == false)\
+												return EXIT_FAILURE;\
+											break
+
 // function prototypes
 
 bool									setAlternativeEnvironment(char * newEnvironment);
+bool									setLineWidth(char * value, const char * option);
 bool									checkLastArgumentIsInputFile(char * name);
 void									warnAboutExtraArguments(char ** argv, int i);
 

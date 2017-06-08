@@ -23,7 +23,12 @@
 
 // global verbosity settings
 
-static decoder_verbosity_t		__decoder_verbosity__ = VERBOSITY_NORMAL;
+static 	decoder_verbosity_t		__decoder_verbosity__ = VERBOSITY_NORMAL;
+
+// static settings with accessor functions
+
+static	size_t					outputLineWidth = DEFAULT_OUTPUT_LINE_WIDTH;
+static	bool					wrapLines = false;
 
 // get verbosity level
 
@@ -34,18 +39,50 @@ EXPORTED	decoder_verbosity_t	__getVerbosity(void)
 
 // set verbosity level
 
-EXPORTED	void 				__setVerbosity(decoder_verbosity_t verbosity)
+EXPORTED	void	__setVerbosity(decoder_verbosity_t verbosity)
 {
 	__decoder_verbosity__ = verbosity;
 }
 
+// get line size
+
+EXPORTED	size_t	getOutputLineWidth(void)
+{
+	return outputLineWidth;
+}
+
+// set line size
+
+EXPORTED	void 	setOutputLineWidth(size_t width)
+{
+	outputLineWidth = width;
+}
+
+// get/set line wrap
+
+EXPORTED	bool	getLineWrap(void)
+{
+	return wrapLines;
+}
+
+EXPORTED	void	setLineWrap(void)
+{
+	wrapLines = true;
+}
+
 // output formatting
 
-EXPORTED	char * 				wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *charsOnLine, uint32_t *toWrite, char *output)
+EXPORTED	char * 				wrapOutput(uint32_t *charsOnLine, uint32_t *toWrite, char *output)
 {
-	uint32_t					remOnLine = lineSize - *charsOnLine;
+	uint32_t					remOnLine = outputLineWidth - *charsOnLine;
 	char *						out = output;
 
+	if (wrapLines && !output)
+	{
+		if (fwrite("\n", 1, 1, stdout) != 1) /* append newline */
+			returnError(WRITE_FAILED, 0);
+		returnError(NOERROR, 0);		
+	}
 	if (wrapLines && (*toWrite > remOnLine)) /* wrap on lineSize */
 	{
 		if ((remOnLine > 0) && (fwrite(out, remOnLine, 1, stdout) != 1)) /* remaining line */
@@ -55,26 +92,16 @@ EXPORTED	char * 				wrapOutput(bool wrapLines, uint32_t lineSize, uint32_t *char
 		*charsOnLine = 0;
 		if (fwrite("\n", 1, 1, stdout) != 1) /* append newline */
 			returnError(WRITE_FAILED, 0);
-		while (*toWrite > lineSize)
+		while (*toWrite > outputLineWidth)
 		{
-			if (fwrite(out, lineSize, 1, stdout) != 1)
+			if (fwrite(out, outputLineWidth, 1, stdout) != 1)
 				returnError(WRITE_FAILED, 0);
-			*toWrite -= lineSize;
-			out += lineSize;
+			*toWrite -= outputLineWidth;
+			out += outputLineWidth;
 			if (fwrite("\n", 1, 1, stdout) != 1) /* append newline */
 				returnError(WRITE_FAILED, 0);
 		}
 	}
+
 	return out;
-}
-
-static		char				optionString[16];
-
-EXPORTED	char *				optionsString(int option, const char * longOption)
-{
-	if (longOption)
-		snprintf(optionString, sizeof(optionString), "--%s", longOption);
-	else
-		snprintf(optionString, sizeof(optionString), "-%c", option);
-	return optionString;
 }
