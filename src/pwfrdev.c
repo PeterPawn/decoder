@@ -22,12 +22,13 @@
 #include "common.h"
 #include "pwfrdev_usage.c"
 
-static commandEntry_t 		__pwfrdev_command = { .name = &commandNames, .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	pwfrdev_command = &__pwfrdev_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "pwfrdev_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__pwfrdev_command = { .names = &commandNames, .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	pwfrdev_command = &__pwfrdev_command;
 
 // statics
 
@@ -37,7 +38,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'password_from_device' function - compute the password hash from the current device properties
 
-int pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	bool				hexOutput = false;
 	bool				forExport = false;

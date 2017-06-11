@@ -22,12 +22,13 @@
 #include "common.h"
 #include "devpw_usage.c"
 
-static commandEntry_t 		__devpw_command = { .name = &commandNames, .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	devpw_command = &__devpw_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "devpw_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__devpw_command = { .names = &commandNames, .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	devpw_command = &__devpw_command;
 
 // statics
 
@@ -40,7 +41,7 @@ static	char *			errorMissingArguments = "Missing arguments on command line.\n";
 
 // 'device_password' function - compute the password hash from the specified device properties
 
-int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	bool				hexOutput = false;
 	char				hash[MAX_DIGEST_SIZE];

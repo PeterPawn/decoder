@@ -241,13 +241,17 @@ endif
 # include debug info on build                                                                         #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_LINK_STATIC = $(if $(ifdef $(STATIC)),y,n)
+ifdef STATIC
+DECODER_CONFIG_LINK_STATIC=y
+endif
 #######################################################################################################
 #                                                                                                     #
 # include debug info on build                                                                         #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DEBUG = $(if $(ifdef $(DEBUG)),y,n)
+ifdef DEBUG
+DECODER_CONFIG_DEBUG=y
+endif
 #######################################################################################################
 #                                                                                                     #
 # Makefile variables composition                                                                      #
@@ -273,12 +277,17 @@ APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev de
 # macros to add an applet                                                                             #
 #                                                                                                     #
 #######################################################################################################
+define GEN_FUNCTION
+$(shell printf "\"%s\",\n" "$(2)" >>$(addsuffix _commands.c,$(1)))
+endef
+
 define ADD_APPLET_MACRO 
-$(info $(1) $(2) $(3))
 ifeq "$(strip $(1))" "y"
-CMDS += $(2:+%=%)
+CMDS += $(if $(filter +%,$(2)),$(3))
 LINKS += $(patsubst +%, %, $(filter +%, $(2)))
 FILES += $(3)
+$(shell $(RM) $(addsuffix _commands.c,$(3)) 2>/dev/null)
+$(foreach cmd,$(2:+%=%),$(call GEN_FUNCTION,$(3),$(cmd)))
 endif
 endef
 
@@ -291,7 +300,7 @@ $(if $(filter y, $(split, $(addprefix DECODER_CONFIG_, $(1)))))
 endef
 
 define GEN_CONFIG_LINE
-printf "#define\\t%s\\t%s\\n" $1 "$(strip $($1:%+=%))"; 
+printf "#define\\t%s\\t%s\\n" $1 "$(strip $($1:%+=%))";
 endef
 
 define GEN_CONFIG
@@ -383,7 +392,7 @@ endif
 #######################################################################################################
 CONFIG = config.h
 APPLETS = applets.h
-HDRS_DEP = common.h 
+HDRS_DEP = common.h
 #######################################################################################################
 #                                                                                                     #
 # source files defined so far are applets and have a '%_usage.c' file with help text                  #
@@ -518,12 +527,15 @@ endif
 # show values on debug                                                                                #
 #                                                                                                     #
 #######################################################################################################
+ifdef $(DEBUG)
 newline = $(shell printf "\n")
 $(info Settings: $(newline))
 $(info FILES=$(FILES))
 $(info LINKS=$(LINKS))
 $(info CMDS=$(CMDS))
+$(info DEBUG=$(DECODER_CONFIG_DEBUG))
 $(info $(newline))
+endif
 #######################################################################################################
 #                                                                                                     #
 # rules and dependencies                                                                              #
@@ -542,20 +554,20 @@ all:	$(binfile)
 
 $(OBJS_COMMON):	$(APPLETS) $(CONFIG) $(HDRS_COMMON) $(SRCS_COMMON)
 
-$(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP) 
+$(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP)
 
 $(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN)
 
 $(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
 	$(CC) $(LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$^)
 
-$(APPLETS): $(CMDS)
+$(APPLETS): | $(CMDS)
 	@$(RM) $@ 2>/dev/null || true
 	@for l in $(CMDS); do \
 		printf "&%s_command,\n" "$$l"; \
 	done > $@
 
-$(CONFIG):	$(MF) $(APPLETS)
+$(CONFIG):	| $(APPLETS)
 	@(sed -n -e '1,\|^// configuration area$$|p' config.in; \
 		$(call GEN_CONFIG, $(addprefix DECODER_CONFIG_, $(CFG))) \
 		sed -n -e '\|^// configuration area$$|,$$p' config.in) > $@ ; \
@@ -588,16 +600,21 @@ $(CONFIG):	$(MF) $(APPLETS)
 #                                                                                                     #
 #######################################################################################################
 uninstall:
-	-for l in $(LINKS:%=$(bindir)/%); do \
+	@for l in $(LINKS:%=$(bindir)/%); do \
 		[ -L $$l ] && $(RM) $$l && echo "symlink for $$l removed"; \
 	done; \
 	true;
-	-[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
+	@[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
+	echo "uninstall succeeded"
 
 clean: 
 	-[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
 	-$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
-	for 
+	for n in $(APPLET_SRCS); do \
+		$(RM) $${n}_commands.c 2>/dev/null; \
+	done; \
+	true
+	echo "clean succeeded"
 
 #######################################################################################################
 #                                                                                                     #

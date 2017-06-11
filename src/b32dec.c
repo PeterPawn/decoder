@@ -22,12 +22,13 @@
 #include "common.h"
 #include "b32dec_usage.c"
 
-static	commandEntry_t 		__b32dec_command = { .name = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
-EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "b32dec_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__b32dec_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
+EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
 
 // statics
 
@@ -84,7 +85,7 @@ int 	b32dec_output(char * base32, bool hexOutput)
 	return EXIT_SUCCESS;
 }
 
-int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	char				buffer[81];
 	char *				input;

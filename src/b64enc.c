@@ -22,12 +22,13 @@
 #include "common.h"
 #include "b64enc_usage.c"
 
-static commandEntry_t 		__b64enc_command = { .name = &commandNames, .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
-EXPORTED commandEntry_t *	b64enc_command = &__b64enc_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "b64enc_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static 	commandEntry_t 		__b64enc_command = { .names = &commandNames, .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
+EXPORTED commandEntry_t *	b64enc_command = &__b64enc_command;
 
 //// error messages ////
 static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
@@ -39,7 +40,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'b64enc' function - encode binary data from STDIN to Base64 encoded on STDOUT
 
-int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	bool				hexInput = false;
 	bool				padOutput = false;

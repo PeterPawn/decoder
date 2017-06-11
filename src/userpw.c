@@ -22,12 +22,13 @@
 #include "common.h"
 #include "userpw_usage.c"
 
-static commandEntry_t 		__userpw_command = { .name = &commandNames, .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	userpw_command = &__userpw_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "userpw_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__userpw_command = { .names = &commandNames, .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	userpw_command = &__userpw_command;
 
 // statics
 
@@ -41,7 +42,7 @@ static	char *			verbosePasswordHash = "user password converted to key 0x%s\n";
 
 // 'user_password' function - compute the password hash for export files with a user-specified password
 
-int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	bool				hexOutput = false;
 	char *				password = NULL;

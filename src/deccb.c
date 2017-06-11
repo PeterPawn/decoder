@@ -22,12 +22,13 @@
 #include "common.h"
 #include "deccb_usage.c"
 
-static commandEntry_t 		__deccb_command = { .name = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "deccb_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__deccb_command = { .names = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
 
 // statics
 
@@ -39,7 +40,7 @@ static	char *			errorNoMemory = "Memory allocation error.\n";
 
 // 'decode_crypedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT
 
-int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

@@ -22,12 +22,13 @@
 #include "common.h"
 #include "decfile_usage.c"
 
-static commandEntry_t 		__decfile_command = { .name = &commandNames, .ep = &decfile_entry, .usage = &decfile_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	decfile_command = &__decfile_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "decfile_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__decfile_command = { .names = &commandNames, .ep = &decfile_entry, .usage = &decfile_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	decfile_command = &__decfile_command;
 
 // statics
 
@@ -40,7 +41,7 @@ static	char *			errorReadToMemory = "Error reading data into memory.\n";
 
 // 'decode_secrets' function - decode all secret values from STDIN content and copy it with replaced values to STDOUT
 
-int decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

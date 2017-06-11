@@ -22,12 +22,13 @@
 #include "common.h"
 #include "hexdec_usage.c"
 
-static commandEntry_t 		__hexdec_command = { .name = &commandNames, .ep = &hexdec_entry, .usage = &hexdec_usage };
-EXPORTED commandEntry_t *	hexdec_command = &__hexdec_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "hexdec_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__hexdec_command = { .names = &commandNames, .ep = &hexdec_entry, .usage = &hexdec_usage };
+EXPORTED commandEntry_t *	hexdec_command = &__hexdec_command;
 
 // statics
 
@@ -41,7 +42,7 @@ static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n"
 
 // 'hexdec' function - decode hexadecimal presentation of data from STDIN to STDOUT
 
-int hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	char				buffer[80];
 	size_t				read = 0;

@@ -22,12 +22,13 @@
 #include "common.h"
 #include "hexenc_usage.c"
 
-static commandEntry_t 		__hexenc_command = { .name = &commandNames, .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
-EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "hexenc_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__hexenc_command = { .names = &commandNames, .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
+EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
 
 // statics
 
@@ -38,7 +39,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT
 
-int hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	uint32_t			charsOnLine = 0;
 	char				buffer[120];

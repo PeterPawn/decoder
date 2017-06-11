@@ -22,12 +22,13 @@
 #include "common.h"
 #include "b32enc_usage.c"
 
-static commandEntry_t 		__b32enc_command = { .name = &commandNames, .ep = &b32enc_entry, .usage = &b32enc_usage, .finalNewlineOnTTY = true };
-EXPORTED commandEntry_t *	b32enc_command = &__b32enc_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "b32enc_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__b32enc_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
+EXPORTED commandEntry_t *	b32enc_command = &__b32enc_command;
 
 // statics
 
@@ -41,7 +42,7 @@ static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n"
 
 // 'b32enc' function - encode binary data from STDIN to Base32 encoded on STDOUT
 
-int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	bool				hexInput = false;
 	bool				padInput = false;

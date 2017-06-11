@@ -71,13 +71,24 @@ int main(int argc, char** argv)
 		main_usage(false);
 
 #if DEBUG == 1
-		fprintf(stderr, "\n\n");
+		fprintf(stderr, "\n");
 
 		int				i=0;
 		commandEntry_t	*current = getCommandEntry(i);
 		while (current)
 		{
-			fprintf(stderr, "command=%s, ep=0x%08llx, usage=0x%08llx, usesCrypto=%u, finalNewlineOnTTY=%u\n", current->name, (long long unsigned int) current->ep, (long long unsigned int) current->usage, current->usesCrypto, current->finalNewlineOnTTY);
+			char * *	name = *(current->names);
+
+			fprintf(stderr, "ep=0x%08llx, usage=0x%08llx, usesCrypto=%u, finalNewlineOnTTY=%u, name=", \
+				(long long unsigned int) current->ep, (long long unsigned int) current->usage, \
+				current->usesCrypto, current->finalNewlineOnTTY);
+			
+			while (*name)
+			{
+				fprintf(stderr, "%s ", *name);
+				name++;
+			}
+			fprintf(stderr, "\n");
 			current = getCommandEntry(++i);
 		}
 #endif
@@ -90,22 +101,27 @@ int main(int argc, char** argv)
 
 	while (current)
 	{
-		if (strcmp(fname, current->name))
+		char * *		name = *(current->names);
+
+		while (*name)
 		{
-			current = getCommandEntry(++i);
-			continue;
+			if (!strcmp(fname, *name))
+			{
+				if (current->usesCrypto) EncryptionInit();
+				arguments[0] = ename;
+				opterr = 0;
+				int exitCode = (*current->ep)(argumentCount, arguments, argumentOffset, current, *name);
+				if (exitCode == EXIT_SUCCESS)
+				{
+					if (current->finalNewlineOnTTY && isatty(1) && !isAnyError())
+						fprintf(stdout, "\n");
+				}
+				if (current->usesCrypto) EVP_cleanup();
+				exit(exitCode);
+			}
+			name++;
 		}
-		if (current->usesCrypto) EncryptionInit();
-		arguments[0] = ename;
-		opterr = 0;
-		int exitCode = (*current->ep)(argumentCount, arguments, argumentOffset, current);
-		if (exitCode == EXIT_SUCCESS)
-		{
-			if (current->finalNewlineOnTTY && isatty(1) && !isAnyError())
-				fprintf(stdout, "\n");
-		}
-		if (current->usesCrypto) EVP_cleanup();
-		exit(exitCode);
+		current = getCommandEntry(++i);
 	}
 
 	if (!current)

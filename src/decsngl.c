@@ -22,12 +22,13 @@
 #include "common.h"
 #include "decsngl_usage.c"
 
-static commandEntry_t 		__decsngl_command = { .name = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	decsngl_command = &__decsngl_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "decsngl_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__decsngl_command = { .names = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	decsngl_command = &__decsngl_command;
 
 // statics
 
@@ -43,7 +44,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'decode_secret' function - decode the specified secret value (in Base32 encoding) perties
 
-int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	bool				hexOutput = false;
 	char *				out = NULL;

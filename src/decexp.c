@@ -22,12 +22,13 @@
 #include "common.h"
 #include "decexp_usage.c"
 
-static commandEntry_t 		__decexp_command = { .name = &commandNames, .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "decexp_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static	commandEntry_t 		__decexp_command = { .names = &commandNames, .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
+EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
 
 // statics
 
@@ -43,7 +44,7 @@ static	char *			verboseUsingKey = "using key 0x%s for decryption\n";
 
 // 'decode_export' function - decode all secret values from the export file on STDIN and copy it with replaced values to STDOUT
 
-int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);
@@ -160,10 +161,10 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	size_t				offset = 0;
 	size_t				foundOffset = offset;
 	size_t				valueSize = 0;
-	char *				name;
+	char *				varName;
 	bool				split = false;
 
-	if ((name = memoryBufferFindString(&found, &foundOffset, EXPORT_PASSWORD_NAME, strlen(EXPORT_PASSWORD_NAME) , &split)) != NULL)
+	if ((varName = memoryBufferFindString(&found, &foundOffset, EXPORT_PASSWORD_NAME, strlen(EXPORT_PASSWORD_NAME) , &split)) != NULL)
 	{
 		current = found;
 		offset = foundOffset;

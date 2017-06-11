@@ -22,12 +22,13 @@
 #include "common.h"
 #include "b64dec_usage.c"
 
-static commandEntry_t 		__b64dec_command = { .name = &commandNames, .ep = &b64dec_entry, .usage = &b64dec_usage };
-EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
-static	char *				commandNames = {
+static	char *				__commandNames[] = {
 #include "b64dec_commands.c"
 		NULL
 };
+static	char * *			commandNames = &__commandNames[0];
+static 	commandEntry_t 		__b64dec_command = { .names = &commandNames, .ep = &b64dec_entry, .usage = &b64dec_usage };
+EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 
 // statics
 
@@ -84,7 +85,7 @@ int		b64dec_output(char * base64, bool hexOutput, bool pad)
 	return EXIT_SUCCESS;
 }
 
-int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
 {
 	char				buffer[80];
 	char *				input;
