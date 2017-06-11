@@ -1,127 +1,615 @@
-###########################################################
-#                                                         #
-# project settings                                        #
-#                                                         #
-###########################################################
-BASENAME:=decoder
-#
-# target binary
-# 
-BINARY:=$(BASENAME)
-#
-# files
-#
-MAIN = decoder
-FILES = errors output base32 base64 hex encryption memory functions crypto options environ
-COMMANDS = b32dec b32enc b64dec b64enc hexdec hexenc
-COMMANDS += userpw devpw pwfrdev
-COMMANDS += decsngl decfile decexp deccb
-HFILES = common 
-#
-# source files
-#
-SRCS = $(addsuffix .c, $(FILES) $(COMMANDS))
-SRCS += $(addsuffix _usage.c, $(COMMANDS))
-OBJS = $(addsuffix .o, $(FILES) $(COMMANDS))
-HDRS = $(addsuffix .h, $(FILES) $(COMMANDS) $(HFILES) $(MAIN))
-MAIN_SRC = $(addsuffix .c, $(MAIN))
-#
-# link binaries with this libraries too
-#
-LIBS = -lcrypto
-#
-# target directory, if not overridden
-#
-INSTALLDIR = ../bin
-#
-# symlinks names for binary utility
-#
-SYMLINK_TARGETS += b32dec
-SYMLINK_TARGETS += b32enc
-SYMLINK_TARGETS += b64dec
-SYMLINK_TARGETS += b64enc
-SYMLINK_TARGETS += hexdec
-SYMLINK_TARGETS += hexenc
-SYMLINK_TARGETS += user_password
-SYMLINK_TARGETS += device_password
-SYMLINK_TARGETS += password_from_device
-SYMLINK_TARGETS += decode_export
-SYMLINK_TARGETS += decode_secrets
-SYMLINK_TARGETS += decode_secret
-SYMLINK_TARGETS += decode_passwords
-SYMLINK_TARGETS += decode_cryptedbinfile
-ifeq ($(FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG), y)
-SYMLINK_TARGETS += decrypt-fritzos-cfg
+# vim: set tabstop=4 syntax=sh :
+###################################################################################################VER#
+#                                                                                                     #
+# decode_passwords, version 0.3                                                                       #
+#                                                                                                     #
+# This Makefile is a part of the project from https://github.com/PeterPawn/decode_passwords.          #
+#                                                                                                     #
+###################################################################################################CPY#
+#                                                                                                     #
+# Copyright (C) 2014-2017 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+#                                                                                                     #
+###################################################################################################LIC#
+#                                                                                                     #
+# This project is free software, licensed under a slightly modified GPL version; most people          #
+# can redistribute it and/or modify it under the terms of the GNU General Public License as           #
+# published by the Free Software Foundation; either version 2 of the License, or (at your             #
+# option) any later version.                                                                          #
+#                                                                                                     #
+# This project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;           #
+# without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           #
+# See the GNU General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more          #
+# details.                                                                                            #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# configuration values                                                                                #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# categories and applets                                                                              #
+#                                                                                                     #
+# a trailing plus-sign after an applet name will create a symlink for this applet on install          #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# general converters to/from binary to/from ( Base32 | Base64 | hexadecimal )                         #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CONVERTERS=y
+#######################################################################################################
+#                                                                                                     #
+# general converters from binary to a textual representation                                          #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CONVERTERS_ENCODERS=y
+#######################################################################################################
+#                                                                                                     #
+# general converters from text data to binary                                                         #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CONVERTERS_DECODERS=y
+#######################################################################################################
+#                                                                                                     #
+# general converters for Base32                                                                       #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CONVERTERS_BASE32=y
+#######################################################################################################
+#                                                                                                     #
+# general converters for Base64                                                                       #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CONVERTERS_BASE64=y
+#######################################################################################################
+#                                                                                                     #
+# general converters for hexadecimal                                                                  #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CONVERTERS_HEX=y
+#######################################################################################################
+#                                                                                                     #
+# include Base32 to binary applet                                                                     #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECODE_BASE32=y
+#######################################################################################################
+#                                                                                                     #
+# include Base64 to binary applet                                                                     #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECODE_BASE64=y
+#######################################################################################################
+#                                                                                                     #
+# include hexadecimal to binary applet                                                                #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECODE_HEX=y
+#######################################################################################################
+#                                                                                                     #
+# include binary to Base32 applet                                                                     #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_ENCODE_BASE32=y
+#######################################################################################################
+#                                                                                                     #
+# include binary to Base64 applet                                                                     #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_ENCODE_BASE64=y
+#######################################################################################################
+#                                                                                                     #
+# include binary to hexadecimal applet                                                                #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_ENCODE_HEX=y
+#######################################################################################################
+#                                                                                                     #
+# general decipher key creation                                                                       #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS=y
+#######################################################################################################
+#                                                                                                     #
+# decryption key from user password applet                                                            #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS_USER_PASSWORD=y
+#######################################################################################################
+#                                                                                                     #
+# decryption key from device properties applet                                                        #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS_DEVICE_PROPERTIES=y
+#######################################################################################################
+#                                                                                                     #
+# decryption key from current device properties applet                                                #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS_CURRENT_DEVICE=y
+#######################################################################################################
+#                                                                                                     #
+# export file handling                                                                                #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_EXPORT_FILES=y
+#######################################################################################################
+#                                                                                                     #
+# export file - CRYPTEDBINFILE sections decryption                                                    #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_EXPORT_BINFILE=y
+#######################################################################################################
+#                                                                                                     #
+# single value decryption                                                                             #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_SINGLE_VALUES=y
+#######################################################################################################
+#                                                                                                     #
+# decrypt any values in a text file                                                                   #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_FILES=y
+#######################################################################################################
+#                                                                                                     #
+# applet names, multiple names may be specified for the same applet                                   #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# Base32 to binary applet name                                                                        #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECODE_BASE32_NAME = +b32dec
+#######################################################################################################
+#                                                                                                     #
+# binary to Base32 applet name                                                                        #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_ENCODE_BASE32_NAME = +b32enc
+#######################################################################################################
+#                                                                                                     #
+# Base64 to binary applet name                                                                        #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECODE_BASE64_NAME = +b64dec
+#######################################################################################################
+#                                                                                                     #
+# binary to Base64 applet name                                                                        #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_ENCODE_BASE64_NAME = +b64enc
+#######################################################################################################
+#                                                                                                     #
+# hexadecimal to binary applet name                                                                   #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECODE_HEX_NAME = +hexdec
+#######################################################################################################
+#                                                                                                     #
+# binary to hexadecimal applet name                                                                   #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_ENCODE_HEX_NAME = +hexenc
+#######################################################################################################
+#                                                                                                     #
+# key from user password applet name                                                                  #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS_USER_PASSWORD_NAME = +user_password
+#######################################################################################################
+#                                                                                                     #
+# key from device properties applet name                                                              #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS_DEVICE_PROPERTIES_NAME = +device_password
+#######################################################################################################
+#                                                                                                     #
+# key from current device properties applet name                                                      #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_KEYS_CURRENT_DEVICE_NAME = +password_from_device
+#######################################################################################################
+#                                                                                                     #
+# decrypt export file applet name                                                                     #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_EXPORT_FILES_NAME = +decode_export
+#######################################################################################################
+#                                                                                                     #
+# decrypt CRYPTEDBINFILE content applet name                                                          #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_EXPORT_BINFILE_NAME = +decode_cryptedbinfile
+#######################################################################################################
+#                                                                                                     #
+# single value decryption applet name                                                                 #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_SINGLE_VALUES_NAME = +decode_secret
+#######################################################################################################
+#                                                                                                     #
+# decrypt any values in a text file applet name                                                       #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECRYPT_FILES_NAME = +decode_secrets
+ifeq ($(strip $(FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG)), y)
+DECODER_CONFIG_DECRYPT_FILES_NAME += +decrypt-fritzos-cfg
 endif
-###########################################################
-#                                                         #
-# tool definitions, will be overridden for cross builds   #
-#                                                         #
-###########################################################
+#######################################################################################################
+#                                                                                                     #
+# include debug info on build                                                                         #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_LINK_STATIC = $(if $(ifdef $(STATIC)),y,n)
+#######################################################################################################
+#                                                                                                     #
+# include debug info on build                                                                         #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DEBUG = $(if $(ifdef $(DEBUG)),y,n)
+#######################################################################################################
+#                                                                                                     #
+# Makefile variables composition                                                                      #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# project settings                                                                                    #
+#                                                                                                     #
+#######################################################################################################
+project := decoder
+srcdir = .
+#######################################################################################################
+#                                                                                                     #
+# build settings from configuration above                                                             #
+#                                                                                                     #
+#######################################################################################################
+FILES :=
+LINKS :=
+CMDS :=
+#######################################################################################################
+#                                                                                                     #
+# macros to add an applet                                                                             #
+#                                                                                                     #
+#######################################################################################################
+define ADD_APPLET_MACRO 
+$(info $(1) $(2) $(3))
+ifeq "$(strip $(1))" "y"
+CMDS += $(2:+%=%)
+LINKS += $(patsubst +%, %, $(filter +%, $(2)))
+FILES += $(3)
+endif
+endef
+
+define ADD_APPLET
+$(eval $(call ADD_APPLET_MACRO,$($(addprefix DECODER_CONFIG_, $(1))),$($(addsuffix _NAME, $(addprefix DECODER_CONFIG_, $(1)))),$(2)))
+endef
+
+define IS_SET_MACRO
+$(if $(filter y, $(split, $(addprefix DECODER_CONFIG_, $(1)))))
+endef
+#######################################################################################################
+#                                                                                                     #
+# configure conditional inclusion of applets                                                          #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# converter applets                                                                                   #
+#                                                                                                     #
+#######################################################################################################
+ifeq "$(strip $(DECODER_CONFIG_CONVERTERS))" "y"
+ifeq "$(strip $(DECODER_CONFIG_CONVERTERS_BASE32))" "y"
+ifneq "$(strip $(DECODER_CONFIG_CONVERTERS_DECODERS))" "n"
+$(call ADD_APPLET,DECODE_BASE32,b32dec)
+endif
+ifneq ($(DECODER_CONFIG_CONVERTERS_ENCODERS),n)
+ifeq "$(strip $(DECODER_CONFIG_ENCODE_BASE32))" "y"
+$(call ADD_APPLET,ENCODE_BASE32,b32enc)
+endif
+endif
+endif
+ifeq ($(DECODER_CONFIG_CONVERTERS_BASE64),y)
+ifneq ($(DECODER_CONFIG_CONVERTERS_DECODERS),n)
+ifneq ($(DECODER_CONFIG_DECODE_BASE64),n)
+$(call ADD_APPLET,DECODE_BASE64,b64dec)
+endif
+endif
+ifneq ($(DECODER_CONFIG_CONVERTERS_ENCODERS),n)
+ifneq ($(DECODER_CONFIG_ENCODE_BASE64),n)
+$(call ADD_APPLET,ENCODE_BASE64,b64enc)
+endif
+endif
+endif
+ifeq ($(DECODER_CONFIG_CONVERTERS_HEX),y)
+ifneq ($(DECODER_CONFIG_CONVERTERS_DECODERS),n)
+ifneq ($(DECODER_CONFIG_DECODE_HEX),n)
+$(call ADD_APPLET,DECODE_HEX,hexdec)
+endif
+endif
+ifneq ($(DECODER_CONFIG_CONVERTERS_ENCODERS),n)
+ifneq ($(DECODER_CONFIG_ENCODE_HEX),n)
+$(call ADD_APPLET,ENCODE_HEX,hexenc)
+endif
+endif
+endif
+endif
+#######################################################################################################
+#                                                                                                     #
+# decrypt key applets                                                                                 #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_KEYS),y)
+ifeq ($(DECODER_CONFIG_KEYS_USER_PASSWORD),y)
+$(call ADD_APPLET,KEYS_USER_PASSWORD,userpw)
+endif
+ifeq ($(DECODER_CONFIG_KEYS_DEVICE_PROPERTIES),y)
+$(call ADD_APPLET,KEYS_DEVICE_PROPERTIES,devpw)
+endif
+ifeq ($(DECODER_CONFIG_KEYS_CURRENT_DEVICE),y)
+$(call ADD_APPLET,KEYS_CURRENT_DEVICE,pwfrdev)
+endif
+endif
+#######################################################################################################
+#                                                                                                     #
+# decrypt data applets                                                                                #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_FILES),y)
+$(call ADD_APPLET,DECRYPT_EXPORT_FILES,decexp)
+ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_BINFILE),y)
+$(call ADD_APPLET,DECRYPT_EXPORT_BINFILE,deccb)
+endif
+endif
+ifeq ($(DECODER_CONFIG_DECRYPT_SINGLE_VALUES),y)
+$(call ADD_APPLET,DECRYPT_SINGLE_VALUES,decsngl)
+endif
+ifeq ($(DECODER_CONFIG_DECRYPT_FILES),y)
+$(call ADD_APPLET,DECRYPT_FILES,decfile)
+endif
+#######################################################################################################
+#                                                                                                     #
+# common files as dependencies for other files                                                        #
+#                                                                                                     #
+#######################################################################################################
+CONFIG = config.h
+APPLETS = applets.h
+HDRS_DEP = common.h $(CONFIG) $(APPLETS)
+#######################################################################################################
+#                                                                                                     #
+# source files defined so far are applets and have a '%_usage.c' file with help text                  #
+#                                                                                                     #
+#######################################################################################################
+FILES_APP = $(FILES)
+HDRS_APP = $(addsuffix .h, $(FILES_APP)) $(HDRS_DEP)
+SRCS_USE = $(addsuffix _usage.c, $(FILES_APP))
+OBJS_APP = $(addsuffix .o, $(FILES_APP))
+SRCS_APP = $(addsuffix .c, $(FILES_APP))
+#######################################################################################################
+#                                                                                                     #
+# configuration independent source files                                                              #
+#                                                                                                     #
+#######################################################################################################
+FILES_COMMON += errors
+FILES_COMMON += output
+FILES_COMMON += base32
+FILES_COMMON += base64
+FILES_COMMON += hex
+FILES_COMMON += encryption
+FILES_COMMON += memory
+FILES_COMMON += functions
+FILES_COMMON += crypto
+FILES_COMMON += options
+FILES_COMMON += environ
+HDRS_COMMON = $(addsuffix .h, $(FILES_COMMON)) $(HDRS_DEP)
+OBJS_COMMON = $(addsuffix .o, $(FILES_COMMON))
+SRCS_COMMON = $(addsuffix .c, $(FILES_COMMON))
+#######################################################################################################
+#                                                                                                     #
+# additional definitions for the main file                                                            #
+#                                                                                                     #
+#######################################################################################################
+FILES_MAIN = decoder
+HDRS_MAIN = $(addsuffix .h, $(FILES_MAIN)) $(HDRS_DEP)
+OBJS_MAIN = $(addsuffix .o, $(FILES_MAIN))
+SRCS_MAIN = $(addsuffix .c, $(FILES_MAIN))
+#######################################################################################################
+#                                                                                                     #
+# configuration file settings                                                                         #
+#                                                                                                     #
+#######################################################################################################
+CFG += CONVERTERS
+CFG += CONVERTERS_ENCODERS
+CFG += CONVERTERS_DECODERS
+CFG += CONVERTERS_BASE32
+CFG += CONVERTERS_BASE64
+CFG += CONVERTERS_HEX
+CFG += DECODE_BASE32
+CFG += DECODE_BASE64
+CFG += DECODE_HEX
+CFG += ENCODE_BASE32
+CFG += ENCODE_BASE64
+CFG += ENCODE_HEX
+CFG += KEYS
+CFG += KEYS_USER_PASSWORD
+CFG += KEYS_DEVICE_PROPERTIES
+CFG += KEYS_CURRENT_DEVICE
+CFG += DECRYPT_EXPORT_FILES
+CFG += DECRYPT_EXPORT_FILES_DECRYPT_BINFILES
+CFG += DECRYPT_SINGLE_VALUES
+CFG += DECRYPT_FILES
+CFG += DECODE_BASE32_NAME
+CFG += DECODE_BASE64_NAME
+CFG += DECODE_HEX_NAME
+CFG += ENCODE_BASE32_NAME
+CFG += ENCODE_BASE64_NAME
+CFG += ENCODE_HEX_NAME
+CFG += KEYS_USER_PASSWORD_NAME
+CFG += KEYS_DEVICE_PROPERTIES_NAME
+CFG += KEYS_CURRENT_DEVICE_NAME
+CFG += DECRYPT_EXPORT_FILES_NAME
+CFG += DECRYPT_EXPORT_FILES_DECRPYT_BINFILE_NAME
+CFG += DECRYPT_SINGLE_VALUES_NAME
+CFG += DECRYPT_FILES_NAME
+CFG += LINK_STATIC
+CFG += DEBUG
+########################################################################################################
+#                                                                                                     #
+# additional libraries for linker calls                                                               #
+#                                                                                                     #
+#######################################################################################################
+LIBS = -lcrypto
+#######################################################################################################
+#                                                                                                     #
+# target binary name                                                                                  #
+#                                                                                                     #
+#######################################################################################################
+binfile := $(project)
+#######################################################################################################
+#                                                                                                     #
+# install binary and symlinks here, override this for cross-builds                                    #
+#                                                                                                     #
+#######################################################################################################
+prefix = $(HOME)
+bindir = $(prefix)/bin
+#######################################################################################################
+#                                                                                                     #
+# tools definitions, override them for cross-compiles                                                 #
+#                                                                                                     #
+#######################################################################################################
+MF = Makefile
 CC = gcc
 RM = rm
 STRIP = strip
 INSTALL = install
-#
-# flags for calling the tools
-#
+LN = ln
+#######################################################################################################
+#                                                                                                     #
+# tools flags, override them for cross-builds                                                         #
+#                                                                                                     #
+#######################################################################################################
 override CFLAGS += -W -Wall -std=c99 -fvisibility=hidden
-ifdef DEBUG
+ifeq ($(DECODER_CONFIG_DEBUG),y)
 override CFLAGS += -O0 -ggdb -DDEBUG
 else
 override CFLAGS += -O2 -ffunction-sections -fdata-sections
 override LDFLAGS += -Wl,--gc-sections
-STRIP_BINARY = strip
 endif
-ifeq ($(STATIC), 1)
+#######################################################################################################
+#                                                                                                     #
+# additional settings for static builds                                                               #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_LINK_STATIC),y)
 override CFLAGS += -DSTATIC -static
 override LDFLAGS += -Wl,-static
 endif
-#
-# how to build objects from sources
-#
+#######################################################################################################
+#                                                                                                     #
+# strip symbols on install, if no debug settings were selected                                        #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_DEBUG),y)
+STRIP := touch
+endif
+#######################################################################################################
+#                                                                                                     #
+# show values on debug                                                                                #
+#                                                                                                     #
+#######################################################################################################
+newline = $(shell printf "\n")
+$(info Settings: $(newline))
+$(info FILES=$(FILES))
+$(info LINKS=$(LINKS))
+$(info CMDS=$(CMDS))
+$(info $(newline))
+#######################################################################################################
+#                                                                                                     #
+# changed receipts                                                                                    #
+#                                                                                                     #
+#######################################################################################################
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
-###########################################################
-#                                                         #
-# prepare variables                                       #
-#                                                         #
-###########################################################
-DESTDIR:=$(shell printf "%s" "$(INSTALLDIR)" | sed -e 's|^\(.*\)/\+$$|\1|')/
-###########################################################
-#                                                         #
-# possible targets to make                                #
-#                                                         #
-###########################################################
-.PHONY: all
-#
-all: $(BINARY)
-#
-$(OBJS): Makefile $(SRCS) $(HDRS)
-$(MAIN_SRC:%.c=%.o): Makefile $(OBJS) $(MAIN_SRC)
-#
-$(BINARY): $(OBJS) $(MAIN_SRC:%.c=%.o)
-	$(CC) $(LDFLAGS) $(EXTRA_LDFLAGS) -L. $(LIBS) -o $@ $^
-#
-strip:	$(BINARY)
-	$(STRIP) $(BINARY)
-#
-install: install_$(BINARY) install-links
-#
-install_$(BINARY): $(BINARY) strip
-	$(INSTALL) -d $(DESTDIR)
-	$(INSTALL) $(BINARY) $(DESTDIR)
-#
-install-links: $(SYMLINK_TARGETS)
-#
-$(SYMLINK_TARGETS): $(BINARY)
-	ln -sf $(BINARY) $(DESTDIR)$@
-#
-uninstall:
-	-@for l in $(SYMLINK_TARGETS); do [ -L $(DESTDIR)$$l ] && $(RM) $(DESTDIR)$$l && echo "symlink for $$l removed"; done; true
-	-[ -f $(DESTDIR)$(BINARY) ] && $(RM) $(DESTDIR)$(BINARY) 2>/dev/null || true
-#
-clean: 
-	-[ -f $(BINARY) ] && $(RM) $(BINARY) 2>/dev/null || true
-	-$(RM) *.o 2>/dev/null || true
 
+define GEN_CONFIG_LINE
+printf "#define\\t%s\\t%s\\n" $1 "$(strip $($1:%+=%))"; 
+endef
+
+define GEN_CONFIG
+$(foreach v, $1, $(call GEN_CONFIG_LINE,$(v)))
+endef
+
+#######################################################################################################
+#                                                                                                     #
+# rules and dependencies                                                                              #
+#                                                                                                     #
+#######################################################################################################
+#                                                                                                     #
+# build targets and rules                                                                             #
+#                                                                                                     #
+#######################################################################################################
+all:	$(binfile)
+
+.PHONY:	all install_$(binfile) links uninstall clean install
+
+$(OBJS_COMMON):	$(HDRS_COMMON) $(SRCS_COMMON)
+
+$(OBJS_APP):	$(HDRS_APP) $(SRCS_USE) $(SRCS_APP) 
+
+$(OBJS_MAIN):	$(HDRS_MAIN) $(SRCS_MAIN)
+
+$(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
+	$(CC) $(LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$^)
+
+$(APPLETS):	$(CMDS)
+	-$(RM) $@ 2>/dev/null
+	$(file >> $@, $(foreach applet,$^,$($call ADD_APPLET_TO_LIST,$(applet))))
+
+$(CONFIG):	$(MF)
+	@(sed -n -e '1,\|^// configuration area$$|p' config.in; \
+		$(call GEN_CONFIG, $(addprefix DECODER_CONFIG_, $(CFG))) \
+		sed -n -e '\|^// configuration area$$|,$$p' config.in) > $@ ; \
+		cat $@
+
+#######################################################################################################
+#                                                                                                     #
+# install targets and rules                                                                           #
+#                                                                                                     #
+#######################################################################################################
+#.PHONY:	$(LINKS:%=$(bindir)/%)
+#
+#$(LINKS:%=$(bindir)/%):	$(binfile)
+#	opwd=$$(pwd); \
+#	cd $(bindir); \
+#	$(LN) -s -f $< $@ ; \
+#	cd $$opwd
+#
+#install_$(binfile):	$(binfile)
+#	$(STRIP) $<
+#	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
+#	$(INSTALL) $(binfile) $(bindir)
+#
+#links:	$(LINKS:%=$(bindir)/%)
+#
+#install:	install_$(binfile) links
+#
+#######################################################################################################
+#                                                                                                     #
+# uninstall / clean targets and rules                                                                 #
+#                                                                                                     #
+#######################################################################################################
+uninstall:
+	-for l in $(LINKS:%=$(bindir)/%); do \
+		[ -L $$l ] && $(RM) $$l && echo "symlink for $$l removed"; \
+	done; \
+	true;
+	-[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
+
+clean: 
+	-[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
+	-$(RM) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
+
+#######################################################################################################
+#                                                                                                     #
+# end of Makefile                                                                                     #
+#                                                                                                     #
+#######################################################################################################
