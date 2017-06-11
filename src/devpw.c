@@ -22,8 +22,12 @@
 #include "common.h"
 #include "devpw_usage.c"
 
-static commandEntry_t 		__devpw_command = { .name = "device_password", .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
+static commandEntry_t 		__devpw_command = { .name = &commandNames, .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	devpw_command = &__devpw_command;
+static	char *				commandNames = {
+#include "devpw_commands.c"
+		NULL
+};
 
 // statics
 

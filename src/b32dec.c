@@ -22,8 +22,12 @@
 #include "common.h"
 #include "b32dec_usage.c"
 
-static commandEntry_t 		__b32dec_command = { .name = "b32dec", .ep = &b32dec_entry, .usage = &b32dec_usage };
+static	commandEntry_t 		__b32dec_command = { .name = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
 EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
+static	char *				commandNames = {
+#include "b32dec_commands.c"
+		NULL
+};
 
 // statics
 

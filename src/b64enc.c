@@ -22,8 +22,12 @@
 #include "common.h"
 #include "b64enc_usage.c"
 
-static commandEntry_t 		__b64enc_command = { .name = "b64enc", .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
+static commandEntry_t 		__b64enc_command = { .name = &commandNames, .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	b64enc_command = &__b64enc_command;
+static	char *				commandNames = {
+#include "b64enc_commands.c"
+		NULL
+};
 
 //// error messages ////
 static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";

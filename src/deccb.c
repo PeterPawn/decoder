@@ -22,8 +22,12 @@
 #include "common.h"
 #include "deccb_usage.c"
 
-static commandEntry_t 		__deccb_command = { .name = "decode_cryptedbinfile", .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
+static commandEntry_t 		__deccb_command = { .name = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
+static	char *				commandNames = {
+#include "deccb_commands.c"
+		NULL
+};
 
 // statics
 

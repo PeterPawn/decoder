@@ -22,8 +22,12 @@
 #include "common.h"
 #include "hexdec_usage.c"
 
-static commandEntry_t 		__hexdec_command = { .name = "hexdec", .ep = &hexdec_entry, .usage = &hexdec_usage };
+static commandEntry_t 		__hexdec_command = { .name = &commandNames, .ep = &hexdec_entry, .usage = &hexdec_usage };
 EXPORTED commandEntry_t *	hexdec_command = &__hexdec_command;
+static	char *				commandNames = {
+#include "hexdec_commands.c"
+		NULL
+};
 
 // statics
 

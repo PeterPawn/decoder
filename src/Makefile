@@ -232,7 +232,7 @@ DECODER_CONFIG_DECRYPT_SINGLE_VALUES_NAME = +decode_secret
 # decrypt any values in a text file applet name                                                       #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECRYPT_FILES_NAME = +decode_secrets
+DECODER_CONFIG_DECRYPT_FILES_NAME = +decode_secrets +decode_passwords
 ifeq ($(strip $(FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG)), y)
 DECODER_CONFIG_DECRYPT_FILES_NAME += +decrypt-fritzos-cfg
 endif
@@ -267,6 +267,7 @@ srcdir = .
 FILES :=
 LINKS :=
 CMDS :=
+APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb
 #######################################################################################################
 #                                                                                                     #
 # macros to add an applet                                                                             #
@@ -288,6 +289,15 @@ endef
 define IS_SET_MACRO
 $(if $(filter y, $(split, $(addprefix DECODER_CONFIG_, $(1)))))
 endef
+
+define GEN_CONFIG_LINE
+printf "#define\\t%s\\t%s\\n" $1 "$(strip $($1:%+=%))"; 
+endef
+
+define GEN_CONFIG
+$(foreach v, $1, $(call GEN_CONFIG_LINE,$(v)))
+endef
+
 #######################################################################################################
 #                                                                                                     #
 # configure conditional inclusion of applets                                                          #
@@ -373,14 +383,14 @@ endif
 #######################################################################################################
 CONFIG = config.h
 APPLETS = applets.h
-HDRS_DEP = common.h $(CONFIG) $(APPLETS)
+HDRS_DEP = common.h 
 #######################################################################################################
 #                                                                                                     #
 # source files defined so far are applets and have a '%_usage.c' file with help text                  #
 #                                                                                                     #
 #######################################################################################################
 FILES_APP = $(FILES)
-HDRS_APP = $(addsuffix .h, $(FILES_APP)) $(HDRS_DEP)
+HDRS_APP = $(addsuffix .h, $(FILES_APP))
 SRCS_USE = $(addsuffix _usage.c, $(FILES_APP))
 OBJS_APP = $(addsuffix .o, $(FILES_APP))
 SRCS_APP = $(addsuffix .c, $(FILES_APP))
@@ -400,7 +410,7 @@ FILES_COMMON += functions
 FILES_COMMON += crypto
 FILES_COMMON += options
 FILES_COMMON += environ
-HDRS_COMMON = $(addsuffix .h, $(FILES_COMMON)) $(HDRS_DEP)
+HDRS_COMMON = $(addsuffix .h, $(FILES_COMMON))
 OBJS_COMMON = $(addsuffix .o, $(FILES_COMMON))
 SRCS_COMMON = $(addsuffix .c, $(FILES_COMMON))
 #######################################################################################################
@@ -409,7 +419,7 @@ SRCS_COMMON = $(addsuffix .c, $(FILES_COMMON))
 #                                                                                                     #
 #######################################################################################################
 FILES_MAIN = decoder
-HDRS_MAIN = $(addsuffix .h, $(FILES_MAIN)) $(HDRS_DEP)
+HDRS_MAIN = $(addsuffix .h, $(FILES_MAIN))
 OBJS_MAIN = $(addsuffix .o, $(FILES_MAIN))
 SRCS_MAIN = $(addsuffix .c, $(FILES_MAIN))
 #######################################################################################################
@@ -505,14 +515,6 @@ override LDFLAGS += -Wl,-static
 endif
 #######################################################################################################
 #                                                                                                     #
-# strip symbols on install, if no debug settings were selected                                        #
-#                                                                                                     #
-#######################################################################################################
-ifeq ($(DECODER_CONFIG_DEBUG),y)
-STRIP := touch
-endif
-#######################################################################################################
-#                                                                                                     #
 # show values on debug                                                                                #
 #                                                                                                     #
 #######################################################################################################
@@ -524,22 +526,6 @@ $(info CMDS=$(CMDS))
 $(info $(newline))
 #######################################################################################################
 #                                                                                                     #
-# changed receipts                                                                                    #
-#                                                                                                     #
-#######################################################################################################
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-define GEN_CONFIG_LINE
-printf "#define\\t%s\\t%s\\n" $1 "$(strip $($1:%+=%))"; 
-endef
-
-define GEN_CONFIG
-$(foreach v, $1, $(call GEN_CONFIG_LINE,$(v)))
-endef
-
-#######################################################################################################
-#                                                                                                     #
 # rules and dependencies                                                                              #
 #                                                                                                     #
 #######################################################################################################
@@ -547,28 +533,32 @@ endef
 # build targets and rules                                                                             #
 #                                                                                                     #
 #######################################################################################################
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 all:	$(binfile)
 
-.PHONY:	all install_$(binfile) links uninstall clean install
+.PHONY:	all install_$(binfile) links uninstall clean install $(CMDS)
 
-$(OBJS_COMMON):	$(HDRS_COMMON) $(SRCS_COMMON)
+$(OBJS_COMMON):	$(APPLETS) $(CONFIG) $(HDRS_COMMON) $(SRCS_COMMON)
 
-$(OBJS_APP):	$(HDRS_APP) $(SRCS_USE) $(SRCS_APP) 
+$(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP) 
 
-$(OBJS_MAIN):	$(HDRS_MAIN) $(SRCS_MAIN)
+$(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN)
 
 $(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
 	$(CC) $(LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$^)
 
-$(APPLETS):	$(CMDS)
-	-$(RM) $@ 2>/dev/null
-	$(file >> $@, $(foreach applet,$^,$($call ADD_APPLET_TO_LIST,$(applet))))
+$(APPLETS): $(CMDS)
+	@$(RM) $@ 2>/dev/null || true
+	@for l in $(CMDS); do \
+		printf "&%s_command,\n" "$$l"; \
+	done > $@
 
-$(CONFIG):	$(MF)
+$(CONFIG):	$(MF) $(APPLETS)
 	@(sed -n -e '1,\|^// configuration area$$|p' config.in; \
 		$(call GEN_CONFIG, $(addprefix DECODER_CONFIG_, $(CFG))) \
 		sed -n -e '\|^// configuration area$$|,$$p' config.in) > $@ ; \
-		cat $@
 
 #######################################################################################################
 #                                                                                                     #
@@ -606,7 +596,8 @@ uninstall:
 
 clean: 
 	-[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
-	-$(RM) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
+	-$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
+	for 
 
 #######################################################################################################
 #                                                                                                     #

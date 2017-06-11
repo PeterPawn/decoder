@@ -22,8 +22,12 @@
 #include "common.h"
 #include "hexenc_usage.c"
 
-static commandEntry_t 		__hexenc_command = { .name = "hexenc", .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
+static commandEntry_t 		__hexenc_command = { .name = &commandNames, .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
+static	char *				commandNames = {
+#include "hexenc_commands.c"
+		NULL
+};
 
 // statics
 

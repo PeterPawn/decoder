@@ -22,12 +22,12 @@
 #include "common.h"
 #include "decfile_usage.c"
 
-static commandEntry_t 		__decfile_command = { .name = "decode_secrets", .ep = &decfile_entry, .usage = &decfile_usage, .usesCrypto = true };
+static commandEntry_t 		__decfile_command = { .name = &commandNames, .ep = &decfile_entry, .usage = &decfile_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decfile_command = &__decfile_command;
-#ifdef FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG
-static commandEntry_t 		__decfile_command = { .name = "decrypt-fritzos-cfg", .ep = &decfile_entry, .usage = &decfile_usage, .usesCrypto = true };
-EXPORTED commandEntry_t *	decfile_command = &__decfile_command;
-#endif
+static	char *				commandNames = {
+#include "decfile_commands.c"
+		NULL
+};
 
 // statics
 

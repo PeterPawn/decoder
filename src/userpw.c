@@ -22,8 +22,12 @@
 #include "common.h"
 #include "userpw_usage.c"
 
-static commandEntry_t 		__userpw_command = { .name = "user_password", .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
+static commandEntry_t 		__userpw_command = { .name = &commandNames, .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	userpw_command = &__userpw_command;
+static	char *				commandNames = {
+#include "userpw_commands.c"
+		NULL
+};
 
 // statics
 

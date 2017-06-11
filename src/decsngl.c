@@ -22,8 +22,12 @@
 #include "common.h"
 #include "decsngl_usage.c"
 
-static commandEntry_t 		__decsngl_command = { .name = "decode_secret", .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true };
+static commandEntry_t 		__decsngl_command = { .name = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decsngl_command = &__decsngl_command;
+static	char *				commandNames = {
+#include "decsngl_commands.c"
+		NULL
+};
 
 // statics
 

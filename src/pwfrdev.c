@@ -22,8 +22,12 @@
 #include "common.h"
 #include "pwfrdev_usage.c"
 
-static commandEntry_t 		__pwfrdev_command = { .name = "password_from_device", .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .usesCrypto = true };
+static commandEntry_t 		__pwfrdev_command = { .name = &commandNames, .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	pwfrdev_command = &__pwfrdev_command;
+static	char *				commandNames = {
+#include "pwfrdev_commands.c"
+		NULL
+};
 
 // statics
 

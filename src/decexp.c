@@ -22,8 +22,12 @@
 #include "common.h"
 #include "decexp_usage.c"
 
-static commandEntry_t 		__decexp_command = { .name = "decode_export", .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
+static commandEntry_t 		__decexp_command = { .name = &commandNames, .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
+static	char *				commandNames = {
+#include "decexp_commands.c"
+		NULL
+};
 
 // statics
 

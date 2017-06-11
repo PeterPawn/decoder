@@ -17,9 +17,9 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef STDLIBS_H
+#ifndef COMMON_H
 
-#define STDLIBS_H
+#define COMMON_H
 
 #define _GNU_SOURCE
 
@@ -41,6 +41,7 @@
 #include <sys/fcntl.h>
 #include <openssl/evp.h>
 
+#include "config.h"
 #include "errors.h"
 
 #include "base32.h"
