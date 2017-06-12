@@ -431,6 +431,7 @@ FILES_MAIN = decoder
 HDRS_MAIN = $(addsuffix .h, $(FILES_MAIN))
 OBJS_MAIN = $(addsuffix .o, $(FILES_MAIN))
 SRCS_MAIN = $(addsuffix .c, $(FILES_MAIN))
+USE_MAIN = $(addsuffix _usage.c, $(FILES_MAIN))
 #######################################################################################################
 #                                                                                                     #
 # configuration file settings                                                                         #
@@ -554,9 +555,9 @@ all:	$(binfile)
 
 $(OBJS_COMMON):	$(APPLETS) $(CONFIG) $(HDRS_COMMON) $(SRCS_COMMON)
 
-$(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP)
+$(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP) $(SRCS_USE)
 
-$(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN)
+$(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN) $(USE_MAIN)
 
 $(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
 	$(CC) $(LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$^)

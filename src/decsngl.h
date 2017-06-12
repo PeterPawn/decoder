@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		decsngl_usage(bool help);
+void		decsngl_usage(char * name, bool help);
 int			decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef DECSNGL_C

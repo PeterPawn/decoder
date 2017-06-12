@@ -32,7 +32,7 @@ void (*usageScreen)(void);
 typedef struct commandEntry {
 	char * *		*names;
 	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry, char * name);
-	void			(*usage)(bool help);
+	void			(*usage)(char * name, bool help);
 	bool			usesCrypto;
 	bool			finalNewlineOnTTY;
 } commandEntry_t;

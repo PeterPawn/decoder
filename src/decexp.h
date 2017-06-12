@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		decexp_usage(bool help);
+void		decexp_usage(char * name, bool help);
 int			decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef DECEXP_C

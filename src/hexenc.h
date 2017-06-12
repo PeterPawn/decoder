@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		hexenc_usage(bool help);
+void		hexenc_usage(char * name, bool help);
 int			hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef HEXENC_C

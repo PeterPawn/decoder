@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		hexdec_usage(bool help);
+void		hexdec_usage(char * name, bool help);
 int			hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef HEXDEC_C

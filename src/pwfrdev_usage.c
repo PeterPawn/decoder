@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	pwfrdev_usage(bool help)
+void 	pwfrdev_usage(char * name, bool help)
 {
-	errorMessage("help for password_from_device\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

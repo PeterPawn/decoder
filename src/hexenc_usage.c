@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	hexenc_usage(bool help)
+void 	hexenc_usage(char * name, bool help)
 {
-	errorMessage("help for hexenc\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

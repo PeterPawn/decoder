@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	decfile_usage(bool help)
+void 	decfile_usage(char * name, bool help)
 {
-	errorMessage("help for decode_secrets\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		b64enc_usage(bool help);
+void		b64enc_usage(char * name, bool help);
 int			b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef B64ENC_C

@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		b32enc_usage(bool help);
+void		b32enc_usage(char * name, bool help);
 int			b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef B32ENC_C

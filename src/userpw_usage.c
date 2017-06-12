@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	userpw_usage(bool help)
+void 	userpw_usage(char * name, bool help)
 {
-	errorMessage("help for user_password\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	hexdec_usage(bool help)
+void 	hexdec_usage(char * name, bool help)
 {
-	errorMessage("help for hexdec\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

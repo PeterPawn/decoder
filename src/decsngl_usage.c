@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	decsngl_usage(bool help)
+void 	decsngl_usage(char * name, bool help)
 {
-	errorMessage("help for decode_secret\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

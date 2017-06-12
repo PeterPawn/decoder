@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	decexp_usage(bool help)
+void 	decexp_usage(char * name, bool help)
 {
-	errorMessage("help for decode_export\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

@@ -76,7 +76,9 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 #define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) fprintf(stderr, ##__VA_ARGS__)
 
-#define __usage(help)					((*entry->usage)(help))
+#define __usage(help)					((*entry->usage)(name, help))
+
+#define getAppletName()					(strdup(name))
 
 // function prototypes
 

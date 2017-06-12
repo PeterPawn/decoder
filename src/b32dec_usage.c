@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	b32dec_usage(bool help)
+void 	b32dec_usage(char * name, bool help)
 {
-	errorMessage("help for b32dec\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

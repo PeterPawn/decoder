@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void		pwfrdev_usage(bool help);
+void		pwfrdev_usage(char * name, bool help);
 int			pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
 
 #ifndef PWFRDEV_C

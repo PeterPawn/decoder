@@ -37,8 +37,8 @@ int main(int argc, char** argv)
 	int					argumentCount = argc;
 	char **				arguments = argv;
 	int					argumentOffset = 0;
-	char * 				fname;
-	char * 				ename;
+	char * 				fname = NULL;
+	char * 				ename = NULL;
 	char 				enameLong[PATH_MAX+1];
 	size_t				linkSize;
 	
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		main_usage(false);
+		main_usage(fname, false);
 
 #if DEBUG == 1
 		fprintf(stderr, "\n");
@@ -82,7 +82,7 @@ int main(int argc, char** argv)
 			fprintf(stderr, "ep=0x%08llx, usage=0x%08llx, usesCrypto=%u, finalNewlineOnTTY=%u, name=", \
 				(long long unsigned int) current->ep, (long long unsigned int) current->usage, \
 				current->usesCrypto, current->finalNewlineOnTTY);
-			
+
 			while (*name)
 			{
 				fprintf(stderr, "%s ", *name);
@@ -117,6 +117,8 @@ int main(int argc, char** argv)
 						fprintf(stdout, "\n");
 				}
 				if (current->usesCrypto) EVP_cleanup();
+				free(ename);
+				free(fname);
 				exit(exitCode);
 			}
 			name++;
@@ -127,8 +129,10 @@ int main(int argc, char** argv)
 	if (!current)
 	{
 		errorMessage(errorInvalidFunction, fname, enameLong);
-		main_usage(false);
+		main_usage(fname, false);
 	}
+	free(ename);
+	free(fname);
 
 	exit(EXIT_FAILURE);
 }

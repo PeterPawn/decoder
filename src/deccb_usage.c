@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	deccb_usage(bool help)
+void 	deccb_usage(char * name, bool help)
 {
-	errorMessage("help for decode_cryptedbinfile\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }

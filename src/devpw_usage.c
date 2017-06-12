@@ -19,9 +19,9 @@
 
 // display usage help
 
-void 	devpw_usage(bool help)
+void 	devpw_usage(char * name, bool help)
 {
-	errorMessage("help for device_password\n");
+	errorMessage("help for %s\n", getAppletName());
 	if (help)
 		errorMessage("option --help used\n");
 }
