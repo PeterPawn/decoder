@@ -42,7 +42,7 @@ static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n"
 
 // 'hexdec' function - decode hexadecimal presentation of data from STDIN to STDOUT
 
-int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	char				buffer[80];
 	size_t				read = 0;

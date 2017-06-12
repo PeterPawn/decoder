@@ -85,7 +85,7 @@ int		b64dec_output(char * base64, bool hexOutput, bool pad)
 	return EXIT_SUCCESS;
 }
 
-int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	char				buffer[80];
 	char *				input;

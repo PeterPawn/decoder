@@ -44,7 +44,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'decode_secret' function - decode the specified secret value (in Base32 encoding) perties
 
-int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	bool				hexOutput = false;
 	char *				out = NULL;
@@ -103,7 +103,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, char
 			if (!key)
 			{
 				errorMessage(errorWrongArgumentsCount);
-				__usage(false);
+				__usage(false, false);
 				return EXIT_FAILURE;
 			}
 		}
@@ -111,7 +111,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, char
 	else
 	{
 		errorMessage(errorWrongArgumentsCount);
-		__usage(false);
+		__usage(false, false);
 		return EXIT_FAILURE;
 	}
 

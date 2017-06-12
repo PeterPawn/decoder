@@ -85,7 +85,7 @@ int 	b32dec_output(char * base32, bool hexOutput)
 	return EXIT_SUCCESS;
 }
 
-int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	char				buffer[81];
 	char *				input;
@@ -101,6 +101,7 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char 
 		static struct option options_long[] = {
 			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
+			options_long_end,
 		};
 		char *			options_short = "x" verbosity_options_short;
 

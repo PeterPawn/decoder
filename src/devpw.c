@@ -41,7 +41,7 @@ static	char *			errorMissingArguments = "Missing arguments on command line.\n";
 
 // 'device_password' function - compute the password hash from the specified device properties
 
-int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	bool				hexOutput = false;
 	char				hash[MAX_DIGEST_SIZE];
@@ -106,7 +106,7 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char *
 			if (!maca)
 			{
 				errorMessage(errorMissingSerialMac);
-				__usage(false);
+				__usage(false, false);
 				return EXIT_FAILURE;
 			}
 		}
@@ -114,7 +114,7 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char *
 	else
 	{
 		errorMessage(errorMissingArguments);
-		__usage(false);
+		__usage(false, false);
 		return EXIT_FAILURE;
 	}
 

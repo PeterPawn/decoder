@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		b64dec_usage(char * name, bool help);
-int			b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
+void		b64dec_usage(const char * name, const bool help, const bool version);
+int			b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
 
 #ifndef B64DEC_C
 

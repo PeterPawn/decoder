@@ -41,7 +41,7 @@ static	char *			errorReadToMemory = "Error reading data into memory.\n";
 
 // 'decode_secrets' function - decode all secret values from STDIN content and copy it with replaced values to STDOUT
 
-int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

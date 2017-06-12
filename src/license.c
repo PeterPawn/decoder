@@ -17,22 +17,23 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef HEXENC_H
-
-#define HEXENC_H
+#define	LICENSE_C
 
 #include "common.h"
 
-// function prototypes
+// display license text
 
-void		hexenc_usage(const char * name, const bool help, const bool version);
-int			hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
+static	char *	license = "\
+Copyright (C) 2014-2017 P.Haemmerlein (peterpawn@yourfritz.de)\n\n\
+This project is free software, you can redistribute it and/or modify it under the terms of the GNU\n\
+General Public License as published by the Free Software Foundation; either version 2 of the\n\
+License, or (at your option) any later version.\n\n\
+This project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without\n\
+even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\
+See the GNU General Public License under http://www.gnu.org/licenses/gpl-2.0.html for more details.\n\
+";
 
-#ifndef HEXENC_C
-
-extern commandEntry_t * 	hexenc_command;
-
-#endif
-
-#endif
-
+void 	showLicense(FILE * out)
+{
+	fprintf(out, license);
+}

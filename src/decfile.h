@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		decfile_usage(char * name, bool help);
-int			decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
+void		decfile_usage(const char * name, const bool help, const bool version);
+int			decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
 
 #ifndef DECFILE_C
 

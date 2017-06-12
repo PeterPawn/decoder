@@ -40,7 +40,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'b64enc' function - encode binary data from STDIN to Base64 encoded on STDOUT
 
-int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	bool				hexInput = false;
 	bool				padOutput = false;

@@ -51,6 +51,8 @@
 #include "functions.h"
 #include "memory.h"
 #include "output.h"
+#include "help.h"
+#include "license.h"
 #include "options.h"
 #include "environ.h"
 

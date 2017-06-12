@@ -45,9 +45,12 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 #define verbosity_options_long			{ "verbose", no_argument, NULL, 'v' },\
 										{ "quiet", no_argument, NULL, 'q' },\
-										{ "help", no_argument, NULL, 'h' }
+										{ "help", no_argument, NULL, 'h' },\
+										{ "version", no_argument, NULL, 'V' }
 
-#define verbosity_options_short			"qvh"
+#define	options_long_end				{ NULL, 0, NULL, 0 }
+
+#define verbosity_options_short			"qvhV"
 
 #define check_verbosity_options_short()	case 'v':\
 											__setVerbosity(VERBOSITY_VERBOSE);\
@@ -57,11 +60,14 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 											break
 
 #define help_option()					case 'h':\
-											__usage(true);\
-											return EXIT_FAILURE
+											__usage(true, false);\
+											return EXIT_FAILURE;\
+										case 'V':\
+											__usage(false, true);\
+											return EXIT_FAILURE;\
 
 #define getopt_message_displayed()		case '?':\
-											__usage(false);\
+											__usage(false, false);\
 											return EXIT_FAILURE
 
 #define getopt_argument_missing()		case ':':\
@@ -76,7 +82,7 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 #define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) fprintf(stderr, ##__VA_ARGS__)
 
-#define __usage(help)					((*entry->usage)(name, help))
+#define __usage(help, version)			((*entry->usage)(name, help, version))
 
 #define getAppletName()					(strdup(name))
 

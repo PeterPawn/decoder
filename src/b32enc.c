@@ -42,7 +42,7 @@ static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n"
 
 // 'b32enc' function - encode binary data from STDIN to Base32 encoded on STDOUT
 
-int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	bool				hexInput = false;
 	bool				padInput = false;

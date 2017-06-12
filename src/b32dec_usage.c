@@ -19,9 +19,11 @@
 
 // display usage help
 
-void 	b32dec_usage(char * name, bool help)
+void 	b32dec_usage(const char * name, const bool help, const bool version)
 {
-	errorMessage("help for %s\n", getAppletName());
-	if (help)
-		errorMessage("option --help used\n");
+	FILE *	out = (help ? stdout : stderr);
+
+	showUsageHeader(out, name, help, version);
+
+	showUsageFinalize(out, name, help, version);
 }

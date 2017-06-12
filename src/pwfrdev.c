@@ -38,7 +38,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'password_from_device' function - compute the password hash from the current device properties
 
-int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	bool				hexOutput = false;
 	bool				forExport = false;

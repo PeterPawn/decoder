@@ -40,7 +40,7 @@ static	char *			errorNoMemory = "Memory allocation error.\n";
 
 // 'decode_crypedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT
 
-int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

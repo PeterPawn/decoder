@@ -17,22 +17,10 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#ifndef HEXENC_H
+#ifndef LICENSE_H
 
-#define HEXENC_H
+#define LICENSE_H
 
-#include "common.h"
-
-// function prototypes
-
-void		hexenc_usage(const char * name, const bool help, const bool version);
-int			hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
-
-#ifndef HEXENC_C
-
-extern commandEntry_t * 	hexenc_command;
+void									showLicense(FILE * out);
 
 #endif
-
-#endif
-

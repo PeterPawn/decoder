@@ -117,8 +117,6 @@ int main(int argc, char** argv)
 						fprintf(stdout, "\n");
 				}
 				if (current->usesCrypto) EVP_cleanup();
-				free(ename);
-				free(fname);
 				exit(exitCode);
 			}
 			name++;
@@ -129,10 +127,8 @@ int main(int argc, char** argv)
 	if (!current)
 	{
 		errorMessage(errorInvalidFunction, fname, enameLong);
-		main_usage(fname, false);
+		main_usage(ename, false);
 	}
-	free(ename);
-	free(fname);
 
 	exit(EXIT_FAILURE);
 }

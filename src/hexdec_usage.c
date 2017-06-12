@@ -19,7 +19,7 @@
 
 // display usage help
 
-void 	hexdec_usage(char * name, bool help)
+void 	hexdec_usage(const char * name, const bool help, UNUSED const bool version)
 {
 	errorMessage("help for %s\n", getAppletName());
 	if (help)

@@ -19,7 +19,7 @@
 
 // display usage help
 
-void 	deccb_usage(char * name, bool help)
+void 	deccb_usage(const char * name, const bool help, UNUSED const bool version)
 {
 	errorMessage("help for %s\n", getAppletName());
 	if (help)

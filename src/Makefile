@@ -11,10 +11,9 @@
 #                                                                                                     #
 ###################################################################################################LIC#
 #                                                                                                     #
-# This project is free software, licensed under a slightly modified GPL version; most people          #
-# can redistribute it and/or modify it under the terms of the GNU General Public License as           #
-# published by the Free Software Foundation; either version 2 of the License, or (at your             #
-# option) any later version.                                                                          #
+# This project is free software, you can redistribute it and/or modify it under the terms of the GNU  #
+# General Public License as published by the Free Software Foundation; either version 2 of the        #
+# License, or (at your option) any later version.                                                     #
 #                                                                                                     #
 # This project is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;           #
 # without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.           #
@@ -160,81 +159,81 @@ DECODER_CONFIG_DECRYPT_FILES=y
 # Base32 to binary applet name                                                                        #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECODE_BASE32_NAME = +b32dec
+DECODER_CONFIG_DECODE_BASE32_NAME="+b32dec"
 #######################################################################################################
 #                                                                                                     #
 # binary to Base32 applet name                                                                        #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_ENCODE_BASE32_NAME = +b32enc
+DECODER_CONFIG_ENCODE_BASE32_NAME="+b32enc"
 #######################################################################################################
 #                                                                                                     #
 # Base64 to binary applet name                                                                        #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECODE_BASE64_NAME = +b64dec
+DECODER_CONFIG_DECODE_BASE64_NAME="+b64dec"
 #######################################################################################################
 #                                                                                                     #
 # binary to Base64 applet name                                                                        #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_ENCODE_BASE64_NAME = +b64enc
+DECODER_CONFIG_ENCODE_BASE64_NAME="+b64enc"
 #######################################################################################################
 #                                                                                                     #
 # hexadecimal to binary applet name                                                                   #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECODE_HEX_NAME = +hexdec
+DECODER_CONFIG_DECODE_HEX_NAME="+hexdec"
 #######################################################################################################
 #                                                                                                     #
 # binary to hexadecimal applet name                                                                   #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_ENCODE_HEX_NAME = +hexenc
+DECODER_CONFIG_ENCODE_HEX_NAME="+hexenc"
 #######################################################################################################
 #                                                                                                     #
 # key from user password applet name                                                                  #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_KEYS_USER_PASSWORD_NAME = +user_password
+DECODER_CONFIG_KEYS_USER_PASSWORD_NAME="+user_password"
 #######################################################################################################
 #                                                                                                     #
 # key from device properties applet name                                                              #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_KEYS_DEVICE_PROPERTIES_NAME = +device_password
+DECODER_CONFIG_KEYS_DEVICE_PROPERTIES_NAME="+device_password"
 #######################################################################################################
 #                                                                                                     #
 # key from current device properties applet name                                                      #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_KEYS_CURRENT_DEVICE_NAME = +password_from_device
+DECODER_CONFIG_KEYS_CURRENT_DEVICE_NAME="+password_from_device"
 #######################################################################################################
 #                                                                                                     #
 # decrypt export file applet name                                                                     #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECRYPT_EXPORT_FILES_NAME = +decode_export
+DECODER_CONFIG_DECRYPT_EXPORT_FILES_NAME="+decode_export"
 #######################################################################################################
 #                                                                                                     #
 # decrypt CRYPTEDBINFILE content applet name                                                          #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECRYPT_EXPORT_BINFILE_NAME = +decode_cryptedbinfile
+DECODER_CONFIG_DECRYPT_EXPORT_BINFILE_NAME="+decode_cryptedbinfile"
 #######################################################################################################
 #                                                                                                     #
 # single value decryption applet name                                                                 #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECRYPT_SINGLE_VALUES_NAME = +decode_secret
+DECODER_CONFIG_DECRYPT_SINGLE_VALUES_NAME="+decode_secret"
 #######################################################################################################
 #                                                                                                     #
 # decrypt any values in a text file applet name                                                       #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_DECRYPT_FILES_NAME = +decode_secrets +decode_passwords
+DECODER_CONFIG_DECRYPT_FILES_NAME="+decode_secrets +decode_passwords"
 ifeq ($(strip $(FREETZ_PACKAGE_DECRYPT_FRITZOS_CFG)), y)
-DECODER_CONFIG_DECRYPT_FILES_NAME += +decrypt-fritzos-cfg
+DECODER_CONFIG_DECRYPT_FILES_NAME+="+decrypt-fritzos-cfg"
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -289,6 +288,7 @@ srcdir = .
 FILES :=
 LINKS :=
 CMDS :=
+CFG :=
 APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb
 #######################################################################################################
 #                                                                                                     #
@@ -299,7 +299,7 @@ define GEN_FUNCTION
 $(shell printf "\"%s\",\n" "$(2)" >>$(addsuffix _commands.c,$(1)))
 endef
 
-define ADD_APPLET_MACRO 
+define ADD_APPLET_MACRO
 ifeq "$(strip $(1))" "y"
 CMDS += $(if $(filter +%,$(2)),$(3))
 LINKS += $(patsubst +%, %, $(filter +%, $(2)))
@@ -310,7 +310,7 @@ endif
 endef
 
 define ADD_APPLET
-$(eval $(call ADD_APPLET_MACRO,$($(addprefix DECODER_CONFIG_, $(1))),$($(addsuffix _NAME, $(addprefix DECODER_CONFIG_, $(1)))),$(2)))
+$(eval $(call ADD_APPLET_MACRO,$($(addprefix DECODER_CONFIG_, $(1))),$(subst $(shell printf '\042'),,$($(addsuffix _NAME, $(addprefix DECODER_CONFIG_, $(1))))),$(2)))
 endef
 
 define IS_SET_MACRO
@@ -318,7 +318,7 @@ $(if $(filter y, $(split, $(addprefix DECODER_CONFIG_, $(1)))))
 endef
 
 define GEN_CONFIG_LINE
-printf "#define\\t%s\\t%s\\n" $1 "$(strip $($1:%+=%))";
+printf "#define\\t%s\\t%s\\n" '$(1)' '$(subst +,,$($(1)))';
 endef
 
 define GEN_CONFIG
@@ -437,6 +437,8 @@ FILES_COMMON += functions
 FILES_COMMON += crypto
 FILES_COMMON += options
 FILES_COMMON += environ
+FILES_COMMON += license
+FILES_COMMON += help
 HDRS_COMMON = $(addsuffix .h, $(FILES_COMMON))
 OBJS_COMMON = $(addsuffix .o, $(FILES_COMMON))
 SRCS_COMMON = $(addsuffix .c, $(FILES_COMMON))
@@ -472,7 +474,7 @@ CFG += KEYS_USER_PASSWORD
 CFG += KEYS_DEVICE_PROPERTIES
 CFG += KEYS_CURRENT_DEVICE
 CFG += DECRYPT_EXPORT_FILES
-CFG += DECRYPT_EXPORT_FILES_DECRYPT_BINFILES
+CFG += DECRYPT_EXPORT_BINFILE
 CFG += DECRYPT_SINGLE_VALUES
 CFG += DECRYPT_FILES
 CFG += DECODE_BASE32_NAME
@@ -485,14 +487,18 @@ CFG += KEYS_USER_PASSWORD_NAME
 CFG += KEYS_DEVICE_PROPERTIES_NAME
 CFG += KEYS_CURRENT_DEVICE_NAME
 CFG += DECRYPT_EXPORT_FILES_NAME
-CFG += DECRYPT_EXPORT_FILES_DECRPYT_BINFILE_NAME
+CFG += DECRYPT_EXPORT_BINFILE_NAME
 CFG += DECRYPT_SINGLE_VALUES_NAME
 CFG += DECRYPT_FILES_NAME
 CFG += MEMORY_BUFFER_SIZE
 CFG += WRAP_LINE_SIZE
 CFG += URLADER_ENVIRONMENT_PATH
+ifdef DECODER_CONFIG_LINK_STATIC
 CFG += LINK_STATIC
+endif
+ifdef DECODER_CONFIG_DEBUG
 CFG += DEBUG
+endif
 ########################################################################################################
 #                                                                                                     #
 # additional libraries for linker calls                                                               #
@@ -627,16 +633,16 @@ uninstall:
 	done; \
 	true;
 	@[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
-	echo "uninstall succeeded"
+	@echo "uninstall succeeded"
 
 clean: 
-	-[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
-	-$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
-	for n in $(APPLET_SRCS); do \
+	@[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
+	@$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
+	@for n in $(APPLET_SRCS); do \
 		$(RM) $${n}_commands.c 2>/dev/null; \
 	done; \
 	true
-	echo "clean succeeded"
+	@echo "clean succeeded"
 
 #######################################################################################################
 #                                                                                                     #

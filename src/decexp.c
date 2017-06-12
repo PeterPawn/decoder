@@ -44,7 +44,7 @@ static	char *			verboseUsingKey = "using key 0x%s for decryption\n";
 
 // 'decode_export' function - decode all secret values from the export file on STDIN and copy it with replaced values to STDOUT
 
-int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

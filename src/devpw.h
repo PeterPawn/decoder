@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		devpw_usage(char * name, bool help);
-int			devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
+void		devpw_usage(const char * name, const bool help, const bool version);
+int			devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
 
 #ifndef DEVPW_C
 

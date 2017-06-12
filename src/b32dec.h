@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		b32dec_usage(char * name, bool help);
-int			b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
+void		b32dec_usage(const char * name, const bool help, const bool version);
+int			b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
 
 #ifndef B32DEC_C
 

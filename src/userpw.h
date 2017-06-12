@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		userpw_usage(char * name, bool help);
-int			userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name);
+void		userpw_usage(const char * name, const bool help, const bool version);
+int			userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
 
 #ifndef USERPW_C
 

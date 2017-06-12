@@ -42,7 +42,7 @@ static	char *			verbosePasswordHash = "user password converted to key 0x%s\n";
 
 // 'user_password' function - compute the password hash for export files with a user-specified password
 
-int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	bool				hexOutput = false;
 	char *				password = NULL;
@@ -61,6 +61,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char 
 		static struct option options_long[] = {
 			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
+			options_long_end,
 		};
 		char *			options_short = "x" verbosity_options_short;
 
@@ -81,16 +82,19 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, char 
 		if (optind >= (argc - argo))
 		{
 			errorMessage(errorPasswordMissing);
-			__usage(false);
+			__usage(false, false);
 			return EXIT_FAILURE;
 		}
 		else
+		{
 			password = argv[optind + argo];
+			warnAboutExtraArguments(argv, optind + argo);
+		}
 	}
 	else
 	{
 		errorMessage(errorPasswordMissing);
-		__usage(false);
+		__usage(false, false);
 		return EXIT_FAILURE;
 	}
 

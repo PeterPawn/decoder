@@ -39,7 +39,7 @@ static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
 
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT
 
-int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, char * name)
+int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
 {
 	uint32_t			charsOnLine = 0;
 	char				buffer[120];
