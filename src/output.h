@@ -39,7 +39,7 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 // default values
 
-#define DEFAULT_OUTPUT_LINE_WIDTH		80
+#define DEFAULT_OUTPUT_LINE_WIDTH		DECODER_CONFIG_WRAP_LINE_SIZE
 
 // helper macros
 

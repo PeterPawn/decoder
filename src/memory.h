@@ -23,7 +23,7 @@
 
 #include "common.h"
 
-#define	DEFAULT_MEMORY_BUFFER_SIZE		8 * 1024
+#define	DEFAULT_MEMORY_BUFFER_SIZE		DECODER_CONFIG_MEMORY_BUFFER_SIZE
 
 // memory structure for file buffering
 

@@ -238,6 +238,24 @@ DECODER_CONFIG_DECRYPT_FILES_NAME += +decrypt-fritzos-cfg
 endif
 #######################################################################################################
 #                                                                                                     #
+# default memory buffer size                                                                          #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_MEMORY_BUFFER_SIZE=8192
+#######################################################################################################
+#                                                                                                     #
+# default line size, if output to STDOUT should wrap lines                                            #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_WRAP_LINE_SIZE=80
+#######################################################################################################
+#                                                                                                     #
+# default line size, if output to STDOUT should wrap lines                                            #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_URLADER_ENVIRONMENT_PATH="/proc/sys/urlader/environment"
+#######################################################################################################
+#                                                                                                     #
 # include debug info on build                                                                         #
 #                                                                                                     #
 #######################################################################################################
@@ -470,6 +488,9 @@ CFG += DECRYPT_EXPORT_FILES_NAME
 CFG += DECRYPT_EXPORT_FILES_DECRPYT_BINFILE_NAME
 CFG += DECRYPT_SINGLE_VALUES_NAME
 CFG += DECRYPT_FILES_NAME
+CFG += MEMORY_BUFFER_SIZE
+CFG += WRAP_LINE_SIZE
+CFG += URLADER_ENVIRONMENT_PATH
 CFG += LINK_STATIC
 CFG += DEBUG
 ########################################################################################################
