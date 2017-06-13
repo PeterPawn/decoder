@@ -51,6 +51,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
+			{ "hex-input", no_argument, NULL, 'i' },
 			options_long_end,
 		};
 		char *			options_short = ":" "x" verbosity_options_short;
@@ -65,11 +66,10 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 				check_verbosity_options_short();
 				help_option();
-				getopt_message_displayed();
+				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		}
-		fprintf(stderr, "optint=%u, argc=%u, argo=%u optIndex=%u\n", optind, argc, argo, optIndex);
 		if (optind >= (argc - argo))
 		{
 			errorMessage(errorPasswordMissing);
@@ -79,7 +79,8 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		else
 		{
 			password = argv[optind + argo];
-			warnAboutExtraArguments(argv, optind + argo);
+			verboseMessage(verbosePasswordUsed, password);
+			warnAboutExtraArguments(argv, optind + argo + 1);
 		}
 	}
 	else
@@ -100,6 +101,15 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	hexLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
 	hex[hexLen] = 0;
 	verboseMessage(verbosePasswordHash, hex);
+	if (!hexOutput && isatty(1))
+	{
+		if (fwrite("0x", 2, 1, stdout) != 1)
+		{
+			setError(WRITE_FAILED);
+			errorMessage(errorWriteFailed);
+		}
+		hexOutput = true;
+	}
 	if (hexOutput)
 	{
 		outLen = hexLen;

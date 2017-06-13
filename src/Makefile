@@ -259,6 +259,7 @@ DECODER_CONFIG_URLADER_ENVIRONMENT_PATH="/proc/sys/urlader/environment"
 #                                                                                                     #
 #######################################################################################################
 DECODER_CONFIG_AUTO_USAGE=y
+DECODER_CONFIG_AUTO_USAGE=n
 #######################################################################################################
 #                                                                                                     #
 # include debug info on build                                                                         #
@@ -499,6 +500,9 @@ CFG += DECRYPT_FILES_NAME
 CFG += MEMORY_BUFFER_SIZE
 CFG += WRAP_LINE_SIZE
 CFG += URLADER_ENVIRONMENT_PATH
+ifeq ($(strip $(DECODER_CONFIG_AUTO_USAGE)), y)
+CFG += AUTO_USAGE
+endif
 ifdef DECODER_CONFIG_LINK_STATIC
 CFG += LINK_STATIC
 endif

@@ -112,7 +112,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 				check_verbosity_options_short();
 				help_option();
-				getopt_message_displayed();
+				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		} 

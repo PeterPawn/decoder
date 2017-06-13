@@ -21,13 +21,6 @@
 
 #include "common.h"
 
-// statics
-
-//// verbose messages ////
-static	char *			verboseRedirectStdin = "redirecting STDIN to file '%s'\n";
-static	char *			verboseTooMuchArguments = "additional command line argument ignored: '%s'\n";
-//// end ////
-
 EXPORTED	bool	setAlternativeEnvironment(char * newEnvironment)
 {
 	struct stat		st;

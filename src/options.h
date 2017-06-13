@@ -25,7 +25,7 @@
 
 #define __usage(help, version)			((*entry->usage)(help, version))
 
-#if DECODER_CONFIG_AUTO_USAGE == y
+#ifdef DECODER_CONFIG_AUTO_USAGE
 #define	__autoUsage()					__usage(false, false)
 #else
 #define	__autoUsage()
@@ -54,7 +54,9 @@
 											__usage(false, true);\
 											return EXIT_FAILURE;\
 
-#define getopt_message_displayed()		case '?':\
+#define getopt_invalid_option()			case '?':\
+										case 0:\
+											errorMessage((*((argv[optind]) + 1) == '-' ? errorInvalidOrAmbiguousOption : errorInvalidOption), argv[optind]);\
 											__autoUsage();\
 											return EXIT_FAILURE
 
@@ -65,7 +67,13 @@
 
 #define getopt_option_name()			optionsString((optIndex ? optopt : 0), (optIndex ? NULL : options_long[optIndex].name))
 
-// options for more than one applet
+// options check default
+
+#define invalid_option(opt)				default:\
+											errorMessage(errorInvalidOption, argv[optind]);\
+											return EXIT_FAILURE
+
+#// options for more than one applet
 
 // alternate environment file
 

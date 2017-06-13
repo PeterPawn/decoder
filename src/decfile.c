@@ -67,7 +67,7 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
-				getopt_message_displayed();
+				getopt_invalid_option();
 				getopt_argument_missing();
 				invalid_option(opt);
 			}

@@ -111,6 +111,7 @@ extern	char *							errorOpeningEnvironment;
 extern	char *							errorReadingEnvironment;
 extern	char *							errorInvalidOption;
 extern	char *							errorMissingOptionValue;
+extern	char *							errorInvalidOrAmbiguousOption;
 
 #endif
 
@@ -137,11 +138,5 @@ char *	getErrorText(decoder_error_t err);
 											fprintf(stderr, ##__VA_ARGS__);\
 											fprintf(stderr, "\a");\
 										}
-
-// options check default
-
-#define invalid_option(opt)				default:\
-											errorMessage(errorInvalidOption, (char) opt);\
-											return EXIT_FAILURE
 
 #endif

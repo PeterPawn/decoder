@@ -83,8 +83,9 @@ EXPORTED	char *			errorWrongPassword = "The specified password is wrong.\n";
 EXPORTED	char *			errorMissingDeviceProperty = "The device property '%s' is not set.\n";
 EXPORTED	char *			errorOpeningEnvironment = "Error opening environment file '%s'.\n";
 EXPORTED	char *			errorReadingEnvironment = "Error reading environment file '%s'.\n";
-EXPORTED	char *			errorInvalidOption = "Invalid option '%c' specified.\n";
+EXPORTED	char *			errorInvalidOption = "Invalid option '%s' specified.\n";
 EXPORTED	char *			errorMissingOptionValue = "Missing value after option '%s'.\n";
+EXPORTED	char *			errorInvalidOrAmbiguousOption = "The specified option '%s' is ambiguous or unknown.\n";
 //// end ////
 
 // functions

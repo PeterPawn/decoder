@@ -60,7 +60,9 @@ void 	userpw_usage(const bool help, UNUSED const bool version)
 		"the device's secret key - computed from only two device properties - was used to encrypt the key\n"
 		"for the second stage.\n\n"
 		"The generated key will be written to STDOUT; if the option '--hex-output' (or '-x') was specified,\n"
-		"output data will be converted to a hexadecimal string.\n\n"
+		"output data will be converted to a hexadecimal string. If STDOUT is connected to a terminal device,\n"
+		"hexadecimal output is activated automatically. As long as the option for hexadecimal output wasn't\n"
+		"selected explicitely, the value will get a prefix '0x' in front of it.\n\n"
 		"If %s starts with a hyphen, you have to insert '--' in front of it.\n",
 		showUndl("password")
 	);
