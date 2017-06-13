@@ -30,18 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__devpw_command = { .names = &commandNames, .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	devpw_command = &__devpw_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-static	char *			errorPasswordMissing = "Missing password on command line.\n";
-static	char *			errorMissingSerialMac = "At least two arguments (serial and maca) are required.\n";
-static	char *			errorMissingArguments = "Missing arguments on command line.\n";
-//// end ////
-
 // 'device_password' function - compute the password hash from the specified device properties
 
-int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	bool				hexOutput = false;
 	char				hash[MAX_DIGEST_SIZE];

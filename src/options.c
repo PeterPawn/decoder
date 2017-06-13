@@ -23,10 +23,6 @@
 
 // statics
 
-//// error messages ////
-static	char *			errorInvalidWidth = "Invalid line size '%s' specified for %s option.\n";
-static	char *			errorAccessingEnvironment = "Error %u (%s) accessing alternative environment path '%s'.\n";
-//// end ////
 //// verbose messages ////
 static	char *			verboseRedirectStdin = "redirecting STDIN to file '%s'\n";
 static	char *			verboseTooMuchArguments = "additional command line argument ignored: '%s'\n";

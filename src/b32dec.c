@@ -30,15 +30,6 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__b32dec_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
 EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorInvalidValue = "Invalid data value encountered on STDIN.\n";
-static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
-static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-//// end ////
-
 // 'b32dec' function - decode Base32 encoded data from STDIN to STDOUT
 
 int 	b32dec_output(char * base32, bool hexOutput)
@@ -85,7 +76,7 @@ int 	b32dec_output(char * base32, bool hexOutput)
 	return EXIT_SUCCESS;
 }
 
-int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	char				buffer[81];
 	char *				input;

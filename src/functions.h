@@ -31,8 +31,8 @@ void (*usageScreen)(void);
 
 typedef struct commandEntry {
 	char * *		*names;
-	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry, const char * name);
-	void			(*usage)(const char * name, const bool help, const bool version);
+	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry);
+	void			(*usage)(const bool help, const bool version);
 	bool			usesCrypto;
 	bool			finalNewlineOnTTY;
 } commandEntry_t;

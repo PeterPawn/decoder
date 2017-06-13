@@ -33,7 +33,25 @@ typedef enum {
 
 // global verbosity setting
 
-extern decoder_verbosity_t *			__decoder_verbosity;
+extern	decoder_verbosity_t *			__decoder_verbosity;
+
+extern	char *							verboseFoundProperty;
+extern	char *							verboseMissingProperty;
+extern	char *							verboseAltEnv;
+extern	char *							verboseUsingKey;
+extern	char *							verbosePasswordHash;
+extern	char *							verboseRedirectStdin;
+extern	char *							verboseTooMuchArguments;
+extern	char *							verboseDecryptionFailed;
+extern	char *							verboseFoundCipherText;
+extern	char *							verboseDecryptedTo;
+extern	char *							verboseDecryptedToHex;
+extern	char *							verboseDecryptFailed;
+extern	char *							verboseDisplayFailed;
+extern	char *							verboseWrongSerialLength;
+extern	char *							verboseWrongMACAddress;
+extern	char *							verboseWrongWLANKey;
+extern	char *							verboseWrongTR069Passphrase;
 
 #endif
 
@@ -43,48 +61,9 @@ extern decoder_verbosity_t *			__decoder_verbosity;
 
 // helper macros
 
-#define verbosity_options_long			{ "verbose", no_argument, NULL, 'v' },\
-										{ "quiet", no_argument, NULL, 'q' },\
-										{ "help", no_argument, NULL, 'h' },\
-										{ "version", no_argument, NULL, 'V' }
-
-#define	options_long_end				{ NULL, 0, NULL, 0 }
-
-#define verbosity_options_short			"qvhV"
-
-#define check_verbosity_options_short()	case 'v':\
-											__setVerbosity(VERBOSITY_VERBOSE);\
-											break;\
-										case 'q':\
-											__setVerbosity(VERBOSITY_SILENT);\
-											break
-
-#define help_option()					case 'h':\
-											__usage(true, false);\
-											return EXIT_FAILURE;\
-										case 'V':\
-											__usage(false, true);\
-											return EXIT_FAILURE;\
-
-#define getopt_message_displayed()		case '?':\
-											__usage(false, false);\
-											return EXIT_FAILURE
-
-#define getopt_argument_missing()		case ':':\
-											errorMessage("Missing value after option '%s'.\n", getopt_option_name());\
-											return EXIT_FAILURE
-
-#define getopt_option_name()			optionsString((optIndex ? optopt : 0), (optIndex ? NULL : options_long[optIndex].name))
-
 #define isVerbose()						(__getVerbosity() == VERBOSITY_VERBOSE)
 
-#define errorMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) fprintf(stderr, ##__VA_ARGS__); fprintf(stderr, "\a")
-
 #define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) fprintf(stderr, ##__VA_ARGS__)
-
-#define __usage(help, version)			((*entry->usage)(name, help, version))
-
-#define getAppletName()					(strdup(name))
 
 // function prototypes
 
@@ -96,5 +75,7 @@ size_t									getOutputLineWidth(void);
 void									setOutputLineWidth(size_t width);
 void									setLineWrap(void);
 bool									getLineWrap(void);
+void									setAppletName(char * name);
+char *									getAppletName(void);
 
 #endif

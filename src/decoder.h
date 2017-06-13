@@ -25,7 +25,7 @@
 
 // function prototypes
 
-void	main_usage(char * name, bool help);
+void	main_usage(const bool help);
 
 #endif
 

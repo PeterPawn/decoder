@@ -19,11 +19,11 @@
 
 // display usage help
 
-void 	userpw_usage(const char * name, const bool help, UNUSED const bool version)
+void 	userpw_usage(const bool help, UNUSED const bool version)
 {
 	FILE *	out = (help || version ? stdout : stderr);
 
-	showUsageHeader(out, name, help, version);
+	showUsageHeader(out, help, version);
 
 	if (version)
 	{
@@ -31,7 +31,7 @@ void 	userpw_usage(const char * name, const bool help, UNUSED const bool version
 		return;
 	}
 
-	showPurposeHeader(out, name);
+	showPurposeHeader(out);
 	fprintf(out,
 		"This program generates a key, based on the specified password. The key may be used for the first\n"
 		"stage of decryption for an export file or for decryption of a single value (with another program\n"
@@ -39,21 +39,21 @@ void 	userpw_usage(const char * name, const bool help, UNUSED const bool version
 		showBold(DECODER_CONFIG_DECRYPT_SINGLE_VALUES_NAME)
 	);
 
-	showFormatHeader(out, name);
+	showFormatHeader(out);
 	addSpace();
 	addOption("options");
 	addSpace();
 	endOptions();
 	addSpace();
 	addArgument("password");
-	showFormatEnd(out, name);
+	showFormatEnd(out);
 
 	showOptionsHeader("options");
 	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string");
 	addOptionsEntryVerbose();
 	addOptionsEntryHelp();
 	addOptionsEntryVersion();
-	showOptionsEnd(out, name);
+	showOptionsEnd(out);
 
 	fprintf(out,
 		"\nAn export file has to be created with a user-specified password or the decryption will fail, 'cause\n"
@@ -65,5 +65,5 @@ void 	userpw_usage(const char * name, const bool help, UNUSED const bool version
 		showUndl("password")
 	);
 
-	showUsageFinalize(out, name, help, version);
+	showUsageFinalize(out, help, version);
 }

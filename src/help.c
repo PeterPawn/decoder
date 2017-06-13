@@ -44,34 +44,34 @@ static	char *			emptyString = "";
 static	size_t			indent = 0;
 #define	INDENT			4
 
-EXPORTED	void	showUsageHeader(FILE * out, const char * name, const bool help, UNUSED const bool version)
+EXPORTED	void	showUsageHeader(FILE * out, const bool help, UNUSED const bool version)
 {
-	showVersion(out, name, help);
+	showVersion(out, help);
 	fprintf(out, "\n");
 	showLicense(out);
 }
 
-EXPORTED	void	showUsageFinalize(FILE * out, UNUSED const char * name, UNUSED const bool help, UNUSED const bool version)
+EXPORTED	void	showUsageFinalize(FILE * out, UNUSED const bool help, UNUSED const bool version)
 {
 //	fprintf(out, "\nhelp=%u, version=%u\n", help, version);
 	fprintf(out, "\n");
 }
 
-EXPORTED	void 	showVersion(FILE * out, const char * name, UNUSED const bool help)
+EXPORTED	void 	showVersion(FILE * out, UNUSED const bool help)
 {
-	fprintf(out, appletNameMask, showBold(name));
+	fprintf(out, appletNameMask, showBold(getAppletName()));
 }
 
-EXPORTED	void	showPurposeHeader(FILE * out, UNUSED const char * name)
+EXPORTED	void	showPurposeHeader(FILE * out)
 {
 	fprintf(out, "\n%s\n\n", showBold("Purpose:"));
 }
 
-EXPORTED	void	showFormatHeader(FILE * out, UNUSED const char * name)
+EXPORTED	void	showFormatHeader(FILE * out)
 {
 	fprintf(out, "\n%s\n", showBold("Usage:"));
 	addIndent();
-	fprintf(out, "%s%s", newLine(), showBold(name));
+	fprintf(out, "%s%s", newLine(), showBold(getAppletName()));
 	commandLine = malloc(1024);
 	if (commandLine)
 		*(commandLine) = 0;
@@ -114,7 +114,7 @@ EXPORTED	void	addAlternative(void)
 	strcat(commandLine, alternative);
 }
 
-EXPORTED	void	showFormatEnd(FILE * out, UNUSED const char * name)
+EXPORTED	void	showFormatEnd(FILE * out)
 {
 	fprintf(out, "%s%s\n", commandLine, *ansiRset);
 	free(commandLine);
@@ -240,7 +240,7 @@ void	buildOptionsDisplay(void)
 	}
 }
 
-EXPORTED	void	showOptionsEnd(FILE * out, UNUSED const char * name)
+EXPORTED	void	showOptionsEnd(FILE * out)
 {
 	if (!options)
 	{

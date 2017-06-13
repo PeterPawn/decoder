@@ -30,17 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__deccb_command = { .names = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorDecryptFileData = "Unable to decrypt file data.\n";
-static	char *			errorReadToMemory = "Error reading data into memory.\n";
-static	char *			errorNoMemory = "Memory allocation error.\n";
-//// end ////
-
 // 'decode_crypedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT
 
-int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

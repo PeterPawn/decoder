@@ -25,8 +25,27 @@
 
 static 	decoder_verbosity_t		__decoder_verbosity__ = VERBOSITY_NORMAL;
 
+EXPORTED	char *				verboseFoundProperty = "found device property '%s' with value '%s'\n";
+EXPORTED	char *				verboseMissingProperty = "device property '%s' does not exist\n";
+EXPORTED	char *				verboseAltEnv = "using alternative environment path '%s'\n";
+EXPORTED	char *				verboseUsingKey = "using key 0x%s for decryption\n";
+EXPORTED	char *				verbosePasswordHash = "user password converted to key 0x%s\n";
+EXPORTED	char *				verboseRedirectStdin = "redirecting STDIN to file '%s'\n";
+EXPORTED	char *				verboseTooMuchArguments = "additional command line argument ignored: '%s'\n";
+EXPORTED	char *				verboseDecryptionFailed = " -> decryption failed\n";
+EXPORTED	char *				verboseFoundCipherText = "found cipher text '%s' -> ";
+EXPORTED	char *				verboseDecryptedTo = "decrypted to '%s'\n";
+EXPORTED	char *				verboseDecryptedToHex = "decrypted to 0x%s\n";
+EXPORTED	char *				verboseDecryptFailed = "decrypt failed\n";
+EXPORTED	char *				verboseDisplayFailed = "error displaying value, but decryption was successful\n";
+EXPORTED	char *				verboseWrongSerialLength = "the specified serial number '%s' has a wrong length\n";
+EXPORTED	char *				verboseWrongMACAddress = "the specified MAC address '%s' has a wrong format\n";
+EXPORTED	char *				verboseWrongWLANKey = "the specified WLAN key '%s' has an unusual length\n";
+EXPORTED	char *				verboseWrongTR069Passphrase = "the specified TR-069 passphrase looks unusual\n";
+
 // static settings with accessor functions
 
+static	char *					appletName = NULL;
 static	size_t					outputLineWidth = DEFAULT_OUTPUT_LINE_WIDTH;
 static	bool					wrapLines = false;
 
@@ -68,6 +87,18 @@ EXPORTED	bool	getLineWrap(void)
 EXPORTED	void	setLineWrap(void)
 {
 	wrapLines = true;
+}
+
+// get/set applet name for error messages
+
+EXPORTED	void	setAppletName(char * name)
+{
+	appletName = name;
+}
+
+EXPORTED	char *	getAppletName(void)
+{
+	return appletName;
 }
 
 // output formatting

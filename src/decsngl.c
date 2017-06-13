@@ -30,21 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__decsngl_command = { .names = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decsngl_command = &__decsngl_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorWrongArgumentsCount = "Exactly two arguments (Base32 encrypted value and hexadecimal key) are required.\n";
-static	char *			errorPasswordMissing = "Missing password on command line.\n";
-static	char *			errorNoMemory = "Memory allocation error.\n";
-static	char *			errorInvalidArgumentData = "The specified arguments contain invalid data.\n";
-static	char *			errorWrongKeySize = "The specified key has a wrong size.\n";
-static	char *			errorWrongPassword = "The specified password is wrong.\n";
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-//// end ////
-
 // 'decode_secret' function - decode the specified secret value (in Base32 encoding) perties
 
-int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	bool				hexOutput = false;
 	char *				out = NULL;

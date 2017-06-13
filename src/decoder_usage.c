@@ -19,9 +19,6 @@
 
 // display usage help
 
-void	main_usage(char * name, bool help)
+void	main_usage(const bool help)
 {
-	errorMessage("%s - this is a decoder for AVM's cipher implementation\n", getAppletName());
-	if (help)
-		errorMessage("help option used");
 }

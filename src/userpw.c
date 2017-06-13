@@ -30,19 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__userpw_command = { .names = &commandNames, .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	userpw_command = &__userpw_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-static	char *			errorDigestComputation = "Error computing digest value.\n";
-static	char *			errorPasswordMissing = "Missing password on command line.\n";
-//// end ////
-//// verbose messages ////
-static	char *			verbosePasswordHash = "user password converted to key 0x%s\n";
-
 // 'user_password' function - compute the password hash for export files with a user-specified password
 
-int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	bool				hexOutput = false;
 	char *				password = NULL;
@@ -63,7 +53,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const
 			{ "hex-output", no_argument, NULL, 'x' },
 			options_long_end,
 		};
-		char *			options_short = "x" verbosity_options_short;
+		char *			options_short = ":" "x" verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -79,10 +69,11 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const
 				invalid_option(opt);
 			}
 		}
+		fprintf(stderr, "optint=%u, argc=%u, argo=%u optIndex=%u\n", optind, argc, argo, optIndex);
 		if (optind >= (argc - argo))
 		{
 			errorMessage(errorPasswordMissing);
-			__usage(false, false);
+			__autoUsage();
 			return EXIT_FAILURE;
 		}
 		else
@@ -94,7 +85,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry, const
 	else
 	{
 		errorMessage(errorPasswordMissing);
-		__usage(false, false);
+		__autoUsage();
 		return EXIT_FAILURE;
 	}
 

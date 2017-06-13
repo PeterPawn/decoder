@@ -19,9 +19,6 @@
 
 // display usage help
 
-void 	decexp_usage(const char * name, const bool help, UNUSED const bool version)
+void 	decexp_usage(const bool help, UNUSED const bool version)
 {
-	errorMessage("help for %s\n", getAppletName());
-	if (help)
-		errorMessage("option --help used\n");
 }

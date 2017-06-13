@@ -19,11 +19,11 @@
 
 // display usage help
 
-void 	b32dec_usage(const char * name, const bool help, const bool version)
+void 	b32dec_usage(const bool help, const bool version)
 {
 	FILE *	out = (help ? stdout : stderr);
 
-	showUsageHeader(out, name, help, version);
+	showUsageHeader(out, help, version);
 
-	showUsageFinalize(out, name, help, version);
+	showUsageFinalize(out, help, version);
 }

@@ -30,17 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static 	commandEntry_t 		__b64enc_command = { .names = &commandNames, .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	b64enc_command = &__b64enc_command;
 
-//// error messages ////
-static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
-static	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
-static	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
-static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-//// end ////
-
 // 'b64enc' function - encode binary data from STDIN to Base64 encoded on STDOUT
 
-int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	bool				hexInput = false;
 	bool				padOutput = false;

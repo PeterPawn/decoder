@@ -30,21 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__decexp_command = { .names = &commandNames, .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorReadToMemory = "Error reading data into memory.\n";
-static	char *			errorInvalidFirstStageLength = "Invalid length of data (%u) in the '%s' entry. Expected value is 104.\n";
-static	char *			errorDecryptionFailed =  "Decryption failed with the specified arguments.\n";	
-static	char *			errorNoPasswordEntry = "Unable to find the password entry in the provided file.\nIs this really an export file?\n";
-//// end ////
-//// verbose messages ////
-static	char *			verboseUsingKey = "using key 0x%s for decryption\n";
-//// end ////
-
 // 'decode_export' function - decode all secret values from the export file on STDIN and copy it with replaced values to STDOUT
 
-int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);

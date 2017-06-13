@@ -25,13 +25,6 @@
 
 static	char *			environmentFileName = URLADER_ENV_PATH;
 
-// error message masks
-
-static	char *			openErrorMessage = "Error opening ";
-static	char *			readErrorMessage = "Error readdng ";
-static	char *			fileErrorMessage = "environment file '%s'.\n";
-static	char *			errorMessageQuestion = "Are we really running on a FRITZ!OS device?\n";
-
 // get/set environment file name
 
 EXPORTED	void	setEnvironmentPath(char * path)
@@ -44,22 +37,13 @@ EXPORTED	char *	getEnvironmentPath(void)
 	return strdup(environmentFileName);
 }
 
-// read environment functions
-
-void	environErrorCommon(void)
-{
-	errorMessage(fileErrorMessage, environmentFileName);
-	errorMessage(errorMessageQuestion);
-}
-
 EXPORTED	memoryBuffer_t *	getEnvironmentFile(void)
 {
 	FILE *				environment = fopen(environmentFileName, "r");
 
 	if (!environment)
 	{
-		errorMessage(openErrorMessage);
-		environErrorCommon();
+		errorMessage(errorOpeningEnvironment, environmentFileName);
 		setError(URLADER_ENV_ERR);
 		return NULL;
 	}
@@ -69,8 +53,7 @@ EXPORTED	memoryBuffer_t *	getEnvironmentFile(void)
 
 	if (!env)
 	{
-		errorMessage(readErrorMessage);
-		environErrorCommon();
+		errorMessage(errorReadingEnvironment, environmentFileName);
 		setError(URLADER_ENV_ERR);
 		return false;
 	}

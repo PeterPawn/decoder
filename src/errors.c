@@ -51,6 +51,42 @@ static char *				__decoder_error_text__[] = {
 	"invalid data size",
 };
 
+//// error messages ////
+EXPORTED	char *			errorAccessingEnvironment = "Error %u (%s) accessing alternative environment path '%s'.\n";
+EXPORTED	char *			errorDecryptFileData = "Unable to decrypt file data.\n";
+EXPORTED	char *			errorDecryptionFailed =  "Decryption failed with the specified arguments.\n";
+EXPORTED	char *			errorDeviceProperties = "To use the properties of another device, you have to specify at least three\nvalues ('%s', '%s' and '%s').\n";
+EXPORTED	char *			errorDigestComputation = "Error computing digest value.\n";
+EXPORTED	char *			errorExecutableName = "Unable to get executable name from procfs.\n";
+EXPORTED	char *			errorInvalidArgumentData = "The specified arguments contain invalid data.\n";
+EXPORTED	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
+EXPORTED	char *			errorInvalidFirstStageLength = "Invalid length of data (%u) in the '%s' entry. Expected value is 104.\n";
+EXPORTED	char *			errorInvalidFunction = "Unknown function '%s' for '%s' binary.\n";
+EXPORTED	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
+EXPORTED	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
+EXPORTED	char *			errorInvalidKeyValue = "The specified key value '%s' is invalid, it contains wrong characters.\n";
+EXPORTED	char *			errorInvalidValue = "Invalid data value encountered on STDIN.\n";
+EXPORTED	char *			errorInvalidWidth = "Invalid line size '%s' specified for %s option.\n";
+EXPORTED	char *			errorInvocationName = "Unable to get invocation name from arguments.\n";
+EXPORTED	char *			errorMissingArguments = "Missing arguments on command line.\n";
+EXPORTED	char *			errorMissingSerialMac = "At least two arguments (serial and maca) are required.\n";
+EXPORTED	char *			errorNoMemory = "Memory allocation error.\n";
+EXPORTED	char *			errorNoPasswordEntry = "Unable to find the password entry in the provided file.\nIs this really an export file?\n";
+EXPORTED	char *			errorPasswordMissing = "Missing password on command line.\n";
+EXPORTED	char *			errorReadToMemory = "Error reading data into memory.\n";
+EXPORTED	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
+EXPORTED	char *			errorWriteFailed = "Write to STDOUT failed.\n";
+EXPORTED	char *			errorWrongArgumentsCount = "Exactly two arguments (Base32 encrypted value and hexadecimal key) are required.\n";
+EXPORTED	char *			errorWrongHexKeyLength = "The specified key value '%s' has a wrong length, 32 hexadecimal digits are the expected value.\n";
+EXPORTED	char *			errorWrongKeySize = "The specified key has a wrong size.\n";
+EXPORTED	char *			errorWrongPassword = "The specified password is wrong.\n";
+EXPORTED	char *			errorMissingDeviceProperty = "The device property '%s' is not set.\n";
+EXPORTED	char *			errorOpeningEnvironment = "Error opening environment file '%s'.\n";
+EXPORTED	char *			errorReadingEnvironment = "Error reading environment file '%s'.\n";
+EXPORTED	char *			errorInvalidOption = "Invalid option '%c' specified.\n";
+EXPORTED	char *			errorMissingOptionValue = "Missing value after option '%s'.\n";
+//// end ////
+
 // functions
 
 char *	getErrorText(decoder_error_t err)

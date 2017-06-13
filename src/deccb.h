@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		deccb_usage(const char * name, const bool help, const bool version);
-int			deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
+void		deccb_usage(const bool help, const bool version);
+int			deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry);
 
 #ifndef DECCB_C
 

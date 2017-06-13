@@ -68,13 +68,49 @@ typedef enum {
 
 #ifndef ERRORS_C
 
-// glocal error text definitions
+// global error text definitions
 
 extern char *							*__decoder_error_text;
 
 // global error state
 
 extern decoder_error_t *				__decoder_error;
+
+// error messages
+
+extern	char *							errorAccessingEnvironment;
+extern	char *							errorDecryptFileData;
+extern	char *							errorDecryptionFailed;
+extern	char *							errorDeviceProperties;
+extern	char *							errorDigestComputation;
+extern	char *							errorExecutableName;
+extern	char *							errorInvalidArgumentData;
+extern	char *							errorInvalidDataSize;
+extern	char *							errorInvalidFirstStageLength;
+extern	char *							errorInvalidFunction;
+extern	char *							errorInvalidHexSize;
+extern	char *							errorInvalidHexValue;
+extern	char *							errorInvalidKeyValue;
+extern	char *							errorInvalidValue;
+extern	char *							errorInvalidWidth;
+extern	char *							errorInvocationName;
+extern	char *							errorMissingArguments;
+extern	char *							errorMissingSerialMac;
+extern	char *							errorNoMemory;
+extern	char *							errorNoPasswordEntry;
+extern	char *							errorPasswordMissing;
+extern	char *							errorReadToMemory;
+extern	char *							errorUnexpectedError;
+extern	char *							errorWriteFailed;
+extern	char *							errorWrongArgumentsCount;
+extern	char *							errorWrongHexKeyLength;
+extern	char *							errorWrongKeySize;
+extern	char *							errorWrongPassword;
+extern	char *							errorMissingDeviceProperty;
+extern	char *							errorOpeningEnvironment;
+extern	char *							errorReadingEnvironment;
+extern	char *							errorInvalidOption;
+extern	char *							errorMissingOptionValue;
 
 #endif
 
@@ -96,10 +132,16 @@ char *	getErrorText(decoder_error_t err);
 
 #define isError(err)					(getError() == DECODER_ERROR_##err)
 
+#define errorMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) {\
+											fprintf(stderr, "\033[1m\033[31m%s\033[0m: ", getAppletName());\
+											fprintf(stderr, ##__VA_ARGS__);\
+											fprintf(stderr, "\a");\
+										}
+
 // options check default
 
 #define invalid_option(opt)				default:\
-											errorMessage("Invalid option '%c' specified.\n", (char) opt);\
+											errorMessage(errorInvalidOption, (char) opt);\
 											return EXIT_FAILURE
 
 #endif

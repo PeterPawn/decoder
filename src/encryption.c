@@ -46,7 +46,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 	
 	localCtx = (ctx ? ctx : EVP_CIPHER_CTX_new());
 	CipherInit(localCtx, CipherTypeValue, key, cipherBuffer, false);
-	verboseMessage("found cipher text '%s' -> ", cipherText);
+	verboseMessage(verboseFoundCipherText, cipherText);
 	if (!(cipherSize % *cipher_blockSize))
 		cipherSize++;
 	if (CipherUpdate(localCtx, decryptedBuffer, &decryptedSize, cipherBuffer + *cipher_ivLen, cipherSize - *cipher_ivLen))
@@ -61,7 +61,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 			{
 				int	start = 0;
 
-				verboseMessage("decrypted to '%s'\n", value);
+				verboseMessage(verboseDecryptedTo, value);
 				for (int i = 0; i < (int) valueSize; i++)
 				{
 					if (*(value + i) == '\\' || *(value + i) == '"') /* split output */
@@ -96,17 +96,17 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 				{
 					binaryToHexadecimal(value, valueSize, hexBuffer, (valueSize * 2) + 1);
 					*(hexBuffer + (valueSize * 2)) = 0;
-					verboseMessage("decrypted to 0x%s\n", hexBuffer);
+					verboseMessage(verboseDecryptedToHex, hexBuffer);
 					free(hexBuffer);
 				}
 				else
-					verboseMessage("error displaying value, but decryption was successful\n");
+					verboseMessage(verboseDisplayFailed);
 			}
 		}
 		else
 		{
 			setError(DECRYPT_ERR);
-			verboseMessage("decrypt failed\n");
+			verboseMessage(verboseDecryptFailed);
 		}
 	}
 	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize, true);
@@ -248,7 +248,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 
 		if (value)
 		{
-			verboseMessage("found device property '%s' with value '%s'\n", var->show, value);
+			verboseMessage(verboseFoundProperty, var->show, value);
 			DigestUpdate(ctx, value, strlen(value));
 			if (var->append)
 				DigestUpdate(ctx, var->append, strlen(var->append));
@@ -257,11 +257,11 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 		{
 			if (var->errorIfMissing == true)
 			{
-				errorMessage("device property '%s' is not set\n",  var->show);
+				errorMessage(errorMissingDeviceProperty, var->show);
 				setError(URLADER_ENV_ERR);
 				break;
 			}
-			verboseMessage("device property '%s' does not exist.\n", var->show);
+			verboseMessage(verboseMissingProperty, var->show);
 		}
 		var++;
 		if (forExport && !var->export)
@@ -317,23 +317,23 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	DigestContext	 	*ctx = DigestInit();
 
 	if (strlen(serial) != 16)
-		verboseMessage("the specified serial number '%s' has a wrong length\n", serial);
+		verboseMessage(verboseWrongSerialLength, serial);
 	DigestUpdate(ctx, serial, strlen(serial));
 	DigestUpdate(ctx, "\n", 1);
 	if (!checkMACAddress(maca))
-		verboseMessage("the specified MAC address '%s' has a wrong format\n", maca);
+		verboseMessage(verboseWrongMACAddress, maca);
 	DigestUpdate(ctx, maca, strlen(maca));
 	DigestUpdate(ctx, "\n", 1);
 	if (wlanKey && *wlanKey)
 	{
 		if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
-			verboseMessage("the specified WLAN key '%s' has an unusual length\n", wlanKey);
+			verboseMessage(verboseWrongWLANKey, wlanKey);
 		DigestUpdate(ctx, wlanKey, strlen(wlanKey));
 	}
 	if (tr069Passphrase && *tr069Passphrase)
 	{
-		if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
-			verboseMessage("the specified WLAN key '%s' has an unusual length\n", wlanKey);
+		if (strlen(tr069Passphrase) != 8)
+			verboseMessage(verboseWrongTR069Passphrase, tr069Passphrase);
 		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
 	}
 	*hashSize = *digest_blockSize;

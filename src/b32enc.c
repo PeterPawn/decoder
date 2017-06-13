@@ -30,19 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__b32enc_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
 EXPORTED commandEntry_t *	b32enc_command = &__b32enc_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-static	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
-static	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
-static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
-static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
-//// end ////
-
 // 'b32enc' function - encode binary data from STDIN to Base32 encoded on STDOUT
 
-int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	bool				hexInput = false;
 	bool				padInput = false;

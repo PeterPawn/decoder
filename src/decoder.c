@@ -22,14 +22,6 @@
 #include "decoder.h"
 #include "decoder_usage.c"
 
-// statics
-
-//// error messages ////
-static	char *			errorExecutableName = "Unable to get executable name from procfs.\n";
-static	char *			errorInvocationName = "Unable to get invocation name from arguments.\n";
-static	char *			errorInvalidFunction = "Unknown function '%s' for '%s' binary.\n";
-//// end ////
-
 // main entry point for each call
 
 int main(int argc, char** argv)
@@ -68,7 +60,7 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		main_usage(fname, false);
+		main_usage(false);
 
 #if DEBUG == 1
 		fprintf(stderr, "\n");
@@ -110,7 +102,8 @@ int main(int argc, char** argv)
 				if (current->usesCrypto) EncryptionInit();
 				arguments[0] = ename;
 				opterr = 0;
-				int exitCode = (*current->ep)(argumentCount, arguments, argumentOffset, current, *name);
+				setAppletName(*name);
+				int exitCode = (*current->ep)(argumentCount, arguments, argumentOffset, current);
 				if (exitCode == EXIT_SUCCESS)
 				{
 					if (current->finalNewlineOnTTY && isatty(1) && !isAnyError())
@@ -127,7 +120,7 @@ int main(int argc, char** argv)
 	if (!current)
 	{
 		errorMessage(errorInvalidFunction, fname, enameLong);
-		main_usage(ename, false);
+		main_usage(false);
 	}
 
 	exit(EXIT_FAILURE);

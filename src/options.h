@@ -23,25 +23,77 @@
 
 // helper macros
 
+#define __usage(help, version)			((*entry->usage)(help, version))
+
+#if DECODER_CONFIG_AUTO_USAGE == y
+#define	__autoUsage()					__usage(false, false)
+#else
+#define	__autoUsage()
+#endif
+
+#define verbosity_options_long			{ "verbose", no_argument, NULL, 'v' },\
+										{ "quiet", no_argument, NULL, 'q' },\
+										{ "help", no_argument, NULL, 'h' },\
+										{ "version", no_argument, NULL, 'V' }
+
+#define	options_long_end				{ NULL, 0, NULL, 0 }
+
+#define verbosity_options_short			"qvhV"
+
+#define check_verbosity_options_short()	case 'v':\
+											__setVerbosity(VERBOSITY_VERBOSE);\
+											break;\
+										case 'q':\
+											__setVerbosity(VERBOSITY_SILENT);\
+											break
+
+#define help_option()					case 'h':\
+											__usage(true, false);\
+											return EXIT_FAILURE;\
+										case 'V':\
+											__usage(false, true);\
+											return EXIT_FAILURE;\
+
+#define getopt_message_displayed()		case '?':\
+											__autoUsage();\
+											return EXIT_FAILURE
+
+#define getopt_argument_missing()		case ':':\
+											errorMessage(errorMissingOptionValue, getopt_option_name());\
+											__autoUsage();\
+											return EXIT_FAILURE
+
+#define getopt_option_name()			optionsString((optIndex ? optopt : 0), (optIndex ? NULL : options_long[optIndex].name))
+
+// options for more than one applet
+
+// alternate environment file
+
 #define altenv_options_long				{ "alt-env", required_argument, NULL, 'a' }
 
 #define altenv_options_short			"a:"
 
 #define check_altenv_options_short()	case 'a':\
-											if ((altEnv = setAlternativeEnvironment(optarg)) == false)\
+											if ((altEnv = setAlternativeEnvironment(optarg)) == false) {\
+												__autoUsage();\
 												return EXIT_FAILURE;\
+											}\
 											break
 
 #define altenv_verbose_message()		if (altEnv)\
-											verboseMessage("using alternative environment path '%s'\n", getEnvironmentPath())
+											verboseMessage(verboseAltEnv, getEnvironmentPath())
+
+// wrap output lines
 
 #define width_options_long				{ "wrap-lines", optional_argument, NULL, 'w' }
 
 #define width_options_short				"w::"
 
 #define check_width_options_short()		case 'w':\
-											if (setLineWidth(optarg, getopt_option_name()) == false)\
+											if (setLineWidth(optarg, getopt_option_name()) == false) {\
+												__autoUsage();\
 												return EXIT_FAILURE;\
+											}\
 											break
 
 // function prototypes

@@ -25,8 +25,8 @@
 
 // function prototypes
 
-void		hexdec_usage(const char * name, const bool help, const bool version);
-int			hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name);
+void		hexdec_usage(const bool help, const bool version);
+int			hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry);
 
 #ifndef HEXDEC_C
 

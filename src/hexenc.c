@@ -30,16 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__hexenc_command = { .names = &commandNames, .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-//// end ////
-
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT
 
-int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	uint32_t			charsOnLine = 0;
 	char				buffer[120];

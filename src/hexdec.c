@@ -30,19 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__hexdec_command = { .names = &commandNames, .ep = &hexdec_entry, .usage = &hexdec_usage };
 EXPORTED commandEntry_t *	hexdec_command = &__hexdec_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-static	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
-static	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
-static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
-static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
-//// end ////
-
 // 'hexdec' function - decode hexadecimal presentation of data from STDIN to STDOUT
 
-int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	char				buffer[80];
 	size_t				read = 0;

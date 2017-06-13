@@ -30,18 +30,9 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__decfile_command = { .names = &commandNames, .ep = &decfile_entry, .usage = &decfile_usage, .usesCrypto = true };
 EXPORTED commandEntry_t *	decfile_command = &__decfile_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorWrongHexKeyLength = "The specified key value '%s' has a wrong length, 32 hexadecimal digits are the expected value.\n";
-static	char *			errorInvalidKeyValue = "The specified key value '%s' is invalid, it contains wrong characters.\n";
-static	char *			errorDeviceProperties = "To use the properties of another device, you have to specify at least three\nvalues ('%s', '%s' and '%s').\n";
-static	char *			errorReadToMemory = "Error reading data into memory.\n";
-//// end ////
-
 // 'decode_secrets' function - decode all secret values from STDIN content and copy it with replaced values to STDOUT
 
-int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	char 				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);
@@ -61,6 +52,7 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry, cons
 			{ "tty", no_argument, NULL, 't' },
 			altenv_options_long,
 			verbosity_options_long,
+			options_long_end,
 		};
 		char *			options_short = ":" "t" altenv_options_short verbosity_options_short;
 

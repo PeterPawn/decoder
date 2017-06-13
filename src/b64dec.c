@@ -30,15 +30,6 @@ static	char * *			commandNames = &__commandNames[0];
 static 	commandEntry_t 		__b64dec_command = { .names = &commandNames, .ep = &b64dec_entry, .usage = &b64dec_usage };
 EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 
-// statics
-
-//// error messages ////
-static	char *			errorInvalidValue = "Invalid data value encountered on STDIN.\n";
-static	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
-static	char *			errorUnexpectedError = "Unexpected error %d (%s) encountered.\n";
-static	char *			errorWriteFailed = "Write to STDOUT failed.\n";
-//// end ////
-
 // 'b64dec' function - decode Base64 encoded data from STDIN to STDOUT
 
 int		b64dec_output(char * base64, bool hexOutput, bool pad)
@@ -85,7 +76,7 @@ int		b64dec_output(char * base64, bool hexOutput, bool pad)
 	return EXIT_SUCCESS;
 }
 
-int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry, const char * name)
+int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	char				buffer[80];
 	char *				input;

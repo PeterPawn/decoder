@@ -30,11 +30,11 @@ typedef	struct	showOption	{
 #define	DECODER_MAIN_VERSION			"0.3"
 #define DECODER_HELP_WIDTH				99
 
-void									showUsageHeader(FILE * out, const char * name, const bool help, const bool version);
-void									showUsageFinalize(FILE * out, const char * name, const bool help, const bool version);
-void									showVersion(FILE * out, const char * name, const bool help);
-void									showPurposeHeader(FILE * out, const char * name);
-void									showFormatHeader(FILE * out, const char * name);
+void									showUsageHeader(FILE * out, const bool help, const bool version);
+void									showUsageFinalize(FILE * out, const bool help, const bool version);
+void									showVersion(FILE * out, const bool help);
+void									showPurposeHeader(FILE * out);
+void									showFormatHeader(FILE * out);
 void									addArgument(const char * arg);
 void									addOption(const char * option);
 void									startOption(void);
@@ -42,7 +42,7 @@ void									endOption(void);
 void									endOptions(void);
 void									addSpace(void);
 void									addAlternative(void);
-void									showFormatEnd(FILE * out, const char * name);
+void									showFormatEnd(FILE * out);
 void									showOptionsHeader(char * option);
 void									addOptionsEntry(char * value, char * description);
 void									addOptionsEntryVerbose(void);
@@ -51,7 +51,7 @@ void									addOptionsEntryVersion(void);
 void									addOptionsEntryVerbose(void);
 void									addOptionsEntryQuiet(void);
 void									buildOptionsDisplay(void);
-void									showOptionsEnd(FILE * out, UNUSED const char * name);
+void									showOptionsEnd(FILE * out);
 char *									showBold(const char * data);
 char *									showUndl(const char * data);
 void									addIndent(void);
