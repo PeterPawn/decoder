@@ -51,7 +51,6 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
-			{ "hex-input", no_argument, NULL, 'i' },
 			options_long_end,
 		};
 		char *			options_short = ":" "x" verbosity_options_short;

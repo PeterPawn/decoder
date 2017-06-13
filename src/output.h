@@ -40,6 +40,7 @@ extern	char *							verboseMissingProperty;
 extern	char *							verboseAltEnv;
 extern	char *							verboseUsingKey;
 extern	char *							verbosePasswordHash;
+extern	char *							verboseDeviceKeyHash;
 extern	char *							verbosePasswordUsed;
 extern	char *							verboseRedirectStdin;
 extern	char *							verboseTooMuchArguments;

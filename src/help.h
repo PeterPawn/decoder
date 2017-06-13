@@ -24,11 +24,14 @@
 typedef	struct	showOption	{
 	struct showOption *	next;
 	char *				value;
+	size_t				invisible;
 	char *				description;
 } 	showOption_t;
 
 #define	DECODER_MAIN_VERSION			"0.3"
 #define DECODER_HELP_WIDTH				99
+
+#define	__undl(string)					"\033[4m" string "\033[0m"
 
 void									showUsageHeader(FILE * out, const bool help, const bool version);
 void									showUsageFinalize(FILE * out, const bool help, const bool version);
@@ -44,7 +47,7 @@ void									addSpace(void);
 void									addAlternative(void);
 void									showFormatEnd(FILE * out);
 void									showOptionsHeader(char * option);
-void									addOptionsEntry(char * value, char * description);
+void									addOptionsEntry(char * value, char * description, size_t invisible);
 void									addOptionsEntryVerbose(void);
 void									addOptionsEntryHelp(void);
 void									addOptionsEntryVersion(void);

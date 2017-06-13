@@ -49,8 +49,9 @@ void 	userpw_usage(const bool help, UNUSED const bool version)
 	showFormatEnd(out);
 
 	showOptionsHeader("options");
-	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string");
+	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string", 0);
 	addOptionsEntryVerbose();
+	addOptionsEntryQuiet();
 	addOptionsEntryHelp();
 	addOptionsEntryVersion();
 	showOptionsEnd(out);

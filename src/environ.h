@@ -25,7 +25,7 @@
 
 // FRITZ!OS environment related settings
 
-#define	URLADER_ENV_PATH		"DECODER_CONFIG_URLADER_ENVIRONMENT_PATH"
+#define	URLADER_ENV_PATH		DECODER_CONFIG_URLADER_ENVIRONMENT_PATH
 
 // environment file functions
 

@@ -39,6 +39,7 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);
 	char				hex[(sizeof(hash) * 2) + 1];
+	size_t				hexLen = 0;
 	char *				out;
 	size_t				outLen;
 	bool				altEnv = false;
@@ -75,6 +76,10 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				invalid_option(opt);
 			}
 		}
+		if (optind < (argc - argo))
+		{
+			warnAboutExtraArguments(argv, optind + argo);
+		}
 	}
 
 	resetError();
@@ -82,6 +87,23 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	altenv_verbose_message();
 
 	keyFromDevice(hash, &hashLen, forExport);
+
+	if (!isAnyError())
+	{
+		hexLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
+		hex[hexLen] = 0;
+		verboseMessage(verboseDeviceKeyHash, hex);
+	}
+
+	if (!isAnyError() && !hexOutput && isatty(1))
+	{
+		if (fwrite("0x", 2, 1, stdout) != 1)
+		{
+			setError(WRITE_FAILED);
+			errorMessage(errorWriteFailed);
+		}
+		hexOutput = true;
+	}
 	
 	if (!isAnyError())
 	{

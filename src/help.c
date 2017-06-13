@@ -134,7 +134,7 @@ EXPORTED	void	showOptionsHeader(char * option)
 	}
 }
 
-EXPORTED	void	addOptionsEntry(char * value, char * description)
+EXPORTED	void	addOptionsEntry(char * value, char * description, size_t invisible)
 {
 	showOption_t *	current = options;
 	showOption_t *	previous = options;
@@ -149,6 +149,7 @@ EXPORTED	void	addOptionsEntry(char * value, char * description)
 	new->next = NULL;
 	new->value = value;
 	new->description = description;
+	new->invisible = invisible;
 
 	if (previous)
 		previous->next = new;
@@ -158,22 +159,22 @@ EXPORTED	void	addOptionsEntry(char * value, char * description)
 
 EXPORTED	void	addOptionsEntryQuiet(void)
 {
-	addOptionsEntry("-q, --quiet", "suppress any error messages on STDERR");
+	addOptionsEntry("-q, --quiet", "suppress any error messages on STDERR", 0);
 }
 
 EXPORTED	void	addOptionsEntryVerbose(void)
 {
-	addOptionsEntry("-v, --verbose", "show additional information on STDERR");
+	addOptionsEntry("-v, --verbose", "show additional information on STDERR", 0);
 }
 
 EXPORTED	void	addOptionsEntryHelp(void)
 {
-	addOptionsEntry("-h, --help", "show this information (on STDOUT) and exit");
+	addOptionsEntry("-h, --help", "show this information (on STDOUT) and exit", 0);
 }
 
 EXPORTED	void	addOptionsEntryVersion(void)
 {
-	addOptionsEntry("-V, --version", "show version (on STDOUT) and exit");
+	addOptionsEntry("-V, --version", "show version (on STDOUT) and exit", 0);
 }
 
 void	buildOptionsDisplay(void)
@@ -186,9 +187,9 @@ void	buildOptionsDisplay(void)
 	while (current)
 	{
 		lines++;
-		if (strlen(current->value) > left)
+		if ((strlen(current->value) - current->invisible) > left)
 		{
-			left = strlen(current->value);
+			left = strlen(current->value) - current->invisible;
 		}
 		current = current->next;				
 	}
@@ -206,7 +207,7 @@ void	buildOptionsDisplay(void)
 	while (current)
 	{
 		strcat(commandLine, current->value);
-		memset((commandLine + strlen(commandLine)), ' ', (left - strlen(current-> value)));
+		memset((commandLine + strlen(commandLine)), ' ', (left - strlen(current-> value) + current->invisible));
 		strcat(commandLine, " - ");
 		if (strlen(current->description) > right)
 		{

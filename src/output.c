@@ -30,6 +30,7 @@ EXPORTED	char *				verboseMissingProperty = "device property '%s' does not exist
 EXPORTED	char *				verboseAltEnv = "using alternative environment path '%s'\n";
 EXPORTED	char *				verboseUsingKey = "using key 0x%s for decryption\n";
 EXPORTED	char *				verbosePasswordHash = "user password converted to key 0x%s\n";
+EXPORTED	char *				verboseDeviceKeyHash = "device key value is 0x%s\n";
 EXPORTED	char *				verbosePasswordUsed = "specified password is '%s'\n";
 EXPORTED	char *				verboseRedirectStdin = "redirecting STDIN to file '%s'\n";
 EXPORTED	char *				verboseTooMuchArguments = "additional command line argument ignored: '%s'\n";
