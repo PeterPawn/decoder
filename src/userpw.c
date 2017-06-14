@@ -39,7 +39,7 @@ int		userpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char				hash[MAX_DIGEST_SIZE];
 	uint32_t			hashLen = sizeof(hash);
 	char				hex[(sizeof(hash) * 2) + 1];
-	size_t				hexLen;
+	size_t				hexLen = 0;
 	char *				out;
 	size_t				outLen;
 

@@ -61,11 +61,9 @@
 											return EXIT_FAILURE
 
 #define getopt_argument_missing()		case ':':\
-											errorMessage(errorMissingOptionValue, getopt_option_name());\
+											errorMessage(errorMissingOptionValue, argv[optind]);\
 											__autoUsage();\
 											return EXIT_FAILURE
-
-#define getopt_option_name()			optionsString((optIndex ? optopt : 0), (optIndex ? NULL : options_long[optIndex].name))
 
 // options check default
 
@@ -73,7 +71,7 @@
 											errorMessage(errorInvalidOption, argv[optind]);\
 											return EXIT_FAILURE
 
-#// options for more than one applet
+// options for more than one applet
 
 // alternate environment file
 
@@ -98,7 +96,7 @@
 #define width_options_short				"w::"
 
 #define check_width_options_short()		case 'w':\
-											if (setLineWidth(optarg, getopt_option_name()) == false) {\
+											if (setLineWidth(optarg, argv[optind]) == false) {\
 												__autoUsage();\
 												return EXIT_FAILURE;\
 											}\

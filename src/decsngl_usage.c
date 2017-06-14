@@ -21,4 +21,60 @@
 
 void 	decsngl_usage(const bool help, UNUSED const bool version)
 {
+	FILE *	out = (help || version ? stdout : stderr);
+
+	showUsageHeader(out, help, version);
+
+	if (version)
+	{
+		fprintf(out, "\n");
+		return;
+	}
+
+	showPurposeHeader(out);
+	fprintf(out,
+		"This program takes a Base32 encoded value and a hexadecimal key and tries to decrypt the value.\n"
+		"If decryption was possible, the clear-text data will be written to STDOUT.\n"
+	);
+
+	showFormatHeader(out);
+	addSpace();
+	addOption("options");
+	addSpace();
+	endOptions();
+	addSpace();
+	addArgument("cipher-text");
+	addSpace();
+	addArgument("key");
+	showFormatEnd(out);
+
+	showOptionsHeader("options");
+	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string", 0);
+	addOptionsEntryVerbose();
+	addOptionsEntryQuiet();
+	addOptionsEntryHelp();
+	addOptionsEntryVersion();
+	showOptionsEnd(out);
+
+	fprintf(out,
+		"\nThe %s parameter must be a Base32 encoded value (using AVM's 'digits', but without the\n"
+		"leading dollar-signs); its size is verified and has to be a multiple of eight.\n",
+		showUndl("cipher-text")
+	);
+
+	fprintf(out,
+		"\nThe %s argument is a hexadecimal string for the decryption key to use and it has to contain 64 or\n"
+		"32 characters; values with 32 characters are padded with zeros to a 256-bit key.\n",
+		showUndl("key")
+	);
+
+	fprintf(out,
+		"\nIf the decoded data doesn't look like a C-string (that means, the last byte isn't NUL), the decoded\n"
+		"data will be output as a hexadecimal string, prefixed with '0x' to mark this format. If hexadecimal\n"
+		"output was requested with option '--hex-output' (or '-x'), this marker is omitted. There's no way\n"
+		"to distinguish between the forced output as hexadecimal string and a value, which really starts\n"
+		"with '0x'. If hexadecimal output is used, any NUL character isn't removed from the end of the data.\n"
+	);
+
+	showUsageFinalize(out, help, version);
 }

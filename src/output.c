@@ -45,6 +45,16 @@ EXPORTED	char *				verboseWrongMACAddress = "the specified MAC address '%s' has 
 EXPORTED	char *				verboseWrongWLANKey = "the specified WLAN key '%s' has an unusual length\n";
 EXPORTED	char *				verboseWrongTR069Passphrase = "the specified TR-069 passphrase looks unusual\n";
 
+EXPORTED	char *				verboseDebugKey = "key\t: (%03u) 0x%s\n";
+EXPORTED	char *				verboseDebugBase32 = "base32\t: (%03u) %s\n";
+EXPORTED	char *				verboseDebugInput = "input\t: (%03u) 0x%s\n";
+EXPORTED	char *				verboseDebugIV = "iv\t: (%03u) 0x%s\n";
+EXPORTED	char *				verboseDebugEncData = "enc'd\t: (%03u) 0x%s\n";
+EXPORTED	char *				verboseDebugDecData = "dec'd\t: (%03u) 0x%s\n";
+EXPORTED	char *				verboseDebugSize = "size\t: %u\n";
+EXPORTED	char *				verboseDebugIsString = "string\t: %s\n";
+EXPORTED	char *				verboseDebugValue = "value\t: (%03u) %s\n";
+
 // static settings with accessor functions
 
 static	char *					appletName = NULL;

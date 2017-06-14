@@ -44,6 +44,7 @@ void 	pwfrdev_usage(const bool help, UNUSED const bool version)
 	showOptionsHeader("options");
 	addOptionsEntry("-a, --alt-env " __undl("filename"), "use an alternative source for the 'urlader environment'", 8);
 	addOptionsEntry("-e, --for-export", "create a key usable for a settings export file", 0);
+	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string", 0);
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
 	addOptionsEntryHelp();
@@ -61,14 +62,23 @@ void 	pwfrdev_usage(const bool help, UNUSED const bool version)
 	fprintf(out,
 		"\nThe 'urlader environment' is usually available with a fixed path name on procfs, but while a\n"
 		"FRITZ!OS device is started, a copy will be created in '/var/env'. If the program is used outside of\n"
-		"FRITZ!OS (or it has to use properties from another device), an alternative path may be specified and\n"
-		"it has to point to a text file with the correct structure.\n"
+		"FRITZ!OS (or it's supposed to use properties from another device), an alternative %s may be\n"
+		"set and used with the '--alt-env' (or '-a') option. The original file format (name and value\n"
+		"delimited by a single TAB character, no empty lines in the file) must be respected.\n",
+		showUndl("filename")
 	);
 
 	fprintf(out,
 		"\nThe key used to encrypt export files, if they're created without an user-defined password, differs\n"
 		"from the key for internal storage. If you need an export key for a device, you may specify the\n"
 		"option '--for-export' (or '-e') to create such one.\n"
+	);
+
+	fprintf(out,
+		"\nThe computed key will be written to STDOUT; if the option '--hex-output' (or '-x') was specified,\n"
+		"output data will be converted to a hexadecimal string. If STDOUT is connected to a terminal device,\n"
+		"hexadecimal output is activated automatically. As long as the option for hexadecimal output wasn't\n"
+		"selected explicitely, the value will get a prefix '0x' in front of it.\n"
 	);
 
 	showUsageFinalize(out, help, version);

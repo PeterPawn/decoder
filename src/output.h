@@ -55,6 +55,16 @@ extern	char *							verboseWrongMACAddress;
 extern	char *							verboseWrongWLANKey;
 extern	char *							verboseWrongTR069Passphrase;
 
+extern	char *							verboseDebugKey;
+extern	char *							verboseDebugBase32;
+extern	char *							verboseDebugInput;
+extern	char *							verboseDebugIV;
+extern	char *							verboseDebugEncData;
+extern	char *							verboseDebugDecData;
+extern	char *							verboseDebugSize;
+extern	char *							verboseDebugIsString;
+extern	char *							verboseDebugValue;
+
 #endif
 
 // default values

@@ -54,6 +54,7 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			altenv_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
 			{ "for-export", no_argument, NULL, 'e' },
+			options_long_end,
 		};
 		char *			options_short = ":" "xe" altenv_options_short verbosity_options_short;
 
@@ -72,6 +73,7 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
+				getopt_argument_missing();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}

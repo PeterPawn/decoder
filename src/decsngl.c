@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__decsngl_command = { .names = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true };
+static	commandEntry_t 		__decsngl_command = { .names = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	decsngl_command = &__decsngl_command;
 
 // 'decode_secret' function - decode the specified secret value (in Base32 encoding) perties
@@ -48,8 +48,9 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
+			options_long_end,
 		};
-		char *			options_short = "x" verbosity_options_short;
+		char *			options_short = ":" "x" verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -68,7 +69,8 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 		if (optind >= (argc - argo))
 		{
-			errorMessage(errorPasswordMissing);
+			errorMessage(errorMissingArguments);
+			__autoUsage();
 			return EXIT_FAILURE;
 		}
 		else
@@ -91,15 +93,19 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			if (!key)
 			{
 				errorMessage(errorWrongArgumentsCount);
-				__usage(false, false);
+				__autoUsage();
 				return EXIT_FAILURE;
+			}
+			if (argv[i])
+			{
+				warnAboutExtraArguments(argv, i);
 			}
 		}
 	}
 	else
 	{
 		errorMessage(errorWrongArgumentsCount);
-		__usage(false, false);
+		__autoUsage();
 		return EXIT_FAILURE;
 	}
 
@@ -114,6 +120,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	size_t				keySize = 0;
 	size_t				dataLen = 0;
 	bool				isString = false;
+	bool				hexForced = false;
 
 	char *				secretBuffer = (char *) malloc(secretBufSize + *cipher_blockSize);
 	char *				decryptedBuffer = (char *) malloc(secretBufSize + *cipher_blockSize);
@@ -143,7 +150,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		return EXIT_FAILURE;
 	}
 
-	if (keySize != 16)
+	if (keySize != 16 && keySize != 32)
 	{
 		errorMessage(errorWrongKeySize);
 		secretBuffer = clearMemory(secretBuffer, secretBufSize + *cipher_blockSize, true);
@@ -152,16 +159,87 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		return EXIT_FAILURE;
 	}
 
+	if (isVerbose())
+	{
+		hexBuffer = malloc((32 * 2) + 1);
+
+		if (hexBuffer)
+		{
+			binaryToHexadecimal(keyBuffer, keySize, hexBuffer, (keySize * 2) + 1);
+			*(hexBuffer + (keySize * 2)) = 0;
+			verboseMessage(verboseDebugKey, keySize, hexBuffer);
+			free(hexBuffer);
+			hexBuffer = NULL;
+		}
+
+		verboseMessage(verboseDebugBase32, strlen(secret), secret);
+
+		hexBuffer = malloc((secretSize * 2) + 1);
+
+		if (hexBuffer)
+		{
+			binaryToHexadecimal(secretBuffer, secretSize, hexBuffer, (secretSize * 2) + 1);
+			*(hexBuffer + (secretSize * 2)) = 0;
+			verboseMessage(verboseDebugInput, secretSize, hexBuffer);
+			free(hexBuffer);
+			hexBuffer = NULL;
+		}
+
+		hexBuffer = malloc((*cipher_ivLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			binaryToHexadecimal(secretBuffer, *cipher_ivLen, hexBuffer, (*cipher_ivLen * 2) + 1);
+			*(hexBuffer + (*cipher_ivLen * 2)) = 0;
+			verboseMessage(verboseDebugIV, *cipher_ivLen, hexBuffer);
+			free(hexBuffer);
+			hexBuffer = NULL;
+		}
+
+		hexBuffer = malloc(((secretSize - *cipher_ivLen) * 2) + 1);
+
+		if (hexBuffer)
+		{
+			binaryToHexadecimal(secretBuffer + *cipher_ivLen, (secretSize - *cipher_ivLen), hexBuffer, ((secretSize - *cipher_ivLen) * 2) + 1);
+			*(hexBuffer + ((secretSize - *cipher_ivLen) * 2)) = 0;
+			verboseMessage(verboseDebugEncData, (secretSize - *cipher_ivLen), hexBuffer);
+			free(hexBuffer);
+			hexBuffer = NULL;
+		}
+	}
+
 	CipherContext 		*ctx = CipherInit(NULL, CipherTypeValue, keyBuffer, secretBuffer, false);
 	
 	if (!(secretSize % 16))
 		secretSize++;
+
 	if (CipherUpdate(ctx, decryptedBuffer, &decryptedSize, secretBuffer + *cipher_ivLen, secretSize - *cipher_ivLen))
 	{
+		if (isVerbose())
+		{
+			hexBuffer = malloc((decryptedSize * 2) + 1);
+
+			if (hexBuffer)
+			{
+				binaryToHexadecimal(decryptedBuffer, decryptedSize, hexBuffer, (decryptedSize * 2) + 1);
+				*(hexBuffer + (decryptedSize * 2)) = 0;
+				verboseMessage(verboseDebugDecData, decryptedSize, hexBuffer);
+				free(hexBuffer);
+				hexBuffer = NULL;
+			}
+		}
 		if (!DigestCheckValue(decryptedBuffer, decryptedSize, &out, &dataLen, &isString))
 		{	
 			setError(INVALID_KEY);
 			errorMessage(errorWrongPassword);
+		}
+		else
+		{
+			if (isVerbose())
+			{
+				verboseMessage(verboseDebugSize, dataLen + (isString ? 1 : 0));
+				verboseMessage(verboseDebugIsString, (isString && !hexOutput ? "yes" : "no"));
+			}
 		}
 	}
 	
@@ -171,9 +249,12 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (!isAnyError())
 	{
-		if (hexOutput)
+		if (!hexOutput && !isString)
+			hexForced = true;
+
+		if (hexOutput || hexForced)
 		{
-			hexBuffer = (char *) malloc((dataLen * 2) * 1);
+			hexBuffer = (char *) malloc((dataLen * 2) + 5);
 			if (!hexBuffer)
 			{
 				errorMessage(errorNoMemory);
@@ -181,12 +262,30 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			}
 			else
 			{
-				outLen = binaryToHexadecimal(out, dataLen, hexBuffer, (dataLen * 2) + 1);
-				out = hexBuffer;
+				char *	target = hexBuffer;
+
+				if (hexForced || hexOutput)
+				{
+					strcpy(target, "0x");
+					target += 2;
+				}
+
+				if (isString)
+					dataLen += 1;
+
+				outLen = binaryToHexadecimal(out, dataLen, target, (dataLen * 2) + 1);
+				outLen += (hexForced ? 2 : 0);
+				*(target + (dataLen * 2)) = 0;
+				out = hexBuffer + (hexOutput ? 2 : 0);
+				verboseMessage(verboseDebugValue, dataLen, hexBuffer);
 			}
 		}
 		else
+		{
 			outLen = dataLen;
+			verboseMessage(verboseDebugValue, strlen(out), out);
+		}
+
 		if (!isAnyError() && fwrite(out, outLen, 1, stdout) != 1)
 		{
 			setError(WRITE_FAILED);
@@ -194,7 +293,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 	}
 
-	hexBuffer = clearMemory(hexBuffer, *cipher_keyLen, true);
+	hexBuffer = clearMemory(hexBuffer, 1, true);
 	decryptedBuffer = clearMemory(decryptedBuffer, secretBufSize + *cipher_blockSize, true);
 
 	return EXIT_SUCCESS;

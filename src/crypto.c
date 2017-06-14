@@ -67,7 +67,7 @@ EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, const EVP_CIPHER * type
 		return cipherCTX;
 	if (EVP_DecryptInit_ex(cipherCTX, (EVP_CIPHER *) type, NULL, (unsigned char *) key, (unsigned char *) iv))
 	{
-		EVP_CIPHER_CTX_set_padding(ctx, padding);
+		EVP_CIPHER_CTX_set_padding(cipherCTX, padding);
 		return cipherCTX;
 	}
 	returnError(OSSL_CIPHER_ERR, NULL);
