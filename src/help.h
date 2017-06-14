@@ -39,6 +39,7 @@ void									showVersion(FILE * out, const bool help);
 void									showPurposeHeader(FILE * out);
 void									showFormatHeader(FILE * out);
 void									addArgument(const char * arg);
+void									addNormalString(const char * arg);
 void									addOption(const char * option);
 void									startOption(void);
 void									endOption(void);

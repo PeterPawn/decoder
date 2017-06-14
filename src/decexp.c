@@ -50,6 +50,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			{ "tty", no_argument, NULL, 't' },
 			altenv_options_long,
 			verbosity_options_long,
+			options_long_end,
 		};
 		char *			options_short = ":" "t" altenv_options_short verbosity_options_short;
 

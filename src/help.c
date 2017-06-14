@@ -82,6 +82,11 @@ EXPORTED	void	addArgument(const char * arg)
 	strcat(commandLine, showUndl(arg));
 }
 
+EXPORTED	void	addNormalString(const char * arg)
+{
+	strcat(commandLine, arg);
+}
+
 EXPORTED	void	addOption(const char * option)
 {
 	startOption();
