@@ -34,7 +34,7 @@
 usage_text()
 {
 	__purpose_hdr
-	__nl "This script decrypts all occurences of encrypted data on STDIN (if decryption is possible) and"
+	__nl "This script decrypts all occurrences of encrypted data on STDIN (if decryption is possible) and"
 	__nl "writes the data to STDOUT, while replacing cipher-text with the corresponding clear-text values."
 	__usage_hdr
 	__usage_opt "options"; __usage_opt_end; __usage_opt "password" "$( printf " | "; __undl "serial"; printf " "; \
