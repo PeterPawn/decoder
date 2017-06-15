@@ -86,6 +86,7 @@ EXPORTED	char *			errorReadingEnvironment = "Error reading environment file '%s'
 EXPORTED	char *			errorInvalidOption = "Invalid option '%s' specified.\n";
 EXPORTED	char *			errorMissingOptionValue = "Missing value after option '%s'.\n";
 EXPORTED	char *			errorInvalidOrAmbiguousOption = "The specified option '%s' is ambiguous or unknown.\n";
+EXPORTED	char *			errorReadFromTTY = "STDIN is connected to a terminal device, execution aborted. If it's your intention to enter data from terminal, specify the '--tty' option while calling.\n";
 //// end ////
 
 // functions

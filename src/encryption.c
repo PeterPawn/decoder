@@ -332,8 +332,10 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	}
 	if (tr069Passphrase && *tr069Passphrase)
 	{
-		if (strlen(tr069Passphrase) != 8)
+		/* warn about unusual/unexpected length of data - I've seen 8 or 12 characters here
+		if (strlen(tr069Passphrase) != 8 && strlen(tr069Passphrase != 12)
 			verboseMessage(verboseWrongTR069Passphrase, tr069Passphrase);
+		*/
 		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
 	}
 	*hashSize = *digest_blockSize;

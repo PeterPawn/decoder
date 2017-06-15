@@ -40,6 +40,8 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char *				maca = NULL;
 	bool				altEnv = false;
 	bool				tty = false;
+	char *				hexBuffer = NULL;
+	size_t				hexLen = 0;
 
 	if (argc > argo + 1)
 	{
@@ -65,6 +67,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
+				getopt_argument_missing();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
@@ -119,20 +122,60 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	{
 		if (!keyFromDevice(hash, &hashLen, true))
 			return EXIT_FAILURE;
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verboseDeviceKeyHash, hexBuffer);
+			free(hexBuffer);
+		}
 	}
 	else if (!maca) /* single argument - assume it's a user-defined password */
 	{
+		verboseMessage(verbosePasswordUsed, serial);
 		hashLen = Digest(serial, strlen(serial), hash, hashLen);
+
 		if (isAnyError())
 			return EXIT_FAILURE;
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verbosePasswordHash, hexBuffer);
+			free(hexBuffer);
+		}
 	}
 	else
 	{
+		verboseMessage(verboseSerialUsed, serial);
+		verboseMessage(verboseMACUsed, maca);
+
 		if (!keyFromProperties(hash, &hashLen, serial, maca, NULL, NULL))
 			return EXIT_FAILURE;
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verboseUsingKey, hexBuffer);
+			free(hexBuffer);
+		}
+	}
+
+	if (isatty(0) && !tty)
+	{
+		errorMessage(errorReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	memoryBuffer_t		*inputFile = memoryBufferReadFile(stdin, -1);

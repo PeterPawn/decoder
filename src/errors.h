@@ -112,6 +112,7 @@ extern	char *							errorReadingEnvironment;
 extern	char *							errorInvalidOption;
 extern	char *							errorMissingOptionValue;
 extern	char *							errorInvalidOrAmbiguousOption;
+extern	char *							errorReadFromTTY;
 
 #endif
 
