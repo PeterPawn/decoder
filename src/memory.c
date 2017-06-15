@@ -272,7 +272,7 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 	return NULL;	
 }
 
-// scan memory buffer and replace occurences of encrypted data while writing data to an output file 
+// scan memory buffer and replace occurrences of encrypted data while writing data to an output file 
 
 EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out)
 {

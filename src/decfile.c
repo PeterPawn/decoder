@@ -42,6 +42,8 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char *				tr069Passphrase = NULL;
 	bool				altEnv = false;
 	bool				tty = false;
+	size_t				hexLen = 0;
+	char *				hexBuffer = NULL;
 
 	if (argc > argo + 1)
 	{
@@ -67,8 +69,8 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
-				getopt_invalid_option();
 				getopt_argument_missing();
+				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		}
@@ -112,8 +114,6 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	resetError();
 
-	altenv_verbose_message();
-
 	CipherSizes();
 
 	char				key[*cipher_keyLen];
@@ -122,36 +122,84 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (!serial) /* use device properties from running system */
 	{
+		altenv_verbose_message();
+
 		if (!keyFromDevice(hash, &hashLen, false))
 			return EXIT_FAILURE; /* error message was displayed from called function */
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verboseDeviceKeyHash, hexBuffer);
+			free(hexBuffer);
+		}
 	}
 	else if (!maca) /* single argument - assume it's a hexadecimal key already */
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
 		if (strlen(serial) != 32)
 		{
 			errorMessage(errorWrongHexKeyLength, serial);
 			return EXIT_FAILURE;
 		}
+
 		hexadecimalToBinary(serial, strlen(serial), key, *cipher_keyLen);
+
 		if (isAnyError())
 		{
 			errorMessage(errorInvalidKeyValue, serial);
 			return EXIT_FAILURE;
 		}
+
+		verboseMessage(verboseUsingKey, serial);
 	}
 	else if (!wlanKey) /* serial and maca - use an export key from device */
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
 		errorMessage(errorDeviceProperties, URLADER_SERIAL_NAME, URLADER_MACA_NAME, URLADER_WLANKEY_NAME);
+
 		return EXIT_FAILURE;
 	}
 	else
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
+		verboseMessage(verboseSerialUsed, serial);
+		verboseMessage(verboseMACUsed, maca);
+		verboseMessage(verboseWLANKeyUsed, wlanKey);
+		if (tr069Passphrase)
+			verboseMessage(verboseTR069PPUsed, tr069Passphrase);
+
 		if (!keyFromProperties(hash, &hashLen, serial, maca, wlanKey, tr069Passphrase))
 		{
 			return EXIT_FAILURE;
 		}
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verboseUsingKey, hexBuffer);
+			free(hexBuffer);
+		}
+	}
+
+	if (isatty(0) && !tty)
+	{
+		errorMessage(errorReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	memoryBuffer_t		*inputFile = memoryBufferReadFile(stdin, -1);

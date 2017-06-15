@@ -110,8 +110,6 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	resetError();
 
-	altenv_verbose_message();
-
 	CipherSizes();
 
 	char				key[*cipher_keyLen];
@@ -120,6 +118,8 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (!serial) /* use device properties from running system */
 	{
+		altenv_verbose_message();
+
 		if (!keyFromDevice(hash, &hashLen, true))
 			return EXIT_FAILURE;
 
@@ -136,6 +136,9 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 	else if (!maca) /* single argument - assume it's a user-defined password */
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
 		verboseMessage(verbosePasswordUsed, serial);
 		hashLen = Digest(serial, strlen(serial), hash, hashLen);
 
@@ -154,6 +157,9 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 	else
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
 		verboseMessage(verboseSerialUsed, serial);
 		verboseMessage(verboseMACUsed, maca);
 

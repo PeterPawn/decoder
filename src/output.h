@@ -42,6 +42,8 @@ extern	char *							verboseUsingKey;
 extern	char *							verbosePasswordHash;
 extern	char *							verboseSerialUsed;
 extern	char *							verboseMACUsed;
+extern	char *							verboseWLANKeyUsed;
+extern	char *							verboseTR069PPUsed;
 extern	char *							verboseDeviceKeyHash;
 extern	char *							verbosePasswordUsed;
 extern	char *							verboseRedirectStdin;
@@ -56,6 +58,7 @@ extern	char *							verboseWrongSerialLength;
 extern	char *							verboseWrongMACAddress;
 extern	char *							verboseWrongWLANKey;
 extern	char *							verboseWrongTR069Passphrase;
+extern	char *							verboseAltEnvIgnored;
 
 extern	char *							verboseDebugKey;
 extern	char *							verboseDebugBase32;

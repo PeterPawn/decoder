@@ -32,6 +32,8 @@ EXPORTED	char *				verboseUsingKey = "using key 0x%s for decryption\n";
 EXPORTED	char *				verbosePasswordHash = "user password converted to key 0x%s\n";
 EXPORTED	char *				verboseSerialUsed = "using serial number '%s'\n";
 EXPORTED	char *				verboseMACUsed = "using maca value '%s'\n";
+EXPORTED	char *				verboseWLANKeyUsed = "using wlan_key value '%s'\n";
+EXPORTED	char *				verboseTR069PPUsed = "using tr069_passphrase value '%s'\n";
 EXPORTED	char *				verboseDeviceKeyHash = "device key value is 0x%s\n";
 EXPORTED	char *				verbosePasswordUsed = "specified password is '%s'\n";
 EXPORTED	char *				verboseRedirectStdin = "redirecting STDIN to file '%s'\n";
@@ -46,6 +48,7 @@ EXPORTED	char *				verboseWrongSerialLength = "the specified serial number '%s' 
 EXPORTED	char *				verboseWrongMACAddress = "the specified MAC address '%s' has a wrong format\n";
 EXPORTED	char *				verboseWrongWLANKey = "the specified WLAN key '%s' has an unusual length\n";
 EXPORTED	char *				verboseWrongTR069Passphrase = "the specified TR-069 passphrase looks unusual\n";
+EXPORTED	char *				verboseAltEnvIgnored = "the specification for an alternative environment file was ignored\n";
 
 EXPORTED	char *				verboseDebugKey = "key\t: (%03u) 0x%s\n";
 EXPORTED	char *				verboseDebugBase32 = "base32\t: (%03u) %s\n";

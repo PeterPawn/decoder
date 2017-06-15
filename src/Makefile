@@ -262,7 +262,13 @@ DECODER_CONFIG_AUTO_USAGE=y
 DECODER_CONFIG_AUTO_USAGE=n
 #######################################################################################################
 #                                                                                                     #
-# include debug info on build                                                                         #
+# warn on wrong length of TR-069 passphrases (not 8 or 12 characters)                                 #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE=y
+#######################################################################################################
+#                                                                                                     #
+# create a statically linked binary                                                                   #
 #                                                                                                     #
 #######################################################################################################
 ifdef STATIC
@@ -502,6 +508,9 @@ CFG += WRAP_LINE_SIZE
 CFG += URLADER_ENVIRONMENT_PATH
 ifeq ($(strip $(DECODER_CONFIG_AUTO_USAGE)), y)
 CFG += AUTO_USAGE
+endif
+ifeq ($(strip $(DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE)), y)
+CFG += WARN_ON_TR069_PASSPHRASE
 endif
 ifdef DECODER_CONFIG_LINK_STATIC
 CFG += LINK_STATIC

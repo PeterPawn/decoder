@@ -33,7 +33,7 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 
 	showPurposeHeader(out);
 	fprintf(out,
-		"This program decrypts all occurences of encrypted data on STDIN (if decryption is possible) and\n"
+		"This program decrypts all occurrences of encrypted data on STDIN (if decryption is possible) and\n"
 		"writes the data to STDOUT, while replacing cipher-text with the corresponding clear-text values.\n"
 	);
 
