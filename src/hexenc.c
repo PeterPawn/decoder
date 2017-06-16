@@ -46,8 +46,9 @@ int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			width_options_long,
 			verbosity_options_long,
+			options_long_end,
 		};
-		char *			options_short = ":" "w" width_options_short verbosity_options_short;
+		char *			options_short = ":" width_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -60,6 +61,14 @@ int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				invalid_option(opt);
 			}
 		} 
+		if (optind < argc)
+			warnAboutExtraArguments(argv, optind + 1);
+	}
+
+	if (isatty(0))
+	{
+		errorMessage(errorNoReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	resetError();

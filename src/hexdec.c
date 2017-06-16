@@ -44,6 +44,7 @@ int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 		static struct option options_long[] = {
 			verbosity_options_long,
+			options_long_end,
 		};
 		char *			options_short = verbosity_options_short;
 
@@ -57,6 +58,14 @@ int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				invalid_option(opt);
 			}
 		} 
+		if (optind < argc)
+			warnAboutExtraArguments(argv, optind + 1);
+	}
+
+	if (isatty(0))
+	{
+		errorMessage(errorNoReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	resetError();

@@ -101,7 +101,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 						if (checkLastArgumentIsInputFile(argv[i]))
 							i++;
 					}
-					warnAboutExtraArguments(argv,i);
+					warnAboutExtraArguments(argv, i);
 					break;
 				}
 			}

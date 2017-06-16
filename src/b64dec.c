@@ -32,7 +32,7 @@ EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 
 // 'b64dec' function - decode Base64 encoded data from STDIN to STDOUT
 
-int		b64dec_output(char * base64, bool hexOutput, bool pad)
+int		b64dec_output(char * base64, bool hexOutput, bool pad, uint32_t * charsOnLine)
 {
 	char				binary[3];
 	size_t				binarySize = base64ToBinary(base64, (size_t) -1, binary, sizeof(binary), pad);
@@ -60,6 +60,7 @@ int		b64dec_output(char * base64, bool hexOutput, bool pad)
 	{
 		outSize = binaryToHexadecimal(binary, binarySize, hex, sizeof(hex));
 		out = hex;
+		out = wrapOutput(stdout, charsOnLine, (uint32_t *) &outSize, out);
 	}
 	else
 	{
@@ -84,6 +85,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	int					convUsed = 0;
 	bool				hexOutput = false;
 	bool				padOutput = false;
+	uint32_t			charsOnLine = 0;
 
 	if (argc > argo + 1)
 	{
@@ -91,11 +93,13 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
-			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
 			{ "pad-output", no_argument, NULL, 'p' },
+			width_options_long,
+			verbosity_options_long,
+			options_long_end,
 		};
-		char *			options_short = "xp" verbosity_options_short;
+		char *			options_short = ":" "xp" width_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -110,12 +114,24 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					padOutput = true;
 					break;
 
+				check_width_options_short();
 				check_verbosity_options_short();
 				help_option();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		} 
+	}
+
+	if (getLineWrap() && !hexOutput)
+	{
+		verboseMessage(verboseWrapLinesIgnored);
+	}
+
+	if (isatty(0))
+	{
+		errorMessage(errorNoReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	resetError();
@@ -133,7 +149,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				int		result;
 
 				base64[convUsed] = 0;
-				if ((result = b64dec_output(base64, hexOutput, padOutput)))
+				if ((result = b64dec_output(base64, hexOutput, padOutput, &charsOnLine)))
 					return result;
 				convUsed = 0;
 			}
@@ -143,7 +159,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (convUsed > 0) /* remaining data exist */
 	{
 		base64[convUsed] = 0;
-		return b64dec_output(base64, hexOutput, padOutput);
+		return b64dec_output(base64, hexOutput, padOutput, &charsOnLine);
 	}
 	
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);

@@ -21,4 +21,37 @@
 
 void 	hexdec_usage(const bool help, UNUSED const bool version)
 {
+	FILE *	out = (help || version ? stdout : stderr);
+
+	showUsageHeader(out, help, version);
+
+	if (version)
+	{
+		fprintf(out, "\n");
+		return;
+	}
+
+	showPurposeHeader(out);
+	fprintf(out,
+		"This program takes hexadecimal encoded data from STDIN and decodes it to binary.\n"
+	);
+
+	showFormatHeader(out);
+	addSpace();
+	addOption("options");
+	showFormatEnd(out);
+
+	showOptionsHeader("options");
+	addOptionsEntryVerbose();
+	addOptionsEntryQuiet();
+	addOptionsEntryHelp();
+	addOptionsEntryVersion();
+	showOptionsEnd(out);
+
+	fprintf(out,
+		"\nThe decoded data is written to STDOUT. If STDIN is connected to a terminal device, execution will be\n"
+		"aborted.\n"
+	);
+
+	showUsageFinalize(out, help, version);
 }

@@ -80,7 +80,7 @@ EXPORTED	int		setLineWidth(char * value, char * option, char * next)
 	setLineWrap();
 	if (!value)
 	{
-		if (*next != '-' && *next >= '0' && *next <= '9')
+		if (next && *next && *next != '-' && *next >= '0' && *next <= '9')
 		{
 			val = next;
 			offset = 1;

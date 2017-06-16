@@ -32,11 +32,11 @@ EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
 
 // 'b32dec' function - decode Base32 encoded data from STDIN to STDOUT
 
-int 	b32dec_output(char * base32, bool hexOutput)
+int 	b32dec_output(char * base32, bool hexOutput, uint32_t * charsOnLine)
 {
 	char				binary[5];
 	size_t				binarySize = base32ToBinary(base32, (size_t) -1, binary, sizeof(binary));
-	char				hex[10];
+	char				hex[11];
 	char *				out;
 	size_t				outSize;
 
@@ -60,6 +60,7 @@ int 	b32dec_output(char * base32, bool hexOutput)
 	{
 		outSize = binaryToHexadecimal(binary, binarySize, hex, sizeof(hex));
 		out = hex;
+		out = wrapOutput(stdout, charsOnLine, (uint32_t *) &outSize, out);
 	}
 	else
 	{
@@ -72,6 +73,7 @@ int 	b32dec_output(char * base32, bool hexOutput)
 		errorMessage(errorWriteFailed);
 		return EXIT_FAILURE;
 	}
+	*charsOnLine += outSize;
 
 	return EXIT_SUCCESS;
 }
@@ -83,6 +85,8 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char				base32[9];
 	int					convUsed = 0;
 	bool				hexOutput = false;
+	uint32_t			charsOnLine = 0;
+	bool				begin = true;
 
 	if (argc > argo + 1)
 	{
@@ -90,11 +94,12 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
-			verbosity_options_long,
 			{ "hex-output", no_argument, NULL, 'x' },
+			width_options_long,
+			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = "x" verbosity_options_short;
+		char *			options_short = ":" "x" width_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -105,12 +110,26 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					entry->finalNewlineOnTTY = true;
 					break;
 
+				check_width_options_short();
 				check_verbosity_options_short();
 				help_option();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		} 
+		if (optind < argc)
+			warnAboutExtraArguments(argv, optind + 1);
+	}
+
+	if (getLineWrap() && !hexOutput)
+	{
+		verboseMessage(verboseWrapLinesIgnored);
+	}
+
+	if (isatty(0))
+	{
+		errorMessage(errorNoReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	resetError();
@@ -120,15 +139,16 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		input--;
 		while (*(++input))
 		{
-			if (isspace(*input))
+			if (isspace(*input) || (begin && *input == '$'))
 				continue;
+			begin = false;
 			base32[convUsed++] = *input;
 			if (convUsed == 8)
 			{
 				int		result;
 
 				base32[convUsed] = 0;
-				if ((result = b32dec_output(base32, hexOutput)))
+				if ((result = b32dec_output(base32, hexOutput, &charsOnLine)))
 					return result;
 				convUsed = 0;
 			}
@@ -138,7 +158,7 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (convUsed > 0) /* remaining data exist */
 	{
 		base32[convUsed] = 0;
-		return b32dec_output(base32, hexOutput);
+		return b32dec_output(base32, hexOutput, &charsOnLine);
 	}
 	
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
