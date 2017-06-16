@@ -72,23 +72,34 @@ EXPORTED	char *	optionsString(int option, const char * longOption)
 	return optionString;
 }
 
-EXPORTED	bool	setLineWidth(char * value, const char * option)
+EXPORTED	int		setLineWidth(char * value, char * option, char * next)
 {
+	char *			val = value;
+	int				offset = 0;
 
 	setLineWrap();
-	if (value && *value)
+	if (!value)
+	{
+		if (*next != '-' && *next >= '0' && *next <= '9')
+		{
+			val = next;
+			offset = 1;
+		}
+	}
+	
+	if (val && *val)
 	{
 		char *		endString = NULL;
-		char *		startString = value;
+		char *		startString = val;
 		unsigned long	lineSize = strtoul(startString, &endString, 10);
 
 		if (*startString && strlen(endString))
 		{
 			errorMessage(errorInvalidWidth, startString, option);
-			return(false);
+			return -1;
 		}
 		setOutputLineWidth(lineSize);
 	}
 
-	return true;
+	return offset;
 }

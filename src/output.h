@@ -59,6 +59,7 @@ extern	char *							verboseWrongMACAddress;
 extern	char *							verboseWrongWLANKey;
 extern	char *							verboseWrongTR069Passphrase;
 extern	char *							verboseAltEnvIgnored;
+extern	char *							verboseWrapLinesIgnored;
 
 extern	char *							verboseDebugKey;
 extern	char *							verboseDebugBase32;
@@ -84,7 +85,7 @@ extern	char *							verboseDebugValue;
 
 // function prototypes
 
-char *									wrapOutput(uint32_t *charsOnLine, uint32_t *toWrite, char *output);
+char *									wrapOutput(FILE * outFile, uint32_t *charsOnLine, uint32_t *toWrite, char *output);
 char *									optionsString(int option, const char * longOption);
 decoder_verbosity_t						__getVerbosity(void);
 void									__setVerbosity(decoder_verbosity_t verbosity);

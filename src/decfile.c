@@ -63,8 +63,8 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			switch (opt)
 			{
 				case 't':
-						tty = true;
-						break;
+					tty = true;
+					break;
 
 				check_altenv_options_short();
 				check_verbosity_options_short();

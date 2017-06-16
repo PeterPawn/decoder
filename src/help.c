@@ -230,8 +230,15 @@ void	buildOptionsDisplay(void)
 				else
 					c = next + strlen(next);
 				strncat(commandLine, next, (c - next));
-				strcat(commandLine, "\n");
-				next = c;
+				if (*c)
+				{
+					strcat(commandLine, "\n");
+					*(commandLine + strlen(commandLine) + left + 3) = 0;
+					memset(commandLine + strlen(commandLine), ' ', left + 3);
+					next = c + 1;
+				}
+				else
+					next = c;
 			}
 		}
 		else

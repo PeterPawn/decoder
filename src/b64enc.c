@@ -118,7 +118,7 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		uint32_t	toWrite = base64Size;
 		char *		out = base64;
 
-		out = wrapOutput(&charsOnLine, &toWrite, out);
+		out = wrapOutput(stdout, &charsOnLine, &toWrite, out);
 		if (isAnyError())
 			break;
 
@@ -130,7 +130,7 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		charsOnLine += toWrite;
 	}
 	if (!isAnyError())
-		wrapOutput(&charsOnLine, NULL, NULL);
+		wrapOutput(stdout, &charsOnLine, NULL, NULL);
 	
 	if (isAnyError()) 
 	{

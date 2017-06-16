@@ -38,6 +38,11 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	size_t				hashLen = sizeof(hash);
 	char *				serial = NULL;
 	char *				maca = NULL;
+	bool				tty = false;
+	bool				hexOutput = false;
+	bool				altEnv = false;
+	char *				hexBuffer = NULL;
+	size_t				hexLen = 0;
 
 	if (argc > argo + 1)
 	{
@@ -45,16 +50,33 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
+			{ "tty", no_argument, NULL, 't' },
+			{ "hex-output", no_argument, NULL, 'x' },
+			width_options_long,
+			altenv_options_long,
 			verbosity_options_long,
+			options_long_end,
 		};
-		char *			options_short = verbosity_options_short;
+		char *			options_short = ":" "tx" width_options_short altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
 			switch (opt)
 			{
+				case 't':
+					tty = true;
+					break;
+
+				case 'x':
+					hexOutput = true;
+					entry->finalNewlineOnTTY = true;
+					break;
+
+				check_altenv_options_short();
+				check_width_options_short();
 				check_verbosity_options_short();
 				help_option();
+				getopt_argument_missing();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
@@ -74,7 +96,10 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			{
 				*(arguments[index++]) = argv[i++];
 				if (!arguments[index])
+				{
+					warnAboutExtraArguments(argv, i);
 					break;
+				}
 			}
 		}
 	}
@@ -89,22 +114,75 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (!serial) /* use device properties from running system */
 	{
+		altenv_verbose_message();		
+
 		if (!keyFromDevice(hash, &hashLen, true))
 			return EXIT_FAILURE;
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verboseDeviceKeyHash, hexBuffer);
+			free(hexBuffer);
+		}
 	}
 	else if (!maca) /* single argument - assume it's a user-defined password */
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
+		verboseMessage(verbosePasswordUsed, serial);
 		hashLen = Digest(serial, strlen(serial), hash, hashLen);
+
 		if (isAnyError())
 			return EXIT_FAILURE;
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verbosePasswordHash, hexBuffer);
+			free(hexBuffer);
+		}
 	}
 	else
 	{
+		if (altEnv)
+			verboseMessage(verboseAltEnvIgnored);
+
+		verboseMessage(verboseSerialUsed, serial);
+		verboseMessage(verboseMACUsed, maca);
+
 		if (!keyFromProperties(hash, &hashLen, serial, maca, NULL, NULL))
 			return EXIT_FAILURE;
+
 		memcpy(key, hash, *cipher_ivLen);
+		hexBuffer = malloc((hashLen * 2) + 1);
+
+		if (hexBuffer)
+		{
+			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+			*(hexBuffer + hexLen) = 0;
+			verboseMessage(verboseUsingKey, hexBuffer);
+			free(hexBuffer);
+		}
+	}
+
+	if (getLineWrap() && !hexOutput)
+	{
+		verboseMessage(verboseWrapLinesIgnored);
+	}
+
+	if (isatty(0) && !tty)
+	{
+		errorMessage(errorReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, -1);
@@ -150,7 +228,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (!isAnyError())
 	{
-		DecryptFile(binBuffer, binSize, stdout, NULL, key);
+		DecryptFile(binBuffer, binSize, stdout, NULL, key, hexOutput);
 		if (isError(DECRYPT_ERR))
 			errorMessage(errorDecryptFileData);
 	}

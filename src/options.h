@@ -69,6 +69,7 @@
 
 #define invalid_option(opt)				default:\
 											errorMessage(errorInvalidOption, argv[optind]);\
+											__autoUsage();\
 											return EXIT_FAILURE
 
 // options for more than one applet
@@ -96,16 +97,20 @@
 #define width_options_short				"w::"
 
 #define check_width_options_short()		case 'w':\
-											if (setLineWidth(optarg, argv[optind]) == false) {\
-												__autoUsage();\
-												return EXIT_FAILURE;\
+											{\
+												int	offset = setLineWidth(optarg, argv[optind], argv[optind + 1]);\
+												if (offset == -1) {\
+													__autoUsage();\
+													return EXIT_FAILURE;\
+												}\
+												else optind += offset;\
 											}\
 											break
 
 // function prototypes
 
 bool									setAlternativeEnvironment(char * newEnvironment);
-bool									setLineWidth(char * value, const char * option);
+int										setLineWidth(char * value, char * option, char * next);
 bool									checkLastArgumentIsInputFile(char * name);
 void									warnAboutExtraArguments(char ** argv, int i);
 

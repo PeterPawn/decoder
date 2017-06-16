@@ -39,7 +39,7 @@ void	EncryptionInit(void);
 bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string);
 
 bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped);
-bool    DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key);
+bool    DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput);
 
 bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport);
 bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase);

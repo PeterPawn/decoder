@@ -147,7 +147,7 @@ EXPORTED	bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, s
 
 // decrypt a binary encrypted file (CRYPTEDBINFILE)
 
-EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key)
+EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput)
 {
 	char *				decryptedBuffer = malloc(inputSize + *cipher_blockSize);
 	CipherContext *		ctx = EVP_CIPHER_CTX_new();
@@ -205,10 +205,40 @@ EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * out
 
 		if (dataSize)
 		{
-			if (out && (fwrite(decryptedBuffer + 4, dataSize, 1, out) != 1))
-				setError(WRITE_FAILED);
-			if (outBuffer)
-				memcpy(outBuffer, decryptedBuffer + 4, dataSize);
+			if (!hexOutput)
+			{
+				if (out && (fwrite(decryptedBuffer + 4, dataSize, 1, out) != 1))
+					setError(WRITE_FAILED);
+				if (outBuffer)
+					memcpy(outBuffer, decryptedBuffer + 4, dataSize);
+			}
+			else
+			{
+				char *	hexBuffer = malloc((dataSize * 2) + 1);
+				uint32_t	charsOnLine = 0;
+				size_t	hexLen = 0;
+				char *	writeFrom = NULL;
+
+				if (hexBuffer)
+				{
+					hexLen = binaryToHexadecimal(decryptedBuffer + 4, dataSize, hexBuffer, (dataSize * 2) + 1);
+					*(hexBuffer + hexLen) = 0;
+					if (out)
+					{
+						writeFrom = wrapOutput(out, &charsOnLine, (uint32_t *) &hexLen, hexBuffer);
+						if (hexLen > 0)
+						{
+							if (!isAnyError() && fwrite(writeFrom, hexLen, 1, out) != 1)
+								setError(WRITE_FAILED);
+						}
+					}
+					else if (outBuffer)
+					{
+						memcpy(outBuffer, hexBuffer, hexLen + 1);
+					}
+					free(hexBuffer);
+				}
+			}
 		}
 	}
 

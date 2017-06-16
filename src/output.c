@@ -49,6 +49,7 @@ EXPORTED	char *				verboseWrongMACAddress = "the specified MAC address '%s' has 
 EXPORTED	char *				verboseWrongWLANKey = "the specified WLAN key '%s' has an unusual length\n";
 EXPORTED	char *				verboseWrongTR069Passphrase = "the specified TR-069 passphrase looks unusual\n";
 EXPORTED	char *				verboseAltEnvIgnored = "the specification for an alternative environment file was ignored\n";
+EXPORTED	char *				verboseWrapLinesIgnored = "output data is written as binary content, line break settings will be ignored\n";
 
 EXPORTED	char *				verboseDebugKey = "key\t: (%03u) 0x%s\n";
 EXPORTED	char *				verboseDebugBase32 = "base32\t: (%03u) %s\n";
@@ -120,33 +121,33 @@ EXPORTED	char *	getAppletName(void)
 
 // output formatting
 
-EXPORTED	char * 				wrapOutput(uint32_t *charsOnLine, uint32_t *toWrite, char *output)
+EXPORTED	char * 				wrapOutput(FILE * outFile, uint32_t *charsOnLine, uint32_t *toWrite, char *output)
 {
 	uint32_t					remOnLine = outputLineWidth - *charsOnLine;
 	char *						out = output;
 
 	if (wrapLines && !output)
 	{
-		if (fwrite("\n", 1, 1, stdout) != 1) /* append newline */
+		if (fwrite("\n", 1, 1, outFile) != 1) /* append newline */
 			returnError(WRITE_FAILED, 0);
 		returnError(NOERROR, 0);		
 	}
 	if (wrapLines && (*toWrite > remOnLine)) /* wrap on lineSize */
 	{
-		if ((remOnLine > 0) && (fwrite(out, remOnLine, 1, stdout) != 1)) /* remaining line */
+		if ((remOnLine > 0) && (fwrite(out, remOnLine, 1, outFile) != 1)) /* remaining line */
 			returnError(WRITE_FAILED, out);
 		out += remOnLine;
 		*toWrite -= remOnLine;
 		*charsOnLine = 0;
-		if (fwrite("\n", 1, 1, stdout) != 1) /* append newline */
+		if (fwrite("\n", 1, 1, outFile) != 1) /* append newline */
 			returnError(WRITE_FAILED, 0);
 		while (*toWrite > outputLineWidth)
 		{
-			if (fwrite(out, outputLineWidth, 1, stdout) != 1)
+			if (fwrite(out, outputLineWidth, 1, outFile) != 1)
 				returnError(WRITE_FAILED, 0);
 			*toWrite -= outputLineWidth;
 			out += outputLineWidth;
-			if (fwrite("\n", 1, 1, stdout) != 1) /* append newline */
+			if (fwrite("\n", 1, 1, outFile) != 1) /* append newline */
 				returnError(WRITE_FAILED, 0);
 		}
 	}
