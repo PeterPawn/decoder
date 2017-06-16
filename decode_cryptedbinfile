@@ -54,7 +54,7 @@ usage_text()
 	__nl "the two needed properties of the source device. You can use the second form of parameters with"
 	__nl; __undl "serial"; printf " and "; __undl "maca"; printf " set to the correct values or you can use an alternative file for the 'urlader"
 	__nl "environment' (using the '-a' option from above) and the script will extract the values there.\n"
-	__nl "If the content can not be decrypted (decrypted raw data contain 32 bytes at the end, where we"
+	__nl "If the content can not be decrypted (decrypted raw data contain 16 bytes at the end, where we"
 	__nl "can check a successful decryption), nothing is written to STDOUT."
 }
 #######################################################################################################
