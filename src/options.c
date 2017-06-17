@@ -56,7 +56,7 @@ EXPORTED	void	warnAboutExtraArguments(char ** argv, int i)
 
 	while (argv[index])
 	{
-		verboseMessage(verboseTooMuchArguments, argv[index]);
+		warningMessage(verboseTooMuchArguments, argv[index]);
 		index++;
 	}
 }

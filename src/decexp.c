@@ -137,7 +137,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	else if (!maca) /* single argument - assume it's a user-defined password */
 	{
 		if (altEnv)
-			verboseMessage(verboseAltEnvIgnored);
+			warningMessage(verboseAltEnvIgnored);
 
 		verboseMessage(verbosePasswordUsed, serial);
 		hashLen = Digest(serial, strlen(serial), hash, hashLen);
@@ -158,7 +158,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	else
 	{
 		if (altEnv)
-			verboseMessage(verboseAltEnvIgnored);
+			warningMessage(verboseAltEnvIgnored);
 
 		verboseMessage(verboseSerialUsed, serial);
 		verboseMessage(verboseMACUsed, maca);

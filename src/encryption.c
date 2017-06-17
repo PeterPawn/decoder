@@ -100,13 +100,13 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 					free(hexBuffer);
 				}
 				else
-					verboseMessage(verboseDisplayFailed);
+					warningMessage(verboseDisplayFailed);
 			}
 		}
 		else
 		{
 			setError(DECRYPT_ERR);
-			verboseMessage(verboseDecryptFailed);
+			warningMessage(verboseDecryptFailed);
 		}
 	}
 	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize, true);
@@ -292,7 +292,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 				setError(URLADER_ENV_ERR);
 				break;
 			}
-			verboseMessage(verboseMissingProperty, var->show);
+			warningMessage(verboseMissingProperty, var->show);
 		}
 		var++;
 		if (forExport && !var->export)
@@ -348,17 +348,17 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	DigestContext	 	*ctx = DigestInit();
 
 	if (strlen(serial) != 16)
-		verboseMessage(verboseWrongSerialLength, serial);
+		warningMessage(verboseWrongSerialLength, serial);
 	DigestUpdate(ctx, serial, strlen(serial));
 	DigestUpdate(ctx, "\n", 1);
 	if (!checkMACAddress(maca))
-		verboseMessage(verboseWrongMACAddress, maca);
+		warningMessage(verboseWrongMACAddress, maca);
 	DigestUpdate(ctx, maca, strlen(maca));
 	DigestUpdate(ctx, "\n", 1);
 	if (wlanKey && *wlanKey)
 	{
 		if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
-			verboseMessage(verboseWrongWLANKey, wlanKey);
+			warningMessage(verboseWrongWLANKey, wlanKey);
 		DigestUpdate(ctx, wlanKey, strlen(wlanKey));
 	}
 	if (tr069Passphrase && *tr069Passphrase)
@@ -366,7 +366,7 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 		/* warn about unusual/unexpected length of data - I've seen 8 or 12 characters here */
 #ifdef DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE
 		if (strlen(tr069Passphrase) != 8 && strlen(tr069Passphrase) != 12)
-			verboseMessage(verboseWrongTR069Passphrase, tr069Passphrase);
+			warningMessage(verboseWrongTR069Passphrase, tr069Passphrase);
 #endif
 
 		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));

@@ -81,7 +81,15 @@ extern	char *							verboseDebugValue;
 
 #define isVerbose()						(__getVerbosity() == VERBOSITY_VERBOSE)
 
-#define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) fprintf(stderr, ##__VA_ARGS__)
+#define warningMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) {\
+											fprintf(stderr, "\033[1m\033[33m%s\033[0m: ", getAppletName());\
+											fprintf(stderr, ##__VA_ARGS__);\
+										}
+
+#define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) {\
+											fprintf(stderr, "\033[1m\033[34m%s\033[0m: ", getAppletName());\
+											fprintf(stderr, ##__VA_ARGS__);\
+										}
 
 // function prototypes
 

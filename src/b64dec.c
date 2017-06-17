@@ -126,7 +126,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (getLineWrap() && !hexOutput)
 	{
-		verboseMessage(verboseWrapLinesIgnored);
+		warningMessage(verboseWrapLinesIgnored);
 	}
 
 	if (isatty(0))
