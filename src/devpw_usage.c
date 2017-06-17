@@ -118,3 +118,8 @@ void 	devpw_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	devpw_shortdesc(void)
+{
+	return "compute a secret key based on specified device properties";
+}

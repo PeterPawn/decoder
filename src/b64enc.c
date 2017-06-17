@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static 	commandEntry_t 		__b64enc_command = { .names = &commandNames, .ep = &b64enc_entry, .usage = &b64enc_usage, .finalNewlineOnTTY = true };
+static 	commandEntry_t 		__b64enc_command = { .names = &commandNames, .ep = &b64enc_entry, .usage = &b64enc_usage, .short_desc = &b64enc_shortdesc, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	b64enc_command = &__b64enc_command;
 
 // 'b64enc' function - encode binary data from STDIN to Base64 encoded on STDOUT

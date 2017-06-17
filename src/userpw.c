@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__userpw_command = { .names = &commandNames, .ep = &userpw_entry, .usage = &userpw_usage, .usesCrypto = true };
+static	commandEntry_t 		__userpw_command = { .names = &commandNames, .ep = &userpw_entry, .usage = &userpw_usage, .short_desc = &userpw_shortdesc, .usesCrypto = true };
 EXPORTED commandEntry_t *	userpw_command = &__userpw_command;
 
 // 'user_password' function - compute the password hash for export files with a user-specified password

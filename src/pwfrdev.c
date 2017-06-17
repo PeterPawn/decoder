@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__pwfrdev_command = { .names = &commandNames, .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .usesCrypto = true };
+static	commandEntry_t 		__pwfrdev_command = { .names = &commandNames, .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .short_desc = &pwfrdev_shortdesc, .usesCrypto = true };
 EXPORTED commandEntry_t *	pwfrdev_command = &__pwfrdev_command;
 
 // 'password_from_device' function - compute the password hash from the current device properties

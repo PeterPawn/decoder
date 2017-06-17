@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__hexdec_command = { .names = &commandNames, .ep = &hexdec_entry, .usage = &hexdec_usage };
+static	commandEntry_t 		__hexdec_command = { .names = &commandNames, .ep = &hexdec_entry, .short_desc = &hexdec_shortdesc, .usage = &hexdec_usage };
 EXPORTED commandEntry_t *	hexdec_command = &__hexdec_command;
 
 // 'hexdec' function - decode hexadecimal presentation of data from STDIN to STDOUT

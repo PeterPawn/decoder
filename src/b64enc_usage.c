@@ -68,3 +68,8 @@ void 	b64enc_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	b64enc_shortdesc(void)
+{
+	return "encode data to Base64 representation";	
+}

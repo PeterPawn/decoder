@@ -78,3 +78,8 @@ void 	decsngl_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	decsngl_shortdesc(void)
+{
+	return "decrypt Base32 encoded data using a specified AES key";
+}

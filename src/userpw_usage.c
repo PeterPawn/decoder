@@ -70,3 +70,8 @@ void 	userpw_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	userpw_shortdesc(void)
+{
+	return "compute a secret key based on an user password";
+}

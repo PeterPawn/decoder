@@ -63,3 +63,8 @@ void 	b32dec_usage(const bool help, const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	b32dec_shortdesc(void)
+{
+	return "decode Base32 encoded data";	
+}

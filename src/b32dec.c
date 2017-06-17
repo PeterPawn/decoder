@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__b32dec_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
+static	commandEntry_t 		__b32dec_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage, .short_desc = &b32dec_shortdesc };
 EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
 
 // 'b32dec' function - decode Base32 encoded data from STDIN to STDOUT

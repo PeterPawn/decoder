@@ -121,3 +121,8 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	decexp_shortdesc(void)
+{
+	return "decrypt a FRITZ!OS export file";
+}

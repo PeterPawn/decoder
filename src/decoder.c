@@ -53,37 +53,67 @@ int main(int argc, char** argv)
 	{
 		argumentOffset = 0;		
 	}
-	else if (argumentCount > 1)
+	else if (argumentCount > 1 && *(arguments[1]) != '-')
 	{
 		fname = arguments[1];
 		argumentOffset = 1;
 	}
 	else
 	{
-		main_usage(false);
-
-#if DEBUG == 1
-		fprintf(stderr, "\n");
-
-		int				i=0;
-		commandEntry_t	*current = getCommandEntry(i);
-		while (current)
+		setAppletName(fname);
+		if (argc > 1)
 		{
-			char * *	name = *(current->names);
+			int			opt;
+			int			optIndex = 0;
 
-			fprintf(stderr, "ep=0x%08llx, usage=0x%08llx, usesCrypto=%u, finalNewlineOnTTY=%u, name=", \
-				(long long unsigned int) current->ep, (long long unsigned int) current->usage, \
-				current->usesCrypto, current->finalNewlineOnTTY);
+			static struct option options_long[] = {
+				{ "help", no_argument, NULL, 'h' },
+				{ "version", no_argument, NULL, 'V' },
+				options_long_end,
+			};
+			char *		options_short = ":hV";
 
-			while (*name)
+			while ((opt = getopt_long(argc, argv, options_short, options_long, &optIndex)) != -1)
 			{
-				fprintf(stderr, "%s ", *name);
-				name++;
-			}
-			fprintf(stderr, "\n");
-			current = getCommandEntry(++i);
-		}
+				switch (opt)
+				{
+					case 'h':
+						main_usage(true, false);
+#if DEBUG == 1
+						fprintf(stdout, "====> applet list - only visible on DEBUG builds <====\n");
+						int	i = 0;
+						commandEntry_t	*current = getCommandEntry(i);
+
+						while (current)
+						{
+							char * 		*name = *(current->names);
+
+							fprintf(stdout, "ep=0x%08llx, usage=0x%08llx, usesCrypto=%u, finalNewlineOnTTY=%u, name=", \
+								(long long unsigned int) current->ep, (long long unsigned int) current->usage, \
+								current->usesCrypto, current->finalNewlineOnTTY);
+
+							while (*name)
+							{
+								fprintf(stdout, "%s ", *name);
+								name++;
+							}
+							fprintf(stdout, "\n");
+							current = getCommandEntry(++i);
+						}
 #endif
+						return EXIT_SUCCESS;
+
+					case 'V':
+						main_usage(false, true);
+						return EXIT_SUCCESS;
+
+					getopt_invalid_option();
+					invalid_option(opt);
+				}
+			}
+		}
+
+		main_usage(false, false);
 
 		exit(EXIT_FAILURE);
 	}
@@ -120,7 +150,7 @@ int main(int argc, char** argv)
 	if (!current)
 	{
 		errorMessage(errorInvalidFunction, fname, enameLong);
-		main_usage(false);
+		main_usage(false, false);
 	}
 
 	exit(EXIT_FAILURE);

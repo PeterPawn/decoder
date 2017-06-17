@@ -103,3 +103,8 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	deccb_shortdesc(void)
+{
+	return "decrypt CRYPTEDBINFILE data from an export file";
+}

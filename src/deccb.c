@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__deccb_command = { .names = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .usesCrypto = true };
+static	commandEntry_t 		__deccb_command = { .names = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .short_desc = &deccb_shortdesc, .usesCrypto = true };
 EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
 
 // 'decode_crypedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT

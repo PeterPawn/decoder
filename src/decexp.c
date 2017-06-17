@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__decexp_command = { .names = &commandNames, .ep = &decexp_entry, .usage = &decexp_usage, .usesCrypto = true };
+static	commandEntry_t 		__decexp_command = { .names = &commandNames, .ep = &decexp_entry, .usage = &decexp_usage, .short_desc = &decexp_shortdesc, .usesCrypto = true };
 EXPORTED commandEntry_t *	decexp_command = &__decexp_command;
 
 // 'decode_export' function - decode all secret values from the export file on STDIN and copy it with replaced values to STDOUT

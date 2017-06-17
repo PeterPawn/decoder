@@ -83,3 +83,8 @@ void 	pwfrdev_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	pwfrdev_shortdesc(void)
+{
+	return "compute a secret key based on properties of the current device";
+}

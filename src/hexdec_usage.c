@@ -55,3 +55,8 @@ void 	hexdec_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	hexdec_shortdesc(void)
+{
+	return "decode hexadecimal encoded data";	
+}

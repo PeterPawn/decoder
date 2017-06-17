@@ -49,10 +49,10 @@
 
 #define help_option()					case 'h':\
 											__usage(true, false);\
-											return EXIT_FAILURE;\
+											return EXIT_SUCCESS;\
 										case 'V':\
 											__usage(false, true);\
-											return EXIT_FAILURE;\
+											return EXIT_SUCCESS;\
 
 #define getopt_invalid_option()			case '?':\
 										case 0:\

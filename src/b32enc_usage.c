@@ -68,3 +68,8 @@ void 	b32enc_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	b32enc_shortdesc(void)
+{
+	return "encode data to Base32 representation";
+}

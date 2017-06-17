@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static 	commandEntry_t 		__b64dec_command = { .names = &commandNames, .ep = &b64dec_entry, .usage = &b64dec_usage };
+static 	commandEntry_t 		__b64dec_command = { .names = &commandNames, .ep = &b64dec_entry, .short_desc = &b64dec_shortdesc, .usage = &b64dec_usage };
 EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 
 // 'b64dec' function - decode Base64 encoded data from STDIN to STDOUT

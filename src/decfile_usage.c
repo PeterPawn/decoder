@@ -120,3 +120,8 @@ void 	decfile_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	decfile_shortdesc(void)
+{
+	return "decrypt Base32 encoded secrets from an input file";
+}

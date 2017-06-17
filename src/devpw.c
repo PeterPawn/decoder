@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__devpw_command = { .names = &commandNames, .ep = &devpw_entry, .usage = &devpw_usage, .usesCrypto = true };
+static	commandEntry_t 		__devpw_command = { .names = &commandNames, .ep = &devpw_entry, .usage = &devpw_usage, .short_desc = &devpw_shortdesc, .usesCrypto = true };
 EXPORTED commandEntry_t *	devpw_command = &__devpw_command;
 
 // 'device_password' function - compute the password hash from the specified device properties

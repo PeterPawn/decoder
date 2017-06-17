@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__b32enc_command = { .names = &commandNames, .ep = &b32enc_entry, .usage = &b32enc_usage, .finalNewlineOnTTY = true };
+static	commandEntry_t 		__b32enc_command = { .names = &commandNames, .ep = &b32enc_entry, .usage = &b32enc_usage, .short_desc = &b32enc_shortdesc, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	b32enc_command = &__b32enc_command;
 
 // 'b32enc' function - encode binary data from STDIN to Base32 encoded on STDOUT

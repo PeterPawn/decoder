@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__hexenc_command = { .names = &commandNames, .ep = &hexenc_entry, .usage = &hexenc_usage, .finalNewlineOnTTY = true };
+static	commandEntry_t 		__hexenc_command = { .names = &commandNames, .ep = &hexenc_entry, .usage = &hexenc_usage, .short_desc = &hexenc_shortdesc, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
 
 // 'hexenc' function - encode binary data from STDIN to its hexadecimal presentation on STDOUT

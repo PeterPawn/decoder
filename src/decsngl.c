@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__decsngl_command = { .names = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .usesCrypto = true, .finalNewlineOnTTY = true };
+static	commandEntry_t 		__decsngl_command = { .names = &commandNames, .ep = &decsngl_entry, .usage = &decsngl_usage, .short_desc = &decsngl_shortdesc, .usesCrypto = true, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	decsngl_command = &__decsngl_command;
 
 // 'decode_secret' function - decode the specified secret value (in Base32 encoding) perties

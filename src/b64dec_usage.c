@@ -64,3 +64,8 @@ void 	b64dec_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	b64dec_shortdesc(void)
+{
+	return "decode Base64 encoded data";	
+}

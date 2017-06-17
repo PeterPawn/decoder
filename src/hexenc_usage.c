@@ -61,3 +61,8 @@ void 	hexenc_usage(const bool help, UNUSED const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+char *	hexenc_shortdesc(void)
+{
+	return "encode data to their hexadecimal representation";
+}
