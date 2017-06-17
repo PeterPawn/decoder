@@ -344,6 +344,39 @@ endef
 #                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
+# decrypt data applets                                                                                #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_DECRYPT_FILES),y)
+$(call ADD_APPLET,DECRYPT_FILES,decfile)
+endif
+ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_FILES),y)
+$(call ADD_APPLET,DECRYPT_EXPORT_FILES,decexp)
+ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_BINFILE),y)
+$(call ADD_APPLET,DECRYPT_EXPORT_BINFILE,deccb)
+endif
+endif
+ifeq ($(DECODER_CONFIG_DECRYPT_SINGLE_VALUES),y)
+$(call ADD_APPLET,DECRYPT_SINGLE_VALUES,decsngl)
+endif
+#######################################################################################################
+#                                                                                                     #
+# decrypt key applets                                                                                 #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_KEYS),y)
+ifeq ($(DECODER_CONFIG_KEYS_USER_PASSWORD),y)
+$(call ADD_APPLET,KEYS_USER_PASSWORD,userpw)
+endif
+ifeq ($(DECODER_CONFIG_KEYS_DEVICE_PROPERTIES),y)
+$(call ADD_APPLET,KEYS_DEVICE_PROPERTIES,devpw)
+endif
+ifeq ($(DECODER_CONFIG_KEYS_CURRENT_DEVICE),y)
+$(call ADD_APPLET,KEYS_CURRENT_DEVICE,pwfrdev)
+endif
+endif
+#######################################################################################################
+#                                                                                                     #
 # converter applets                                                                                   #
 #                                                                                                     #
 #######################################################################################################
@@ -382,39 +415,6 @@ $(call ADD_APPLET,ENCODE_HEX,hexenc)
 endif
 endif
 endif
-endif
-#######################################################################################################
-#                                                                                                     #
-# decrypt key applets                                                                                 #
-#                                                                                                     #
-#######################################################################################################
-ifeq ($(DECODER_CONFIG_KEYS),y)
-ifeq ($(DECODER_CONFIG_KEYS_USER_PASSWORD),y)
-$(call ADD_APPLET,KEYS_USER_PASSWORD,userpw)
-endif
-ifeq ($(DECODER_CONFIG_KEYS_DEVICE_PROPERTIES),y)
-$(call ADD_APPLET,KEYS_DEVICE_PROPERTIES,devpw)
-endif
-ifeq ($(DECODER_CONFIG_KEYS_CURRENT_DEVICE),y)
-$(call ADD_APPLET,KEYS_CURRENT_DEVICE,pwfrdev)
-endif
-endif
-#######################################################################################################
-#                                                                                                     #
-# decrypt data applets                                                                                #
-#                                                                                                     #
-#######################################################################################################
-ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_FILES),y)
-$(call ADD_APPLET,DECRYPT_EXPORT_FILES,decexp)
-ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_BINFILE),y)
-$(call ADD_APPLET,DECRYPT_EXPORT_BINFILE,deccb)
-endif
-endif
-ifeq ($(DECODER_CONFIG_DECRYPT_SINGLE_VALUES),y)
-$(call ADD_APPLET,DECRYPT_SINGLE_VALUES,decsngl)
-endif
-ifeq ($(DECODER_CONFIG_DECRYPT_FILES),y)
-$(call ADD_APPLET,DECRYPT_FILES,decfile)
 endif
 #######################################################################################################
 #                                                                                                     #
