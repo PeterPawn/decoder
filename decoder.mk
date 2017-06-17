@@ -5,41 +5,6 @@ $(PKG)_TARGET_BINARY:=$($(PKG)_DEST_DIR)/bin/decoder
 
 $(PKG)_DEPENDS_ON += openssl
 
-$(PKG)_SYMLINKS:=
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_B32UTIL)),y)
-$(PKG)_SYMLINKS += b32dec b32enc
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_B64UTIL)),y)
-$(PKG)_SYMLINKS += b64dec b64enc
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_HEXUTIL)),y)
-$(PKG)_SYMLINKS += hexdec hexenc
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_USER_PASSWORD)),y)
-$(PKG)_SYMLINKS += user_password
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DEVICE_PASSWORD)),y)
-$(PKG)_SYMLINKS += device_password
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_PASSWORD_FROM_DEVICE)),y)
-$(PKG)_SYMLINKS += password_from_device
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_SECRET)),y)
-$(PKG)_SYMLINKS += decode_secret
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_SECRETS)),y)
-$(PKG)_SYMLINKS += decode_secrets
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_EXPORT)),y)
-$(PKG)_SYMLINKS += decode_export
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_CRYPTEDBINFILE)),y)
-$(PKG)_SYMLINKS += decode_cryptedbinfile
-endif
-ifeq ($(strip $(FREETZ_PACKAGE_DECODER_DECODE_PASSWORDS)),y)
-$(PKG)_SYMLINKS += decode_passwords
-endif
-
 ifeq ($(strip $(FREETZ_PACKAGE_DECODER_STATIC)),y)
 $(PKG)_LINK_STATIC = 1
 override $(PKG)_LIBS = -L$(DECODER_DIR) -lcrypto -lgcc_s
