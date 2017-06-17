@@ -36,7 +36,7 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
 	bool				hexInput = false;
 	bool				padOutput = false;
-	uint32_t			charsOnLine = 0;
+	size_t				charsOnLine = 0;
 	char				buffer[120];
 	size_t				read = 0;
 
@@ -46,10 +46,11 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
-			width_options_long,
-			verbosity_options_long,
 			{ "hex-input", no_argument, NULL, 'x' },
 			{ "pad-output", no_argument, NULL, 'p' },
+			width_options_long,
+			verbosity_options_long,
+			options_long_end,
 		};
 		char *			options_short = ":" "xp" width_options_short verbosity_options_short;
 
@@ -65,13 +66,21 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					padOutput = true;
 					break;
 
-				check_verbosity_options_short();
 				check_width_options_short();
+				check_verbosity_options_short();
 				help_option();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		} 
+		if (optind < argc)
+			warnAboutExtraArguments(argv, optind + 1);
+	}
+
+	if (isatty(0))
+	{
+		errorMessage(errorNoReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	resetError();
@@ -80,12 +89,12 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	{
 		if (hexInput)
 		{
-			char	withoutSpaces[sizeof(buffer)];
-			size_t	used = 0;
-			char *	in;
-			char *	out;
-			int		i;
-			size_t	more = read;
+			char		withoutSpaces[sizeof(buffer)];
+			size_t		used = 0;
+			char *		in;
+			char *		out;
+			int			i;
+			size_t		more = read;
 
 			in = buffer;
 			out = withoutSpaces;
@@ -115,7 +124,7 @@ int 	b64enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		
 		if (base64Size == 0) break;
 		
-		uint32_t	toWrite = base64Size;
+		size_t		toWrite = base64Size;
 		char *		out = base64;
 
 		out = wrapOutput(stdout, &charsOnLine, &toWrite, out);

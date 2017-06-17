@@ -211,7 +211,7 @@ EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset,
 EXPORTED	char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *lastOffset, size_t offset)
 {
 	memoryBuffer_t	*current = *buffer;
-	uint32_t		advance = offset;
+	size_t			advance = offset;
 	
 	while (current)
 	{

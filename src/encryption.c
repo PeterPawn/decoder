@@ -215,7 +215,7 @@ EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * out
 			else
 			{
 				char *	hexBuffer = malloc((dataSize * 2) + 1);
-				uint32_t	charsOnLine = 0;
+				size_t	charsOnLine = 0;
 				size_t	hexLen = 0;
 				char *	writeFrom = NULL;
 
@@ -225,12 +225,13 @@ EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * out
 					*(hexBuffer + hexLen) = 0;
 					if (out)
 					{
-						writeFrom = wrapOutput(out, &charsOnLine, (uint32_t *) &hexLen, hexBuffer);
+						writeFrom = wrapOutput(out, &charsOnLine, &hexLen, hexBuffer);
 						if (hexLen > 0)
 						{
 							if (!isAnyError() && fwrite(writeFrom, hexLen, 1, out) != 1)
 								setError(WRITE_FAILED);
 						}
+						// charsOnLine += hexLen; // unnecessary, charsOnLine runs out of scope soon
 					}
 					else if (outBuffer)
 					{

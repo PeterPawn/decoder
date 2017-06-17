@@ -85,7 +85,7 @@ extern	char *							verboseDebugValue;
 
 // function prototypes
 
-char *									wrapOutput(FILE * outFile, uint32_t *charsOnLine, uint32_t *toWrite, char *output);
+char *									wrapOutput(FILE * outFile, size_t *charsOnLine, size_t *toWrite, char *output);
 char *									optionsString(int option, const char * longOption);
 decoder_verbosity_t						__getVerbosity(void);
 void									__setVerbosity(decoder_verbosity_t verbosity);

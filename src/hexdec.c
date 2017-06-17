@@ -46,7 +46,7 @@ int		hexdec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = verbosity_options_short;
+		char *			options_short = ":" verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{

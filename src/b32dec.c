@@ -32,7 +32,7 @@ EXPORTED commandEntry_t *	b32dec_command = &__b32dec_command;
 
 // 'b32dec' function - decode Base32 encoded data from STDIN to STDOUT
 
-int 	b32dec_output(char * base32, bool hexOutput, uint32_t * charsOnLine)
+int 	b32dec_output(char * base32, bool hexOutput, size_t * charsOnLine)
 {
 	char				binary[5];
 	size_t				binarySize = base32ToBinary(base32, (size_t) -1, binary, sizeof(binary));
@@ -60,7 +60,7 @@ int 	b32dec_output(char * base32, bool hexOutput, uint32_t * charsOnLine)
 	{
 		outSize = binaryToHexadecimal(binary, binarySize, hex, sizeof(hex));
 		out = hex;
-		out = wrapOutput(stdout, charsOnLine, (uint32_t *) &outSize, out);
+		out = wrapOutput(stdout, charsOnLine, &outSize, out);
 	}
 	else
 	{
@@ -85,7 +85,7 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char				base32[9];
 	int					convUsed = 0;
 	bool				hexOutput = false;
-	uint32_t			charsOnLine = 0;
+	size_t				charsOnLine = 0;
 	bool				begin = true;
 
 	if (argc > argo + 1)

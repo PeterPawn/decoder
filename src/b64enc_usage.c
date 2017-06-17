@@ -21,4 +21,50 @@
 
 void 	b64enc_usage(const bool help, UNUSED const bool version)
 {
+	FILE *	out = (help || version ? stdout : stderr);
+
+	showUsageHeader(out, help, version);
+
+	if (version)
+	{
+		fprintf(out, "\n");
+		return;
+	}
+
+	showPurposeHeader(out);
+	fprintf(out,
+		"This program encodes data from STDIN into a Base64 representation.\n"
+	);
+
+	showFormatHeader(out);
+	addSpace();
+	addOption("options");
+	showFormatEnd(out);
+
+	showOptionsHeader("options");
+	addOptionsEntry("-x, --hex-input", "input data is a hexadecimal string", 0);
+	addOptionsEntry("-p, --pad-output", "output data will be padded with equal signs to a size, which is a multiple of 4", 0);
+	addOptionsEntry("-w, --wrap-lines [ " __undl("width") " ]", "enable line breaks (wrap lines) on output data and (opt.) define the maximum width of a line (instead of the default value " STRING(DECODER_CONFIG_WRAP_LINE_SIZE) ")", 8);
+	addOptionsEntryVerbose();
+	addOptionsEntryQuiet();
+	addOptionsEntryHelp();
+	addOptionsEntryVersion();
+	showOptionsEnd(out);
+
+	fprintf(out,
+		"\nThe encoded data is written to STDOUT. If STDIN is connected to a terminal device, execution will be\n"
+		"aborted.\n"
+	);
+
+	fprintf(out,
+		"\nInput data may be encoded as hexadecimal string. In this case, any white-space between the digits will\n"
+		"be ignored.\n"
+	);
+
+	fprintf(out,
+		"\nYou can force output of lines with limited width using the '--wrap-lines' (or '-w') option. Optionally\n"
+		"you can set your wanted line width too.\n"
+	);
+
+	showUsageFinalize(out, help, version);
 }

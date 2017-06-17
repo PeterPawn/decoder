@@ -31,8 +31,8 @@ static 	char * UNUSED	base32Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456";
 
 size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t binarySize)
 {
-	uint32_t        offset = 0;
-	uint32_t		outOffset = 0;
+	size_t			offset = 0;
+	size_t			outOffset = 0;
 	size_t			b32Size = (base32Size == (size_t) -1 ? strlen(base32) : base32Size);
 	
 	if (b32Size % 8)
@@ -41,10 +41,10 @@ size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t bina
 		returnError(BUF_TOO_SMALL, (b32Size * 5 / 8));
 	while (offset < b32Size && outOffset < binarySize)
 	{
-		uint32_t		bits = 0;
-		uint32_t		value = 0;
+		int			bits = 0;
+		int			value = 0;
 
-		for (uint32_t i = 0; i < 8; i++)
+		for (int i = 0; i < 8; i++)
 		{
 			char 	c = *(base32 + offset + i);
 	
@@ -75,8 +75,8 @@ size_t	base32ToBinary(char *base32, size_t base32Size, char *binary, size_t bina
 
 size_t	binaryToBase32(char *binary, size_t binarySize, char *base32, size_t base32Size)
 {
-	uint32_t		offset = 0;
-	uint32_t		outOffset = 0;
+	size_t			offset = 0;
+	size_t			outOffset = 0;
 
 	if (binarySize % 5)
 		returnError(INV_B32_ENC_SIZE, 0);
@@ -84,10 +84,10 @@ size_t	binaryToBase32(char *binary, size_t binarySize, char *base32, size_t base
 		returnError(BUF_TOO_SMALL, 0);
 	while (offset < binarySize && outOffset < base32Size)
 	{
-		uint32_t	bits = 0;
-		uint32_t	value = 0;
+		int			bits = 0;
+		int			value = 0;
 
-		for (uint32_t i = 0; i < 5; i++)
+		for (int i = 0; i < 5; i++)
 		{
 			value = (value << 8) + (*(binary + offset + i) & 0xFF);
 			bits += 8;

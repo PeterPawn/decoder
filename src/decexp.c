@@ -214,7 +214,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 		if (valueSize != 104)
 		{
-			errorMessage(errorInvalidFirstStageLength, (uint32_t) valueSize, EXPORT_PASSWORD_NAME);
+			errorMessage(errorInvalidFirstStageLength, valueSize, EXPORT_PASSWORD_NAME);
 			setError(INV_DATA_SIZE);
 			inputFile = memoryBufferFreeChain(inputFile);
 			return EXIT_FAILURE;

@@ -29,10 +29,10 @@ static 	char * UNUSED	hexTable = "0123456789ABCDEF";
 
 size_t 	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t outputSize)
 {
-	uint32_t        offset = 0;
-	uint32_t		outOffset = 0;
+	size_t		    offset = 0;
+	size_t			outOffset = 0;
 	size_t			inSize = (inputSize == (size_t) -1 ? strlen(input) : inputSize);
-	uint32_t		value = 0;
+	int				value = 0;
 	bool			high = true;
 	
 	if ((inSize / 2) > outputSize)
@@ -80,7 +80,7 @@ size_t 	hexadecimalToBinary(char *input, size_t inputSize, char *output, size_t 
 
 size_t	binaryToHexadecimal(char *input, size_t inputSize, char *output, size_t outputSize)
 {
-	uint32_t			index = 0;
+	size_t			index = 0;
 
 	if ((inputSize * 2) > (outputSize - 1))
 		returnError(BUF_TOO_SMALL, (inputSize * 2));

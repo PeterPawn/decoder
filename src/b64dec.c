@@ -32,7 +32,7 @@ EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 
 // 'b64dec' function - decode Base64 encoded data from STDIN to STDOUT
 
-int		b64dec_output(char * base64, bool hexOutput, bool pad, uint32_t * charsOnLine)
+int		b64dec_output(char * base64, bool hexOutput, bool pad, size_t * charsOnLine)
 {
 	char				binary[3];
 	size_t				binarySize = base64ToBinary(base64, (size_t) -1, binary, sizeof(binary), pad);
@@ -60,7 +60,7 @@ int		b64dec_output(char * base64, bool hexOutput, bool pad, uint32_t * charsOnLi
 	{
 		outSize = binaryToHexadecimal(binary, binarySize, hex, sizeof(hex));
 		out = hex;
-		out = wrapOutput(stdout, charsOnLine, (uint32_t *) &outSize, out);
+		out = wrapOutput(stdout, charsOnLine, &outSize, out);
 	}
 	else
 	{
@@ -73,6 +73,7 @@ int		b64dec_output(char * base64, bool hexOutput, bool pad, uint32_t * charsOnLi
 		errorMessage(errorWriteFailed);
 		return EXIT_FAILURE;
 	}
+	*charsOnLine += outSize;
 
 	return EXIT_SUCCESS;
 }
@@ -85,7 +86,7 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	int					convUsed = 0;
 	bool				hexOutput = false;
 	bool				padOutput = false;
-	uint32_t			charsOnLine = 0;
+	size_t				charsOnLine = 0;
 
 	if (argc > argo + 1)
 	{

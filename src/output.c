@@ -121,9 +121,9 @@ EXPORTED	char *	getAppletName(void)
 
 // output formatting
 
-EXPORTED	char * 				wrapOutput(FILE * outFile, uint32_t *charsOnLine, uint32_t *toWrite, char *output)
+EXPORTED	char * 				wrapOutput(FILE * outFile, size_t *charsOnLine, size_t *toWrite, char *output)
 {
-	uint32_t					remOnLine = outputLineWidth - *charsOnLine;
+	size_t						remOnLine = outputLineWidth - *charsOnLine;
 	char *						out = output;
 
 	if (wrapLines && !output)

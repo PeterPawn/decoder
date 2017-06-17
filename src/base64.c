@@ -27,13 +27,13 @@ static 	char * UNUSED	base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 
 size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t binarySize, bool pad)
 {
-	uint32_t        offset = 0;
-	uint32_t		outOffset = 0;
+	size_t			offset = 0;
+	size_t			outOffset = 0;
 	size_t			b64Size = (base64Size == (size_t) -1 ? strlen(base64) : base64Size);
 	bool			filler = false;
 	size_t			bSize = (b64Size * 3 / 4);
-	uint32_t		bits = 0;
-	uint32_t		value = 0;
+	int				bits = 0;
+	int				value = 0;
 	
 	if (b64Size % 4)
 	{
@@ -47,7 +47,7 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 	while (offset < b64Size && outOffset < binarySize)
 	{
 		value = 0;
-		for (uint32_t i = 0; i < 4 && offset < b64Size; i++)
+		for (int i = 0; i < 4 && offset < b64Size; i++)
 		{
 			char 	c = *(base64 + offset++);
 	
@@ -117,11 +117,11 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 
 size_t	binaryToBase64(char *binary, size_t binarySize, char *base64, size_t base64Size, bool pad)
 {
-	uint32_t		offset = 0;
-	uint32_t		outOffset = 0;
-	uint32_t		bSize = (binarySize * 4 / 3);
-	uint32_t		bits = 0;
-	uint32_t		value = 0;
+	size_t			offset = 0;
+	size_t			outOffset = 0;
+	size_t			bSize = (binarySize * 4 / 3);
+	int				bits = 0;
+	int				value = 0;
 
 	if (binarySize % 3)
 		bSize = ((binarySize / 3 ) + 1) * 4;
@@ -130,7 +130,7 @@ size_t	binaryToBase64(char *binary, size_t binarySize, char *base64, size_t base
 	while (offset < binarySize && outOffset < base64Size)
 	{
 		value = 0;
-		for (uint32_t i = 0; i < 3 && offset < binarySize; i++)
+		for (int i = 0; i < 3 && offset < binarySize; i++)
 		{
 			value = (value << 8) + (*(binary + offset++) & 0xFF);
 			bits += 8;

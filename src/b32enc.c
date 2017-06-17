@@ -27,7 +27,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__b32enc_command = { .names = &commandNames, .ep = &b32dec_entry, .usage = &b32dec_usage };
+static	commandEntry_t 		__b32enc_command = { .names = &commandNames, .ep = &b32enc_entry, .usage = &b32enc_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	b32enc_command = &__b32enc_command;
 
 // 'b32enc' function - encode binary data from STDIN to Base32 encoded on STDOUT
@@ -38,6 +38,7 @@ int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	bool				padInput = false;
 	char				buffer[20];
 	size_t				read = 0;
+	size_t				charsOnLine = 0;
 
 	if (argc > argo + 1)
 	{
@@ -45,11 +46,13 @@ int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
-			verbosity_options_long,
 			{ "hex-input", no_argument, NULL, 'x' },
 			{ "pad-input", no_argument, NULL, 'p' },
+			width_options_long,
+			verbosity_options_long,
+			options_long_end,
 		};
-		char *			options_short = "xp" verbosity_options_short;
+		char *			options_short = ":" "xp" width_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -63,12 +66,21 @@ int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					padInput = true;
 					break;
 
+				check_width_options_short();
 				check_verbosity_options_short();
 				help_option();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		} 
+		if (optind < argc)
+			warnAboutExtraArguments(argv, optind + 1);
+	}
+
+	if (isatty(0))
+	{
+		errorMessage(errorNoReadFromTTY);
+		return EXIT_FAILURE;
 	}
 
 	resetError();
@@ -132,12 +144,16 @@ int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 		if (base32Size > 0)
 		{
-			if (fwrite(base32, base32Size, 1, stdout) != 1)
+			char *		out = base32;
+
+			out = wrapOutput(stdout, &charsOnLine, &base32Size, base32);
+			if (fwrite(out, base32Size, 1, stdout) != 1)
 			{
 				setError(WRITE_FAILED);
 				errorMessage(errorWriteFailed);
 				return EXIT_FAILURE;
 			}
+			charsOnLine += base32Size;
 		}
 	}
 	

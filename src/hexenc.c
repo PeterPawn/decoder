@@ -34,7 +34,7 @@ EXPORTED commandEntry_t *	hexenc_command = &__hexenc_command;
 
 int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
-	uint32_t			charsOnLine = 0;
+	size_t				charsOnLine = 0;
 	char				buffer[120];
 	size_t				read = 0;
 
@@ -81,7 +81,7 @@ int		hexenc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		if (outputSize == 0) break;
 		resetError();
 		
-		uint32_t		toWrite = outputSize;
+		size_t			toWrite = outputSize;
 		char *			out = output;
 
 		out = wrapOutput(stdout, &charsOnLine, &toWrite, out);
