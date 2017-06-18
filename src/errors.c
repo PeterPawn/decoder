@@ -49,6 +49,7 @@ static char *				__decoder_error_text__[] = {
 	"decryption failed",
 	"not an export file",
 	"invalid data size",
+	"warning treated as error",
 };
 
 //// error messages ////

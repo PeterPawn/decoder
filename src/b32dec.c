@@ -124,6 +124,7 @@ int		b32dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (getLineWrap() && !hexOutput)
 	{
 		warningMessage(verboseWrapLinesIgnored);
+		failOnStrict();
 	}
 
 	if (isatty(0))

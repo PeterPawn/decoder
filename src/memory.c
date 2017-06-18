@@ -335,7 +335,6 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 
 				if (!DecryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
 				{
-					warningMessage(verboseDecryptionFailed);
 					if (fwrite("$$$$", 4, 1, out) == 1)
 					{
 						if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)

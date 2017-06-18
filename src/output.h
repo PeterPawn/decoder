@@ -24,9 +24,10 @@
 // verbosity level definitions
 
 typedef enum {
-	VERBOSITY_SILENT,
-	VERBOSITY_NORMAL,
-	VERBOSITY_VERBOSE
+	VERBOSITY_SILENT,	/* no error messages on STDERR */
+	VERBOSITY_NORMAL,	/* show only error messages on STDERR */
+	VERBOSITY_STRICT,	/* fail on warnings shown on STDERR */
+	VERBOSITY_VERBOSE	/* show extra information on STDERR */
 } decoder_verbosity_t;
 
 #ifndef OUTPUT_C
@@ -86,8 +87,16 @@ extern	char *							verboseDebugValue;
 											fprintf(stderr, ##__VA_ARGS__);\
 										}
 
+#define warningMessageNoApplet(...)		if (__getVerbosity() != VERBOSITY_SILENT) {\
+											fprintf(stderr, ##__VA_ARGS__);\
+										}
+
 #define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) {\
 											fprintf(stderr, "\033[1m\033[34m%s\033[0m: ", getAppletName());\
+											fprintf(stderr, ##__VA_ARGS__);\
+										}
+
+#define verboseMessageNoApplet(...)		if (__getVerbosity() == VERBOSITY_VERBOSE) {\
 											fprintf(stderr, ##__VA_ARGS__);\
 										}
 

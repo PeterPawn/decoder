@@ -31,20 +31,29 @@
 #define	__autoUsage()
 #endif
 
+#define	isStrict()						(__getVerbosity() == VERBOSITY_STRICT)
+
+#define	failOnStrict()					if (isStrict())\
+											return EXIT_FAILURE
+
 #define verbosity_options_long			{ "verbose", no_argument, NULL, 'v' },\
 										{ "quiet", no_argument, NULL, 'q' },\
+										{ "strict", no_argument, NULL, 's' },\
 										{ "help", no_argument, NULL, 'h' },\
 										{ "version", no_argument, NULL, 'V' }
 
 #define	options_long_end				{ NULL, 0, NULL, 0 }
 
-#define verbosity_options_short			"qvhV"
+#define verbosity_options_short			"vqshV"
 
 #define check_verbosity_options_short()	case 'v':\
 											__setVerbosity(VERBOSITY_VERBOSE);\
 											break;\
 										case 'q':\
 											__setVerbosity(VERBOSITY_SILENT);\
+											break;\
+										case 's':\
+											__setVerbosity(VERBOSITY_STRICT);\
 											break
 
 #define help_option()					case 'h':\

@@ -64,6 +64,8 @@ typedef enum {
 	DECODER_ERROR_INVALID_FILE,
 	// invalid length of second stage key entry
 	DECODER_ERROR_INV_DATA_SIZE,
+	// warning treated as error due to '--strict' option set
+	DECODER_ERROR_WARNING_ISSUED,
 } decoder_error_t;
 
 #ifndef ERRORS_C

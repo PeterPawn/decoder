@@ -141,7 +141,10 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	else if (!maca) /* single argument - assume it's a hexadecimal key already */
 	{
 		if (altEnv)
+		{
 			warningMessage(verboseAltEnvIgnored);
+			failOnStrict();
+		}
 
 		if (strlen(serial) != 32)
 		{
@@ -162,7 +165,10 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	else if (!wlanKey) /* serial and maca - use an export key from device */
 	{
 		if (altEnv)
+		{
 			warningMessage(verboseAltEnvIgnored);
+			failOnStrict();
+		}
 
 		errorMessage(errorDeviceProperties, URLADER_SERIAL_NAME, URLADER_MACA_NAME, URLADER_WLANKEY_NAME);
 
@@ -171,7 +177,10 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	else
 	{
 		if (altEnv)
+		{
 			warningMessage(verboseAltEnvIgnored);
+			failOnStrict();
+		}
 
 		verboseMessage(verboseSerialUsed, serial);
 		verboseMessage(verboseMACUsed, maca);

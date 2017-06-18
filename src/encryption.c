@@ -61,7 +61,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 			{
 				int	start = 0;
 
-				verboseMessage(verboseDecryptedTo, value);
+				verboseMessageNoApplet(verboseDecryptedTo, value);
 				for (int i = 0; i < (int) valueSize; i++)
 				{
 					if (*(value + i) == '\\' || *(value + i) == '"') /* split output */
@@ -96,21 +96,27 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 				{
 					binaryToHexadecimal(value, valueSize, hexBuffer, (valueSize * 2) + 1);
 					*(hexBuffer + (valueSize * 2)) = 0;
-					verboseMessage(verboseDecryptedToHex, hexBuffer);
+					verboseMessageNoApplet(verboseDecryptedToHex, hexBuffer);
 					free(hexBuffer);
 				}
 				else
-					warningMessage(verboseDisplayFailed);
+				{
+					warningMessageNoApplet(verboseDisplayFailed);
+					if (isStrict())
+						setError(WARNING_ISSUED);
+				}
 			}
 		}
 		else
 		{
 			setError(DECRYPT_ERR);
-			warningMessage(verboseDecryptFailed);
+			warningMessageNoApplet(verboseDecryptFailed);
 		}
 	}
+
 	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize, true);
 	decryptedBuffer = clearMemory(decryptedBuffer, cipherBufSize + *cipher_blockSize, true);
+
 	if (!ctx)
 		localCtx = CipherCleanup(localCtx);
 
@@ -293,6 +299,11 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 				break;
 			}
 			warningMessage(verboseMissingProperty, var->show);
+			if (isStrict())
+			{
+				setError(WARNING_ISSUED);
+				break;
+			}
 		}
 		var++;
 		if (forExport && !var->export)
@@ -301,8 +312,12 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 
 	env = memoryBufferFreeChain(env);
 
-	*hashSize = *digest_blockSize;
-	DigestFinal(ctx, hash);
+	if (!isAnyError())
+	{
+		*hashSize = *digest_blockSize;
+		DigestFinal(ctx, hash);
+	}
+
 	ctx = DigestCleanup(ctx);
 
 	return !isAnyError();
@@ -348,31 +363,75 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	DigestContext	 	*ctx = DigestInit();
 
 	if (strlen(serial) != 16)
+	{
 		warningMessage(verboseWrongSerialLength, serial);
-	DigestUpdate(ctx, serial, strlen(serial));
-	DigestUpdate(ctx, "\n", 1);
-	if (!checkMACAddress(maca))
-		warningMessage(verboseWrongMACAddress, maca);
-	DigestUpdate(ctx, maca, strlen(maca));
-	DigestUpdate(ctx, "\n", 1);
-	if (wlanKey && *wlanKey)
-	{
-		if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
-			warningMessage(verboseWrongWLANKey, wlanKey);
-		DigestUpdate(ctx, wlanKey, strlen(wlanKey));
+		if (isStrict())
+		{
+			setError(WARNING_ISSUED);
+		}
 	}
-	if (tr069Passphrase && *tr069Passphrase)
-	{
-		/* warn about unusual/unexpected length of data - I've seen 8 or 12 characters here */
-#ifdef DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE
-		if (strlen(tr069Passphrase) != 8 && strlen(tr069Passphrase) != 12)
-			warningMessage(verboseWrongTR069Passphrase, tr069Passphrase);
-#endif
 
-		DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
+	if (!isAnyError())
+	{
+		DigestUpdate(ctx, serial, strlen(serial));
+		DigestUpdate(ctx, "\n", 1);
+		if (!checkMACAddress(maca))
+		{
+			warningMessage(verboseWrongMACAddress, maca);
+			if (isStrict())
+			{
+				setError(WARNING_ISSUED);
+			}
+		}
+		if (!isAnyError())
+		{
+			DigestUpdate(ctx, maca, strlen(maca));
+			DigestUpdate(ctx, "\n", 1);
+		}
 	}
-	*hashSize = *digest_blockSize;
-	DigestFinal(ctx, hash);
+
+	if (!isAnyError())
+	{
+		if (wlanKey && *wlanKey)
+		{
+			if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
+			{
+				warningMessage(verboseWrongWLANKey, wlanKey);
+				if (isStrict())
+				{
+					setError(WARNING_ISSUED);
+				}
+			}
+			DigestUpdate(ctx, wlanKey, strlen(wlanKey));
+		}
+	}
+
+	if (!isAnyError())
+	{
+		if (tr069Passphrase && *tr069Passphrase)
+		{
+			/* warn about unusual/unexpected length of data - I've seen 8 or 12 characters here */
+#ifdef DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE
+			if (strlen(tr069Passphrase) != 8 && strlen(tr069Passphrase) != 12)
+			{
+				warningMessage(verboseWrongTR069Passphrase, tr069Passphrase);
+				if (isStrict())
+				{
+					setError(WARNING_ISSUED);
+				}
+			}
+#endif
+			if (!isAnyError())
+				DigestUpdate(ctx, tr069Passphrase, strlen(tr069Passphrase));
+		}
+	}
+
+	if (!isAnyError())
+	{
+		*hashSize = *digest_blockSize;
+		DigestFinal(ctx, hash);
+	}
+
 	ctx = DigestCleanup(ctx);
 
 	return !isAnyError();
