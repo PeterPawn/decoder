@@ -45,6 +45,7 @@ void 	hexenc_usage(const bool help, UNUSED const bool version)
 	addOptionsEntry("-w, --wrap-lines [ " __undl("width") " ]", "enable line breaks (wrap lines) on output data and (opt.) define the maximum width of a line (instead of the default value " STRING(DECODER_CONFIG_WRAP_LINE_SIZE) ")", 8);
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
+	addOptionsEntryStrict();
 	addOptionsEntryHelp();
 	addOptionsEntryVersion();
 	showOptionsEnd(out);

@@ -65,6 +65,7 @@ void 	decfile_usage(const bool help, UNUSED const bool version)
 	addOptionsEntry("-a, --alt-env " __undl("filename"), "use an alternative source for the 'urlader environment'", 8);
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
+	addOptionsEntryStrict();
 	addOptionsEntryHelp();
 	addOptionsEntryVersion();
 	showOptionsEnd(out);

@@ -55,6 +55,7 @@ void									addOptionsEntryHelp(void);
 void									addOptionsEntryVersion(void);
 void									addOptionsEntryVerbose(void);
 void									addOptionsEntryQuiet(void);
+void									addOptionsEntryStrict(void);
 void									buildOptionsDisplay(void);
 void									showOptionsEnd(FILE * out);
 char *									showBold(const char * data);

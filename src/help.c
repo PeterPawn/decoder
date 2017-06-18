@@ -182,6 +182,11 @@ EXPORTED	void	addOptionsEntryVersion(void)
 	addOptionsEntry("-V, --version", "show version (on STDOUT) and exit", 0);
 }
 
+EXPORTED	void	addOptionsEntryStrict(void)
+{
+	addOptionsEntry("-s, --strict", "treat warnings as errors and exit", 0);
+}
+
 void	buildOptionsDisplay(void)
 {
 	showOption_t *	current = options;

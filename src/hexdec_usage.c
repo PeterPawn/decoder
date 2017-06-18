@@ -44,6 +44,7 @@ void 	hexdec_usage(const bool help, UNUSED const bool version)
 	showOptionsHeader("options");
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
+	addOptionsEntryStrict();
 	addOptionsEntryHelp();
 	addOptionsEntryVersion();
 	showOptionsEnd(out);

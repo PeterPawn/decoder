@@ -52,6 +52,7 @@ void 	decsngl_usage(const bool help, UNUSED const bool version)
 	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string", 0);
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
+	addOptionsEntryStrict();
 	addOptionsEntryHelp();
 	addOptionsEntryVersion();
 	showOptionsEnd(out);
