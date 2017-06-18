@@ -35,5 +35,5 @@ See the GNU General Public License under http://www.gnu.org/licenses/gpl-2.0.htm
 
 void 	showLicense(FILE * out)
 {
-	fprintf(out, license);
+	fprintf(out, "%s", license);
 }

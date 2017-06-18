@@ -21,6 +21,9 @@
 
 #include "common.h"
 
+// malloc-ated buffers aren't free in each case here ... usually a program will quit soon,
+// after the usage info was shown and so it's unnecessary to free each allocated memory area
+
 // common code to show help screens
 
 static	char *			appletNameMask = "\n%s, version " DECODER_MAIN_VERSION "\n\nThis program is a part of the project from https://github.com/PeterPawn/decode_passwords.\n";
@@ -267,7 +270,7 @@ EXPORTED	void	showOptionsEnd(FILE * out)
 		return;
 	}
 	buildOptionsDisplay();
-	fprintf(out, commandLine);
+	fprintf(out, "%s", commandLine);
 	free(commandLine);
 	commandLine = NULL;
 }

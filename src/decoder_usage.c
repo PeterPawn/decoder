@@ -115,7 +115,7 @@ void	main_usage(const bool help, const bool version)
 		leftFill = left;
 		fprintf(out, "\n");
 		name = *(current->names);
-		fprintf(out, showBold(*name));
+		fprintf(out, "%s", showBold(*name));
 		leftFill -= strlen(*name);
 		name++;
 		if (*name)
@@ -128,11 +128,11 @@ void	main_usage(const bool help, const bool version)
 			fprintf(out, " ");
 		}
 		fprintf(out, " - ");
-		fprintf(out, (*current->short_desc)());
+		fprintf(out, "%s", (*current->short_desc)());
 		while (*name)
 		{
 			fprintf(out, "\n");
-			fprintf(out, showBold(*name));
+			fprintf(out, "%s", showBold(*name));
 			name++;
 			if (*name)
 				fprintf(out, " or");
