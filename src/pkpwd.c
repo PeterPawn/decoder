@@ -36,16 +36,12 @@ EXPORTED commandEntry_t *	pkpwd_command = &__pkpwd_command;
 
 // translation table
 
-static	char *				table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$!";
-
 // 'privatekeypassword' function - compute the secret key for the private key file websrv_ssl_key.pem
 
 int		pkpwd_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
-	char				hash[MAX_DIGEST_SIZE];
-	size_t				hashLen = sizeof(hash);
-	char				out[8];
-	size_t				outLen = 0;
+	char				out[8 + 1];
+	size_t				outLen = sizeof(out);
 	bool				altEnv = false;
 	char *				maca = NULL;
 
@@ -111,26 +107,13 @@ int		pkpwd_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	verboseMessage(verboseMACUsed, maca);
 
-	if ((hashLen = Digest(maca, strlen(maca), hash, hashLen)) == 0)
+	if (privateKeyPassword(out, &outLen, maca))
 	{
-		errorMessage(errorDigestComputation);
-		return EXIT_FAILURE;
-	}
-	
-	for (size_t i = 0; i < sizeof(out); i++)
-	{
-		char			c = hash[i];
-
-		c = (c & 63);
-		out[i] = *(table + c);
-	}
-
-	outLen = 8;
-
-	if (fwrite(out, outLen, 1, stdout) != 1)
-	{
-		setError(WRITE_FAILED);
-		errorMessage(errorWriteFailed);
+		if (fwrite(out, outLen, 1, stdout) != 1)
+		{
+			setError(WRITE_FAILED);
+			errorMessage(errorWriteFailed);
+		}
 	}
 
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);

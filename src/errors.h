@@ -66,6 +66,8 @@ typedef enum {
 	DECODER_ERROR_INV_DATA_SIZE,
 	// warning treated as error due to '--strict' option set
 	DECODER_ERROR_WARNING_ISSUED,
+	// unable to read a value from 'urlader environment'
+	DECODER_ERROR_ENV_VALUE_MISSING,
 } decoder_error_t;
 
 #ifndef ERRORS_C

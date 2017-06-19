@@ -446,4 +446,47 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	return !isAnyError();
 }
 
+EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
+{
+	char *				value = maca;
+	char				hash[MAX_DIGEST_SIZE];
+	size_t				hashLen = sizeof(hash);
+	char *				table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$!";
+
+	if (*outLen < 9)
+	{
+		setError(BUF_TOO_SMALL);
+		return false;
+	}
+
+	if (!value)
+	{
+		value = getEnvironmentValue(NULL, URLADER_MACA_NAME);
+		if (!value)
+		{
+			setError(ENV_VALUE_MISSING);
+			return false;
+		}
+	}
+
+	if ((hashLen = Digest(value, strlen(value), hash, hashLen)) == 0)
+	{
+		setError(OSSL_DIGEST_ERR);
+		return false;
+	}
+	
+	for (size_t i = 0; i < sizeof(out); i++)
+	{
+		char			c = hash[i];
+
+		c = (c & 63);
+		*(out + i) = *(table + c);
+	}
+
+	*(out + 8) = 0;
+	*outLen = 8;
+
+	return true;
+}
+
 #pragma GCC diagnostic pop

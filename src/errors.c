@@ -50,6 +50,7 @@ static char *				__decoder_error_text__[] = {
 	"not an export file",
 	"invalid data size",
 	"warning treated as error",
+	"error reading environment value",
 };
 
 //// error messages ////

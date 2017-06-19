@@ -44,6 +44,8 @@ bool    DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer
 bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport);
 bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase);
 
+bool	privateKeyPassword(char * out, size_t * outLen, char * maca);
+
 bool	checkMACAddress(char * mac);
 
 #endif
