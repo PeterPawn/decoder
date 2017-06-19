@@ -153,6 +153,7 @@ int main(int argc, char** argv)
 
 	if (!current)
 	{
+		setAppletName(ename);
 		errorMessage(errorInvalidFunction, fname, enameLong);
 		main_usage(false, false);
 	}

@@ -152,6 +152,12 @@ DECODER_CONFIG_DECRYPT_SINGLE_VALUES=y
 DECODER_CONFIG_DECRYPT_FILES=y
 #######################################################################################################
 #                                                                                                     #
+# compute secret key to decipher private key of box certificate                                       #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_PRIVKEY_PASSWORD=y
+#######################################################################################################
+#                                                                                                     #
 # applet names, multiple names may be specified for the same applet                                   #
 #                                                                                                     #
 #######################################################################################################
@@ -237,6 +243,12 @@ DECODER_CONFIG_DECRYPT_FILES_NAME+="+decrypt-fritzos-cfg"
 endif
 #######################################################################################################
 #                                                                                                     #
+# private key password applet name                                                                    #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_PRIVKEY_PASSWORD_NAME="+privatekeypassword"
+#######################################################################################################
+#                                                                                                     #
 # default memory buffer size                                                                          #
 #                                                                                                     #
 #######################################################################################################
@@ -302,7 +314,7 @@ FILES :=
 LINKS :=
 CMDS :=
 CFG :=
-APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb
+APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb pkpwd
 #######################################################################################################
 #                                                                                                     #
 # macros to add an applet                                                                             #
@@ -358,6 +370,14 @@ endif
 endif
 ifeq ($(DECODER_CONFIG_DECRYPT_SINGLE_VALUES),y)
 $(call ADD_APPLET,DECRYPT_SINGLE_VALUES,decsngl)
+endif
+#######################################################################################################
+#                                                                                                     #
+# private key password applet                                                                         #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_PRIVKEY_PASSWORD),y)
+$(call ADD_APPLET,PRIVKEY_PASSWORD,pkpwd)
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -503,6 +523,7 @@ CFG += DECRYPT_EXPORT_FILES_NAME
 CFG += DECRYPT_EXPORT_BINFILE_NAME
 CFG += DECRYPT_SINGLE_VALUES_NAME
 CFG += DECRYPT_FILES_NAME
+CFG += PRIVKEY_PASSWORD_NAME
 CFG += MEMORY_BUFFER_SIZE
 CFG += WRAP_LINE_SIZE
 CFG += URLADER_ENVIRONMENT_PATH

@@ -273,12 +273,13 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 		char *			show;
 		char *			append;
 		bool			errorIfMissing;
+		bool			warningIfMissing;
 		bool			export;
 	}					envVariables[] = {
-						{ .name = URLADER_SERIAL_NAME, .show = URLADER_SERIAL_NAME, .append = "\n", .errorIfMissing = true, .export = true },
-						{ .name = URLADER_MACA_NAME, .show = URLADER_MACA_NAME, .append = "\n", .errorIfMissing = true, .export = true },
-						{ .name = URLADER_WLANKEY_NAME, .show = URLADER_WLANKEY_NAME, .append = NULL, .errorIfMissing = true, .export = false },
-						{ .name = URLADER_TR069PP_NAME, .show = URLADER_TR069PP_NAME, .append = NULL, .errorIfMissing = false, .export = false },
+						{ .name = URLADER_SERIAL_NAME, .show = URLADER_SERIAL_NAME, .append = "\n", .errorIfMissing = true, .warningIfMissing = true, .export = true },
+						{ .name = URLADER_MACA_NAME, .show = URLADER_MACA_NAME, .append = "\n", .errorIfMissing = true, .warningIfMissing = true, .export = true },
+						{ .name = URLADER_WLANKEY_NAME, .show = URLADER_WLANKEY_NAME, .append = NULL, .errorIfMissing = true, .warningIfMissing = true, .export = false },
+						{ .name = URLADER_TR069PP_NAME, .show = URLADER_TR069PP_NAME, .append = NULL, .errorIfMissing = false, .warningIfMissing = false, .export = false },
 						{ .name = NULL, .show = NULL, .append = NULL, .errorIfMissing = false },
 	};
 	struct variables 	*var = envVariables;
@@ -302,12 +303,16 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 				setError(URLADER_ENV_ERR);
 				break;
 			}
-			warningMessage(verboseMissingProperty, var->show);
-			if (isStrict())
+			if (var->warningIfMissing)
 			{
-				setError(WARNING_ISSUED);
-				break;
+				warningMessage(verboseMissingProperty, var->show);
+				if (isStrict())
+				{
+					setError(WARNING_ISSUED);
+				}
 			}
+			else
+				verboseMessage(verboseMissingProperty, var->show);
 		}
 		var++;
 		if (forExport && !var->export)
@@ -329,7 +334,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 
 // check MAC address format
 
-bool	checkMACAddress(char * mac)
+EXPORTED	bool	checkMACAddress(char * mac)
 {
 	int		i = 0;
 	int		j = 0;

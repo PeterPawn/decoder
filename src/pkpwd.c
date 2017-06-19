@@ -17,36 +17,37 @@
  * along with this program, please look for the file LICENSE.
  */
 
-#define PWFRDEV_C
+#define PKPWD_C
 
 #include "common.h"
-#include "pwfrdev_usage.c"
+#include "pkpwd_usage.c"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wformat-security"
 
 static	char *				__commandNames[] = {
-#include "pwfrdev_commands.c"
+#include "pkpwd_commands.c"
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__pwfrdev_command = { .names = &commandNames, .ep = &pwfrdev_entry, .usage = &pwfrdev_usage, .short_desc = &pwfrdev_shortdesc, .usesCrypto = true };
-EXPORTED commandEntry_t *	pwfrdev_command = &__pwfrdev_command;
+static	commandEntry_t 		__pkpwd_command = { .names = &commandNames, .ep = &pkpwd_entry, .usage = &pkpwd_usage, .short_desc = &pkpwd_shortdesc, .usesCrypto = true, .finalNewlineOnTTY = true };
+EXPORTED commandEntry_t *	pkpwd_command = &__pkpwd_command;
 
-// 'password_from_device' function - compute the password hash from the current device properties
+// translation table
 
-int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
+static	char *				table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$!";
+
+// 'privatekeypassword' function - compute the secret key for the private key file websrv_ssl_key.pem
+
+int		pkpwd_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
-	bool				hexOutput = false;
-	bool				forExport = false;
 	char				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);
-	char				hex[(sizeof(hash) * 2) + 1];
-	size_t				hexLen = 0;
-	char *				out;
-	size_t				outLen;
+	char				out[8];
+	size_t				outLen = 0;
 	bool				altEnv = false;
+	char *				maca = NULL;
 
 	if (argc > argo + 1)
 	{
@@ -56,35 +57,50 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			verbosity_options_long,
 			altenv_options_long,
-			{ "hex-output", no_argument, NULL, 'x' },
-			{ "for-export", no_argument, NULL, 'e' },
 			options_long_end,
 		};
-		char *			options_short = ":" "xe" altenv_options_short verbosity_options_short;
+		char *			options_short = ":" altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
 			switch (opt)
 			{
-				case 'x':
-					hexOutput = true;
-					break;
-
-				case 'e':
-					forExport = true;
-					break;
-
 				check_altenv_options_short();
 				check_verbosity_options_short();
 				help_option();
-				getopt_argument_missing();
 				getopt_invalid_option();
 				invalid_option(opt);
 			}
 		}
 		if (optind < (argc - argo))
 		{
-			warnAboutExtraArguments(argv, optind + argo);
+			maca = argv[optind + argo];
+			warnAboutExtraArguments(argv, optind + argo + 1);
+		}
+	}
+	
+	if (maca)
+	{
+		if (!checkMACAddress(maca))
+		{
+			errorMessage(errorWrongMACAddress, maca);
+			setError(INV_HEX_DATA);
+		}
+
+		if (!isAnyError() && altEnv)
+		{
+			warningMessage(verboseAltEnvIgnored);
+			failOnStrict();
+		}
+	}
+	else
+	{
+		altenv_verbose_message();
+
+		maca = getEnvironmentValue(NULL, URLADER_MACA_NAME);
+		if (!maca)
+		{
+			errorMessage(errorMissingDeviceProperty, URLADER_MACA_NAME);		
 		}
 	}
 
@@ -93,47 +109,30 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	resetError();
 
-	altenv_verbose_message();
+	verboseMessage(verboseMACUsed, maca);
 
-	keyFromDevice(hash, &hashLen, forExport);
-
-	if (!isAnyError())
+	if ((hashLen = Digest(maca, strlen(maca), hash, hashLen)) == 0)
 	{
-		hexLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
-		hex[hexLen] = 0;
-		verboseMessage(verboseDeviceKeyHash, hex);
-	}
-
-	if (!isAnyError() && !hexOutput && isatty(1))
-	{
-		if (fwrite("0x", 2, 1, stdout) != 1)
-		{
-			setError(WRITE_FAILED);
-			errorMessage(errorWriteFailed);
-		}
-		hexOutput = true;
+		errorMessage(errorDigestComputation);
+		return EXIT_FAILURE;
 	}
 	
-	if (!isAnyError())
+	for (size_t i = 0; i < sizeof(out); i++)
 	{
-		if (hexOutput)
-		{
-			outLen = binaryToHexadecimal((char *) hash, hashLen, hex, sizeof(hex));
-			out = hex;
-			entry->finalNewlineOnTTY = true;
-		}
-		else
-		{
-			outLen = hashLen;
-			out = (char *) hash;
-		}
-		if (fwrite(out, outLen, 1, stdout) != 1)
-		{
-			setError(WRITE_FAILED);
-			errorMessage(errorWriteFailed);
-		}
+		char			c = hash[i];
+
+		c = (c & 63);
+		out[i] = *(table + c);
 	}
-	
+
+	outLen = 8;
+
+	if (fwrite(out, outLen, 1, stdout) != 1)
+	{
+		setError(WRITE_FAILED);
+		errorMessage(errorWriteFailed);
+	}
+
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }
 

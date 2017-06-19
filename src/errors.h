@@ -116,6 +116,7 @@ extern	char *							errorMissingOptionValue;
 extern	char *							errorInvalidOrAmbiguousOption;
 extern	char *							errorReadFromTTY;
 extern	char *							errorNoReadFromTTY;
+extern	char *							errorWrongMACAddress;
 
 #endif
 

@@ -72,5 +72,6 @@
 #include "decfile.h"
 #include "decexp.h"
 #include "deccb.h"
+#include "pkpwd.h"
 
 #endif
