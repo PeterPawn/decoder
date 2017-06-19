@@ -19,6 +19,10 @@
 
 // display usage help
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 void	main_usage(const bool help, const bool version)
 {
 	FILE *	out = (help || version ? stdout : stderr);
@@ -74,6 +78,7 @@ void	main_usage(const bool help, const bool version)
 	commandEntry_t		*current = getCommandEntry(i);
 	char *				*name;
 	bool				moreThanOneName = false;
+	bool				multiLine = false;
 
 	while (current)
 	{
@@ -94,7 +99,6 @@ void	main_usage(const bool help, const bool version)
 		current = getCommandEntry(++i);
 	}
 
-
 	leftFill = left;
 	fprintf(out, "\napplet");
 	leftFill -= 6;
@@ -103,8 +107,13 @@ void	main_usage(const bool help, const bool version)
 		fprintf(out, " ");
 	}
 	fprintf(out, "   purpose\n");
+
+	if ((left + 3 + right) > 99)
+		right = 99 - (left + 3);
+
 	for (size_t j = 0; j < (left + 3 + right); j++)
 		fprintf(out, "=");
+
 	fprintf(out, "\n");
 
 	i = 0;
@@ -128,14 +137,71 @@ void	main_usage(const bool help, const bool version)
 			fprintf(out, " ");
 		}
 		fprintf(out, " - ");
-		fprintf(out, "%s", (*current->short_desc)());
-		while (*name)
+
+		char *			desc = (*current->short_desc)();
+		char *			last;
+		char *			next;
+
+		if (strlen(desc) > right)
 		{
-			fprintf(out, "\n");
-			fprintf(out, "%s", showBold(*name));
-			name++;
+			last = desc + right;
+			while (!isspace(*last))
+				last--;
+			next = last;
+			while (isspace(*last))
+				last--;
+			fwrite(desc, last - desc + 1, 1, out);
+			desc = next;
+			multiLine = true;
+		}
+		else
+		{
+			fprintf(out, "%s", desc);
+			multiLine = false;
+		}
+		while (*name || multiLine)
+		{
+			size_t		leftUsed = 0;
+
 			if (*name)
-				fprintf(out, " or");
+			{
+				fprintf(out, "\n");
+				fprintf(out, "%s", showBold(*name));
+				leftUsed += strlen(*name);
+				name++;
+				if (*name)
+				{
+					fprintf(out, " or");
+					leftUsed += 3;
+				}
+			}
+			if (multiLine)
+			{
+				if (leftUsed == 0)
+					fprintf(out, "\n");
+				for (size_t j = leftUsed; j < (left + 2); j++)
+				{
+					fprintf(out, " ");
+				}
+				if (strlen(desc) > right)
+				{
+					last = desc + right;
+					while (!isspace(*last))
+						last--;
+					next = last;
+					while (isspace(*last))
+						last--;
+
+					fwrite(desc, last - desc + 1, 1, out);
+					desc = next;
+					multiLine = true;
+				}
+				else
+				{
+					fprintf(out, "%s", desc);
+					multiLine = false;
+				}
+			}
 		}
 		current = getCommandEntry(++i);
 		fprintf(out, "\n" );
@@ -143,3 +209,5 @@ void	main_usage(const bool help, const bool version)
 
 	showUsageFinalize(out, help, version);
 }
+
+#pragma GCC diagnostic pop

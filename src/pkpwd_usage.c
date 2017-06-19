@@ -81,5 +81,5 @@ void 	pkpwd_usage(const bool help, UNUSED const bool version)
 
 char *	pkpwd_shortdesc(void)
 {
-	return "compute the secret key used to encrypt the private key for the box certificate (GUI)";
+	return "compute the secret key used to encrypt the private key for the box certificate (which is used for the GUI)";
 }
