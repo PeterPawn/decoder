@@ -22,6 +22,10 @@
 #include "common.h"
 #include "decfile_usage.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 static	char *				__commandNames[] = {
 #include "decfile_commands.c"
 		NULL
@@ -227,3 +231,5 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	return (isAnyError() ? EXIT_FAILURE : EXIT_SUCCESS);
 }
+
+#pragma GCC diagnostic pop

@@ -22,6 +22,10 @@
 #include "common.h"
 #include "b64dec_usage.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 static	char *				__commandNames[] = {
 #include "b64dec_commands.c"
 		NULL
@@ -166,3 +170,5 @@ int		b64dec_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+
+#pragma GCC diagnostic pop

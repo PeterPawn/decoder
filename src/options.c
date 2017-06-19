@@ -21,6 +21,10 @@
 
 #include "common.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 EXPORTED	bool	setAlternativeEnvironment(char * newEnvironment)
 {
 	struct stat		st;
@@ -105,3 +109,5 @@ EXPORTED	int		setLineWidth(char * value, char * option, char * next)
 
 	return offset;
 }
+
+#pragma GCC diagnostic pop

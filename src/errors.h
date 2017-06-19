@@ -137,10 +137,4 @@ char *	getErrorText(decoder_error_t err);
 
 #define isError(err)					(getError() == DECODER_ERROR_##err)
 
-#define errorMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) {\
-											fprintf(stderr, "\033[1m\033[31m%s\033[0m: ", getAppletName());\
-											fprintf(stderr, ##__VA_ARGS__);\
-											fprintf(stderr, "\a");\
-										}
-
 #endif

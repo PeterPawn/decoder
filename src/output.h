@@ -80,24 +80,31 @@ extern	char *							verboseDebugValue;
 
 // helper macros
 
+#define	colAppletName(color,bell)		( fprintf(stderr, "\033[1m\033[3" #color "m%s\033[0m: %s", getAppletName(), (bell ? "\a" : "")) )
+
 #define isVerbose()						(__getVerbosity() == VERBOSITY_VERBOSE)
 
-#define warningMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) {\
-											fprintf(stderr, "\033[1m\033[33m%s\033[0m: ", getAppletName());\
+#define errorMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) {\
+											colAppletName(1,1);\
 											fprintf(stderr, ##__VA_ARGS__);\
+										}
+
+#define warningMessage(...)				if (__getVerbosity() != VERBOSITY_SILENT) {\
+											colAppletName(3,0);\
+											fprintf(stderr, ##__VA_ARGS__ );\
 										}
 
 #define warningMessageNoApplet(...)		if (__getVerbosity() != VERBOSITY_SILENT) {\
-											fprintf(stderr, ##__VA_ARGS__);\
+											fprintf(stderr, ##__VA_ARGS__ );\
 										}
 
 #define verboseMessage(...)				if (__getVerbosity() == VERBOSITY_VERBOSE) {\
-											fprintf(stderr, "\033[1m\033[34m%s\033[0m: ", getAppletName());\
-											fprintf(stderr, ##__VA_ARGS__);\
+											colAppletName(4,0);\
+											fprintf(stderr, ##__VA_ARGS__ );\
 										}
 
 #define verboseMessageNoApplet(...)		if (__getVerbosity() == VERBOSITY_VERBOSE) {\
-											fprintf(stderr, ##__VA_ARGS__);\
+											fprintf(stderr, ##__VA_ARGS__ );\
 										}
 
 // function prototypes

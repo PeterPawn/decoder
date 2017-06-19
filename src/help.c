@@ -21,6 +21,10 @@
 
 #include "common.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 // malloc-ated buffers aren't free in each case here ... usually a program will quit soon,
 // after the usage info was shown and so it's unnecessary to free each allocated memory area
 
@@ -270,7 +274,7 @@ EXPORTED	void	showOptionsEnd(FILE * out)
 		return;
 	}
 	buildOptionsDisplay();
-	fprintf(out, "%s", commandLine);
+	fprintf(out, commandLine);
 	free(commandLine);
 	commandLine = NULL;
 }
@@ -348,3 +352,5 @@ EXPORTED	char *	newLine(void)
 {
 	return getIndent("\n", NULL);
 }
+
+#pragma GCC diagnostic pop

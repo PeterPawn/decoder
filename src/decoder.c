@@ -22,6 +22,10 @@
 #include "decoder.h"
 #include "decoder_usage.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 // main entry point for each call
 
 int main(int argc, char** argv)
@@ -155,3 +159,5 @@ int main(int argc, char** argv)
 
 	exit(EXIT_FAILURE);
 }
+
+#pragma GCC diagnostic pop

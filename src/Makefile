@@ -553,7 +553,7 @@ LN = ln
 # tools flags, override them for cross-builds                                                         #
 #                                                                                                     #
 #######################################################################################################
-override CFLAGS += -W -Wall -std=c99 -fvisibility=hidden
+override CFLAGS += -W -Wall -Wformat=2 -std=c99 -fvisibility=hidden
 ifeq ($(DECODER_CONFIG_DEBUG),y)
 override CFLAGS += -O0 -ggdb -DDEBUG
 else

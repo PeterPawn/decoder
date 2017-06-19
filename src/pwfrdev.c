@@ -22,6 +22,10 @@
 #include "common.h"
 #include "pwfrdev_usage.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 static	char *				__commandNames[] = {
 #include "pwfrdev_commands.c"
 		NULL
@@ -129,3 +133,5 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+
+#pragma GCC diagnostic pop

@@ -21,6 +21,10 @@
 
 #include "common.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 // environment file name
 
 static	char *			environmentFileName = URLADER_ENV_PATH;
@@ -107,3 +111,5 @@ EXPORTED	char *	getEnvironmentValue(memoryBuffer_t * environ, char * name)
 
 	return value;
 }
+
+#pragma GCC diagnostic pop

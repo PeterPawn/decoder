@@ -22,6 +22,10 @@
 #include "common.h"
 #include "decsngl_usage.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 static	char *				__commandNames[] = {
 #include "decsngl_commands.c"
 		NULL
@@ -298,3 +302,5 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	return EXIT_SUCCESS;
 }
+
+#pragma GCC diagnostic pop

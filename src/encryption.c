@@ -21,6 +21,10 @@
 
 #include "common.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 // FRITZ!OS specific crypto functions
 
 // initialize static variables
@@ -436,3 +440,5 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 
 	return !isAnyError();
 }
+
+#pragma GCC diagnostic pop

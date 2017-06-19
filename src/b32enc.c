@@ -22,6 +22,10 @@
 #include "common.h"
 #include "b32enc_usage.c"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-nonliteral"
+#pragma GCC diagnostic ignored "-Wformat-security"
+
 static	char *				__commandNames[] = {
 #include "b32enc_commands.c"
 		NULL
@@ -179,3 +183,5 @@ int 	b32enc_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }
+
+#pragma GCC diagnostic pop
