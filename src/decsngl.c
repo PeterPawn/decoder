@@ -113,6 +113,9 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		return EXIT_FAILURE;
 	}
 
+	if (isAnyError())
+		return EXIT_FAILURE;
+
 	resetError();
 
 	CipherSizes();

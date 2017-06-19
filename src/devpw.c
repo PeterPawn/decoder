@@ -119,6 +119,9 @@ int		devpw_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		__autoUsage();
 		return EXIT_FAILURE;
 	}
+	
+	if (isAnyError())
+		return EXIT_FAILURE;
 
 	resetError();
 

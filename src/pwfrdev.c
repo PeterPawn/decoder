@@ -82,11 +82,22 @@ int		pwfrdev_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				invalid_option(opt);
 			}
 		}
-		if (optind < (argc - argo))
+		if (optind >= (argc - argo))
 		{
-			warnAboutExtraArguments(argv, optind + argo);
+			errorMessage(errorPasswordMissing);
+			__autoUsage();
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			password = argv[optind + argo];
+			verboseMessage(verbosePasswordUsed, password);
+			warnAboutExtraArguments(argv, optind + argo + 1);
 		}
 	}
+
+	if (isAnyError())
+		return EXIT_FAILURE;
 
 	resetError();
 

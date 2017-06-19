@@ -116,6 +116,9 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 	}
 
+	if (isAnyError())
+		return EXIT_FAILURE;
+
 	resetError();
 
 	CipherSizes();
