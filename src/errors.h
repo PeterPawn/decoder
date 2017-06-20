@@ -68,6 +68,8 @@ typedef enum {
 	DECODER_ERROR_WARNING_ISSUED,
 	// unable to read a value from 'urlader environment'
 	DECODER_ERROR_ENV_VALUE_MISSING,
+	// invalid buffer size specified
+	DECODER_ERROR_INV_BUF_SIZE,
 } decoder_error_t;
 
 #ifndef ERRORS_C
@@ -119,6 +121,7 @@ extern	char *							errorInvalidOrAmbiguousOption;
 extern	char *							errorReadFromTTY;
 extern	char *							errorNoReadFromTTY;
 extern	char *							errorWrongMACAddress;
+extern	char *							errorInvalidBufferSize;
 
 #endif
 

@@ -51,6 +51,7 @@ static char *				__decoder_error_text__[] = {
 	"invalid data size",
 	"warning treated as error",
 	"error reading environment value",
+	"invalid buffer size specified",
 };
 
 //// error messages ////
@@ -91,6 +92,7 @@ EXPORTED	char *			errorInvalidOrAmbiguousOption = "The specified option '%s' is 
 EXPORTED	char *			errorReadFromTTY = "STDIN is connected to a terminal device, execution aborted. If it's your intention to enter data from terminal, specify the '--tty' option while calling.\n";
 EXPORTED	char *			errorNoReadFromTTY = "STDIN is connected to a terminal device, execution aborted.\n";
 EXPORTED	char *			errorWrongMACAddress = "The specified MAC address '%s' has a wrong format.\n";
+EXPORTED	char *			errorInvalidBufferSize = "The specified buffer size value '%s' is invalid.\n";
 //// end ////
 
 // functions

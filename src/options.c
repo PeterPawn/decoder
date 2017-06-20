@@ -110,4 +110,25 @@ EXPORTED	int		setLineWidth(char * value, char * option, char * next)
 	return offset;
 }
 
+EXPORTED	bool	setInputBufferSize(char * value, char * option)
+{
+	char *			val = value;
+
+	if (val && *val)
+	{
+		char *		endString = NULL;
+		char *		startString = val;
+		size_t		size = strtoul(startString, &endString, 10);
+
+		if (*startString && strlen(endString))
+		{
+			errorMessage(errorInvalidWidth, startString, option);
+			return false;
+		}
+		memoryBufferSetSize(size);
+	}
+
+	return true;
+}
+
 #pragma GCC diagnostic pop

@@ -120,6 +120,7 @@
 
 bool									setAlternativeEnvironment(char * newEnvironment);
 int										setLineWidth(char * value, char * option, char * next);
+bool									setInputBufferSize(char * value, char * option);
 bool									checkLastArgumentIsInputFile(char * name);
 void									warnAboutExtraArguments(char ** argv, int i);
 

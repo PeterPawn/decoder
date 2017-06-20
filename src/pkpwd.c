@@ -34,8 +34,6 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__pkpwd_command = { .names = &commandNames, .ep = &pkpwd_entry, .usage = &pkpwd_usage, .short_desc = &pkpwd_shortdesc, .usesCrypto = true, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	pkpwd_command = &__pkpwd_command;
 
-// translation table
-
 // 'privatekeypassword' function - compute the secret key for the private key file websrv_ssl_key.pem
 
 int		pkpwd_entry(int argc, char** argv, int argo, commandEntry_t * entry)

@@ -52,7 +52,11 @@ EXPORTED	memoryBuffer_t *	getEnvironmentFile(void)
 		return NULL;
 	}
 
-	memoryBuffer_t *	env = memoryBufferReadFile(environment, -1);
+	// 2 KByte are usually enough room for an environment ... if it's
+	// really too small, consolidation takes place later
+
+	memoryBuffer_t *	env = memoryBufferReadFile(environment, 2048);
+
 	fclose(environment);
 
 	if (!env)
