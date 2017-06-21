@@ -222,6 +222,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		{
 			inputFile = memoryBufferFreeChain(inputFile);
 			inputFile = consolidated;
+			verboseMessage(verboseInputDataConsolidated, memoryBufferDataSize(inputFile));
 		}
 	}
 

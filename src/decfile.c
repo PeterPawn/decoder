@@ -48,6 +48,7 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	bool				tty = false;
 	size_t				hexLen = 0;
 	char *				hexBuffer = NULL;
+	bool				noConsolidate = false;
 
 	if (argc > argo + 1)
 	{
@@ -57,11 +58,12 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			{ "tty", no_argument, NULL, 't' },
 			{ "block-size", required_argument, NULL, 'b' },
+			{ "low-memory", no_argument, NULL, 'l' },
 			altenv_options_long,
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" "tb:" altenv_options_short verbosity_options_short;
+		char *			options_short = ":" "tb:l" altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -71,12 +73,18 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					tty = true;
 					break;
 
+				case 'l':
+					noConsolidate = true;
+					break;
+
 				case 'b':
 					if (!setInputBufferSize(optarg, argv[optind]))
 					{
 						setError(INV_BUF_SIZE);
 						return EXIT_FAILURE;
 					}
+					else
+						noConsolidate = true;
 					break;
 
 				check_altenv_options_short();
@@ -228,6 +236,28 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 
 	memoryBuffer_t		*inputFile = memoryBufferReadFile(stdin, -1);
+
+	if (!noConsolidate)
+	{
+		memoryBuffer_t	*consolidated = memoryBufferConsolidateData(inputFile);
+
+		if (!consolidated)
+		{
+			errorMessage(errorNoMemory);
+			inputFile = memoryBufferFreeChain(inputFile);
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			inputFile = memoryBufferFreeChain(inputFile);
+			inputFile = consolidated;
+			verboseMessage(verboseInputDataConsolidated, memoryBufferDataSize(inputFile));
+		}
+	}
+	else
+	{
+		verboseMessage(verboseNoConsolidate);
+	}
 	
 	if (!inputFile)
 	{

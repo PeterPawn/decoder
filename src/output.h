@@ -61,6 +61,9 @@ extern	char *							verboseWrongWLANKey;
 extern	char *							verboseWrongTR069Passphrase;
 extern	char *							verboseAltEnvIgnored;
 extern	char *							verboseWrapLinesIgnored;
+extern	char *							verboseBufferSize;
+extern	char *							verboseInputDataConsolidated;
+extern	char *							verboseNoConsolidate;
 
 extern	char *							verboseDebugKey;
 extern	char *							verboseDebugBase32;

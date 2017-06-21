@@ -122,10 +122,27 @@ EXPORTED	bool	setInputBufferSize(char * value, UNUSED char * option)
 
 		if (*startString && strlen(endString))
 		{
+			if ((strcmp(endString, "k") == 0) || (strcmp(endString, "K") == 0))
+			{
+				size *= 1024;
+			}
+			else if ((strcmp(endString, "m") == 0) || (strcmp(endString, "M") == 0))
+			{
+				size *= 1024 * 1024;
+			}
+			else
+			{
+				errorMessage(errorInvalidBufferSize, startString);
+				return false;
+			}
+		}
+		if ((size < 32) || (size > (16 * 1024 * 1024)))
+		{
 			errorMessage(errorInvalidBufferSize, startString);
 			return false;
 		}
 		memoryBufferSetSize(size);
+		verboseMessage(verboseBufferSize, size);
 	}
 
 	return true;

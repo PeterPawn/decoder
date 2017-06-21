@@ -63,6 +63,8 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 	showOptionsHeader("options");
 	addOptionsEntry("-t, --tty", "don't quit execution, if STDIN is connected to a terminal device", 0);
 	addOptionsEntry("-a, --alt-env " __undl("filename"), "use an alternative source for the 'urlader environment'", 8);
+	addOptionsEntry("-l, --low-memory", "do not try to consolidate input data into a single buffer", 0);
+	addOptionsEntry("-b, --block-size " __undl("size"), "read input data in blocks of the specified " __undl("size"), 8);
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
 	addOptionsEntryStrict();
@@ -118,6 +120,19 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 		"FRITZ!OS device (with the right properties or with a password), even if all encrypted values are\n"
 		"replaced by their corresponding cleartext. Only the CRC32 checksum at the end of the file has to be\n"
 		"re-computed.\n"
+	);
+
+	fprintf(out,
+		"\nThe option '--low-memory' (or '-l') may be used, if your system has not enough free memory to hold\n"
+		"the input data (from really huge files) twice in memory for a short time.\n"
+	);
+
+	fprintf(out,
+		"\nThe option '--block-size' (or '-b') to specify the input block size should seldom be necessary. If\n"
+		"you specify it, you can set a buffer size between 32 bytes and 16 Mbytes. Any valid number may be\n"
+		"followed by a 'K' or 'M' (upper or lower case) to use a factor of 2**10 or 2**20 with the given\n"
+		"number. This disables at the same time all further tries to consolidate the input data in a single\n"
+		"buffer (as if the option '--low-memory' was used).\n"
 	);
 
 	showUsageFinalize(out, help, version);

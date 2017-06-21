@@ -50,6 +50,9 @@ EXPORTED	char *				verboseWrongWLANKey = "the specified WLAN key '%s' has an unu
 EXPORTED	char *				verboseWrongTR069Passphrase = "the specified TR-069 passphrase looks unusual\n";
 EXPORTED	char *				verboseAltEnvIgnored = "the specification for an alternative environment file was ignored\n";
 EXPORTED	char *				verboseWrapLinesIgnored = "output data is written as binary content, line break settings will be ignored\n";
+EXPORTED	char *				verboseBufferSize = "input data will be read in blocks of %u bytes\n";
+EXPORTED	char *				verboseInputDataConsolidated = "input data consolidated in a single buffer with %lu bytes\n";
+EXPORTED	char *				verboseNoConsolidate = "input data consolidation will be skipped\n";
 
 EXPORTED	char *				verboseDebugKey = "key\t: (%03u) 0x%s\n";
 EXPORTED	char *				verboseDebugBase32 = "base32\t: (%03u) %s\n";
