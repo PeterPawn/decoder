@@ -247,7 +247,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			offset = 0;
 		}
 		memcpy(copy, current->data + offset, foundOffset - offset);
-		passwordIsCorrect = DecryptValue(NULL, cipherText, valueSize, NULL, key, key, false);
+		passwordIsCorrect = decryptValue(NULL, cipherText, valueSize, NULL, key, key, false);
 		memset(key + *cipher_ivLen, 0, *cipher_keyLen - *cipher_ivLen);
 		if (passwordIsCorrect)
 		{

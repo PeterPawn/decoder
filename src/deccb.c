@@ -242,7 +242,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	if (!isAnyError())
 	{
-		DecryptFile(binBuffer, binSize, stdout, NULL, key, hexOutput);
+		decryptFile(binBuffer, binSize, stdout, NULL, key, hexOutput);
 		if (isError(DECRYPT_ERR))
 			errorMessage(errorDecryptFileData);
 	}

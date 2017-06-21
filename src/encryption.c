@@ -29,7 +29,7 @@
 
 // initialize static variables
 
-EXPORTED	void	EncryptionInit(void)
+EXPORTED	void	encryptionInit(void)
 {
 	DigestSizes();
 	CipherSizes();
@@ -37,7 +37,7 @@ EXPORTED	void	EncryptionInit(void)
 
 // decrypt a Base32 value using the specified key
 
-EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped)
+EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped)
 {
 	size_t			cipherBufSize = base32ToBinary(cipherText, valueSize, NULL, 0);
 	size_t			cipherSize;
@@ -64,7 +64,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 		size_t		valueSize = 0;
 		bool		isString = false;
 
-		if (DigestCheckValue(decryptedBuffer, decryptedSize, &value, &valueSize, &isString))
+		if (digestCheckValue(decryptedBuffer, decryptedSize, &value, &valueSize, &isString))
 		{
 			if (out && valueSize && escaped)
 			{
@@ -141,7 +141,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 
 // re-compute and compare the cleartext digest for the specified buffer
 
-EXPORTED	bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string)
+EXPORTED	bool	digestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string)
 {
 	char			hash[MAX_DIGEST_SIZE];
 	size_t			hashLen = sizeof(hash);
@@ -170,7 +170,7 @@ EXPORTED	bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, s
 
 // decrypt a binary encrypted file (CRYPTEDBINFILE)
 
-EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput)
+EXPORTED	bool	decryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput)
 {
 	char *				decryptedBuffer = malloc(inputSize + *cipher_blockSize);
 	CipherContext *		ctx = EVP_CIPHER_CTX_new();

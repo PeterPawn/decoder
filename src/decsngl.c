@@ -235,7 +235,7 @@ int		decsngl_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				hexBuffer = NULL;
 			}
 		}
-		if (!DigestCheckValue(decryptedBuffer, decryptedSize, &out, &dataLen, &isString))
+		if (!digestCheckValue(decryptedBuffer, decryptedSize, &out, &dataLen, &isString))
 		{	
 			setError(INVALID_KEY);
 			errorMessage(errorWrongPassword);

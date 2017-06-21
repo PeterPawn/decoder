@@ -133,7 +133,7 @@ int main(int argc, char** argv)
 		{
 			if (!strcmp(fname, *name))
 			{
-				if (current->usesCrypto) EncryptionInit();
+				if (current->usesCrypto) encryptionInit();
 				arguments[0] = ename;
 				opterr = 0;
 				setAppletName(*name);

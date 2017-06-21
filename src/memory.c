@@ -347,7 +347,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 				memcpy(copy, currentBuffer->data + currentOffset, foundOffset - currentOffset);
 				*(cipherText + valueSize) = 0;
 
-				if (!DecryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
+				if (!decryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
 				{
 					if (fwrite("$$$$", 4, 1, out) == 1)
 					{
