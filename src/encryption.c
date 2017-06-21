@@ -41,18 +41,23 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 {
 	size_t			cipherBufSize = base32ToBinary(cipherText, valueSize, NULL, 0);
 	size_t			cipherSize;
-	char *			cipherBuffer = (char *) malloc(cipherBufSize + *cipher_blockSize);
+	char *			cipherBuffer = (char *) malloc(cipherBufSize + *cipher_blockSize + 1);
 	size_t			decryptedSize = 0;
-	char *			decryptedBuffer = (char *) malloc(cipherBufSize + *cipher_blockSize);
+	char *			decryptedBuffer = (char *) malloc(cipherBufSize + *cipher_blockSize + 1);
 	CipherContext 	*localCtx;
+
+	resetError();
 
 	cipherSize = base32ToBinary(cipherText, (size_t) -1, (char *) cipherBuffer, cipherBufSize + *cipher_blockSize);
 	
 	localCtx = (ctx ? ctx : EVP_CIPHER_CTX_new());
 	CipherInit(localCtx, CipherTypeValue, key, cipherBuffer, false);
+
 	verboseMessage(verboseFoundCipherText, cipherText);
+
 	if (!(cipherSize % *cipher_blockSize))
 		cipherSize++;
+
 	if (CipherUpdate(localCtx, decryptedBuffer, &decryptedSize, cipherBuffer + *cipher_ivLen, cipherSize - *cipher_ivLen))
 	{
 		char *		value;
@@ -65,7 +70,9 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 			{
 				int	start = 0;
 
-				verboseMessageNoApplet(verboseDecryptedTo, value);
+				if (isString)
+					verboseMessageNoApplet(verboseDecryptedTo, value);
+
 				for (int i = 0; i < (int) valueSize; i++)
 				{
 					if (*(value + i) == '\\' || *(value + i) == '"') /* split output */
@@ -75,6 +82,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 							setError(WRITE_FAILED);
 							break;
 						}
+
 						if (fwrite("\\", 1, 1, out) != 1)
 						{
 							setError(WRITE_FAILED);
@@ -86,12 +94,15 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 				valueSize -= start;
 				value += start;
 			}
+
 			if (out && (valueSize > 0) && (fwrite(value, valueSize, 1, out) != 1))
 				setError(WRITE_FAILED);
+
 			if (!out && outBuffer)
 			{
 				memcpy(outBuffer, value, valueSize + (isString ? 1 : 0));	
 			}
+
 			if (!isString)
 			{
 				char *	hexBuffer = malloc((valueSize * 2) + 1);
@@ -106,6 +117,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 				else
 				{
 					warningMessageNoApplet(verboseDisplayFailed);
+
 					if (isStrict())
 						setError(WARNING_ISSUED);
 				}
@@ -118,7 +130,7 @@ EXPORTED	bool	DecryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 		}
 	}
 
-	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize, true);
+	cipherBuffer = clearMemory(cipherBuffer, cipherBufSize + *cipher_blockSize, true);
 	decryptedBuffer = clearMemory(decryptedBuffer, cipherBufSize + *cipher_blockSize, true);
 
 	if (!ctx)
@@ -146,6 +158,7 @@ EXPORTED	bool	DigestCheckValue(char *buffer, size_t bufferSize, char * *value, s
 				(*((unsigned char *) buffer + 7));
 	
 	*value = buffer + 8;
+
 	if (*(buffer + 8 + *dataLen - 1) == 0)
 	{
 		(*dataLen)--;
@@ -219,6 +232,7 @@ EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * out
 			{
 				if (out && (fwrite(decryptedBuffer + 4, dataSize, 1, out) != 1))
 					setError(WRITE_FAILED);
+
 				if (outBuffer)
 					memcpy(outBuffer, decryptedBuffer + 4, dataSize);
 			}
@@ -233,6 +247,7 @@ EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * out
 				{
 					hexLen = binaryToHexadecimal(decryptedBuffer + 4, dataSize, hexBuffer, (dataSize * 2) + 1);
 					*(hexBuffer + hexLen) = 0;
+
 					if (out)
 					{
 						writeFrom = wrapOutput(out, &charsOnLine, &hexLen, hexBuffer);
@@ -247,6 +262,7 @@ EXPORTED	bool	DecryptFile(char * input, size_t inputSize, FILE * out, char * out
 					{
 						memcpy(outBuffer, hexBuffer, hexLen + 1);
 					}
+
 					free(hexBuffer);
 				}
 			}
@@ -292,6 +308,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 		{
 			verboseMessage(verboseFoundProperty, var->show, value);
 			DigestUpdate(ctx, value, strlen(value));
+
 			if (var->append)
 				DigestUpdate(ctx, var->append, strlen(var->append));
 		}
@@ -303,6 +320,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 				setError(URLADER_ENV_ERR);
 				break;
 			}
+
 			if (var->warningIfMissing)
 			{
 				warningMessage(verboseMissingProperty, var->show);
@@ -315,6 +333,7 @@ EXPORTED	bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport)
 				verboseMessage(verboseMissingProperty, var->show);
 		}
 		var++;
+
 		if (forExport && !var->export)
 			break;
 	}
@@ -356,10 +375,12 @@ EXPORTED	bool	checkMACAddress(char * mac)
 		{
 			if ((*curr < '0' || *curr > '9') && (*curr < 'A' || *curr > 'F'))
 				return false;
+
 			j += 1;
 		}
 		curr++;
 	}
+
 	if (i == 5 && j == 2) return true;
 
 	return false;
@@ -374,6 +395,7 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	if (strlen(serial) != 16)
 	{
 		warningMessage(verboseWrongSerialLength, serial);
+
 		if (isStrict())
 		{
 			setError(WARNING_ISSUED);
@@ -384,9 +406,11 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 	{
 		DigestUpdate(ctx, serial, strlen(serial));
 		DigestUpdate(ctx, "\n", 1);
+
 		if (!checkMACAddress(maca))
 		{
 			warningMessage(verboseWrongMACAddress, maca);
+
 			if (isStrict())
 			{
 				setError(WARNING_ISSUED);
@@ -406,6 +430,7 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 			if (strlen(wlanKey) != 16 && strlen(wlanKey) != 20)
 			{
 				warningMessage(verboseWrongWLANKey, wlanKey);
+
 				if (isStrict())
 				{
 					setError(WARNING_ISSUED);
@@ -424,6 +449,7 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 			if (strlen(tr069Passphrase) != 8 && strlen(tr069Passphrase) != 12)
 			{
 				warningMessage(verboseWrongTR069Passphrase, tr069Passphrase);
+
 				if (isStrict())
 				{
 					setError(WARNING_ISSUED);
@@ -462,6 +488,7 @@ EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
 	if (!value)
 	{
 		value = getEnvironmentValue(NULL, URLADER_MACA_NAME);
+
 		if (!value)
 		{
 			setError(ENV_VALUE_MISSING);

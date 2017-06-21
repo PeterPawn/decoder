@@ -74,7 +74,6 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				case 'b':
 					if (!setInputBufferSize(optarg, argv[optind]))
 					{
-						errorMessage(errorInvalidBufferSize, optarg);
 						setError(INV_BUF_SIZE);
 						return EXIT_FAILURE;
 					}

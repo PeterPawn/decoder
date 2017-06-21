@@ -81,15 +81,18 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 	{
 		curr->used += read;
 		data += read;
+
 		if ((read == toRead) && (curr->used == curr->size - sizeof(memoryBuffer_t))) /* buffer is full */
 		{
 			memoryBuffer_t	*next = memoryBufferNew(allocSize);
+
 			if (!next)
 			{
 				setError(STDIN_BUFFER_ERR);
 				top = memoryBufferFreeChain(top);
 				break;
 			}
+
 			curr->next = next;
 			next->prev = curr;
 			curr = next;
@@ -97,12 +100,14 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 			toRead = curr->size - sizeof(memoryBuffer_t);
 		}
 	}
+
 	if (!top->used)
 	{	
 		setError(NOERROR);
 		free(top);
 		top = NULL;
 	}
+
 	return top;
 }
 
@@ -141,6 +146,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferConsolidateData(memoryBuffer_t * start)
 		out += current->used;
 		current = current->next;
 	}
+
 	new->used = size;
 
 	return new;
@@ -165,7 +171,7 @@ EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset,
 				{
 					if (current->next)
 					{
-						if (strncmp(current->data, find + remaining, findSize - remaining) == 0) /* match across buffers */
+						if (strncmp(current->next->data, find + remaining, findSize - remaining) == 0) /* match across buffers */
 						{
 							*buffer = current;
 							*offset = (chk - current->data);
@@ -226,9 +232,12 @@ EXPORTED	char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *las
 				continue;
 			}
 		}
+
 		*lastOffset += advance;
+
 		return (current->data + *lastOffset);
 	}
+
 	return NULL;	
 }
 
@@ -249,12 +258,12 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 			if (current->next)
 			{
 				current = current->next;
-				*buffer = current;
-				*offset = 0;
+				curOffset = 0;
 				cur = current->data;
 				*split = true;
 			}
 		}
+
 		if ((*cur >= 'A' && *cur <= 'Z') || (*cur >= '1' && *cur <= '6'))
 		{
 			count++;
@@ -266,9 +275,11 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 			*buffer = current;
 			*offset = curOffset;
 			*size = count;
+
 			return cur;
 		}
 	}
+
 	return NULL;	
 }
 
@@ -297,10 +308,11 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 					currentBuffer = NULL;
 					break;
 				}
+
 				currentBuffer = currentBuffer->next;
 				currentOffset = 0;
 			}
-			if (currentBuffer)
+			if (currentBuffer && foundOffset > 0)
 			{
 				if (fwrite(currentBuffer->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
 				{
@@ -308,6 +320,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 					currentBuffer = NULL;
 					break;
 				}
+
 				currentOffset = foundOffset;
 			}
 			cipherTextStart = memoryBufferAdvancePointer(&currentBuffer, &currentOffset, 4);
@@ -330,8 +343,9 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 					currentBuffer = currentBuffer->next;
 					currentOffset = 0;
 				}
+
 				memcpy(copy, currentBuffer->data + currentOffset, foundOffset - currentOffset);
-				*(copy + valueSize) = 0;
+				*(cipherText + valueSize) = 0;
 
 				if (!DecryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
 				{
@@ -354,6 +368,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 					currentBuffer = found;
 					currentOffset = foundOffset;
 				}
+
 				free(cipherText);
 			}
 		}
@@ -367,6 +382,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 					currentBuffer = NULL;
 					break;
 				}
+
 				currentBuffer = currentBuffer->next;
 				currentOffset = 0;
 			}
@@ -386,7 +402,9 @@ void *	clearMemory(void * buffer, size_t size, bool freeBuffer)
 	if (buffer)
 	{
 		memset(buffer, 0, size);
+
 		if (freeBuffer) free(buffer);
 	}
+
 	return NULL;
 }

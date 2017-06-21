@@ -110,7 +110,7 @@ EXPORTED	int		setLineWidth(char * value, char * option, char * next)
 	return offset;
 }
 
-EXPORTED	bool	setInputBufferSize(char * value, char * option)
+EXPORTED	bool	setInputBufferSize(char * value, UNUSED char * option)
 {
 	char *			val = value;
 
@@ -122,7 +122,7 @@ EXPORTED	bool	setInputBufferSize(char * value, char * option)
 
 		if (*startString && strlen(endString))
 		{
-			errorMessage(errorInvalidWidth, startString, option);
+			errorMessage(errorInvalidBufferSize, startString);
 			return false;
 		}
 		memoryBufferSetSize(size);
