@@ -25,12 +25,14 @@
 
 // FRITZ!OS environment related settings
 
-#define URLADER_SERIAL_NAME		"SerialNumber"
-#define URLADER_MACA_NAME		"maca"
-#define URLADER_WLANKEY_NAME	"wlan_key"
-#define URLADER_TR069PP_NAME	"tr069_passphrase"
+#define	URLADER_SERIAL_NAME		"SerialNumber"
+#define	URLADER_MACA_NAME		"maca"
+#define	URLADER_WLANKEY_NAME	"wlan_key"
+#define	URLADER_TR069PP_NAME	"tr069_passphrase"
 
-#define EXPORT_PASSWORD_NAME	"\nPassword=$$$$"
+#define	EXPORT_PASSWORD_NAME	"\nPassword=$$$$"
+
+#define	PRIVKEY_PASSWORD_SIZE	8
 
 // decrytion related functions
 

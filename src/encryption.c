@@ -479,7 +479,7 @@ EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
 	size_t				hashLen = sizeof(hash);
 	char *				table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$!";
 
-	if (*outLen < 9)
+	if (*outLen < PRIVKEY_PASSWORD_SIZE + 1)
 	{
 		setError(BUF_TOO_SMALL);
 		return false;
@@ -502,7 +502,7 @@ EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
 		return false;
 	}
 	
-	for (size_t i = 0; i < sizeof(out); i++)
+	for (size_t i = 0; i < PRIVKEY_PASSWORD_SIZE; i++)
 	{
 		char			c = hash[i];
 
@@ -510,8 +510,8 @@ EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
 		*(out + i) = *(table + c);
 	}
 
-	*(out + 8) = 0;
-	*outLen = 8;
+	*(out + PRIVKEY_PASSWORD_SIZE) = 0;
+	*outLen = PRIVKEY_PASSWORD_SIZE;
 
 	return true;
 }
