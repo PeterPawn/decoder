@@ -477,7 +477,7 @@ EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
 	char *				value = maca;
 	char				hash[MAX_DIGEST_SIZE];
 	size_t				hashLen = sizeof(hash);
-	char *				table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$!";
+	char *				table = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!$";
 
 	if (*outLen < PRIVKEY_PASSWORD_SIZE + 1)
 	{
