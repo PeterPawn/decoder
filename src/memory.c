@@ -47,15 +47,15 @@ EXPORTED	memoryBuffer_t *	memoryBufferNew(size_t size)
 
 EXPORTED	memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start)
 {
-	memoryBuffer_t	*curr = start;
+	memoryBuffer_t	*current = start;
 	
-	while (curr)
+	while (current)
 	{
-		memoryBuffer_t	*next = curr->next;
+		memoryBuffer_t	*next = current->next;
 		
-		memset(curr, 0, curr->size);
-		free(curr);
-		curr = next;
+		memset(current, 0, current->size);
+		free(current);
+		current = next;
 	}
 	return NULL;
 }
@@ -66,7 +66,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 {
 	size_t			allocSize;
 	memoryBuffer_t	*top = NULL;
-	memoryBuffer_t	*curr = NULL;
+	memoryBuffer_t	*current = NULL;
 	char *			data;
 	size_t			read;
 	size_t			toRead;
@@ -74,15 +74,15 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 	allocSize = (chunkSize != (size_t) -1 ? chunkSize : memoryBufferSize);
 	allocSize += sizeof(memoryBuffer_t);
 	top = memoryBufferNew(allocSize);
-	curr = top;
+	current = top;
 	data = top->data;
-	toRead = curr->size - curr->used - sizeof(memoryBuffer_t);
+	toRead = current->size - current->used - sizeof(memoryBuffer_t);
 	while ((read = fread(data, 1, toRead, file)) > 0)
 	{
-		curr->used += read;
+		current->used += read;
 		data += read;
 
-		if ((read == toRead) && (curr->used == curr->size - sizeof(memoryBuffer_t))) /* buffer is full */
+		if ((read == toRead) && (current->used == current->size - sizeof(memoryBuffer_t))) /* buffer is full */
 		{
 			memoryBuffer_t	*next = memoryBufferNew(allocSize);
 
@@ -93,11 +93,11 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 				break;
 			}
 
-			curr->next = next;
-			next->prev = curr;
-			curr = next;
-			data = curr->data;
-			toRead = curr->size - sizeof(memoryBuffer_t);
+			current->next = next;
+			next->prev = current;
+			current = next;
+			data = current->data;
+			toRead = current->size - sizeof(memoryBuffer_t);
 		}
 	}
 
@@ -134,7 +134,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferConsolidateData(memoryBuffer_t * start)
 {
 	size_t			size = memoryBufferDataSize(start);
 	memoryBuffer_t	*current = start;
-	memoryBuffer_t	*new = memoryBufferNew(size);
+	memoryBuffer_t	*new = memoryBufferNew(size + sizeof(memoryBuffer_t));
 
 	if (!new) return NULL;
 
@@ -246,37 +246,37 @@ EXPORTED	char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *las
 EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *offset, size_t * size, bool *split)
 {
 	memoryBuffer_t	*current = *buffer;
-	size_t  		curOffset = *offset;
+	size_t  		currentOffset = *offset;
 	size_t			count = 0;
-	char *			cur = current->data + curOffset;
+	char *			position = current->data + currentOffset;
 
 	*split = false;	
 	while (current)
 	{
-		if (current->used <= curOffset) /* next buffer */
+		if (current->used <= currentOffset) /* next buffer */
 		{
 			if (current->next)
 			{
 				current = current->next;
-				curOffset = 0;
-				cur = current->data;
+				currentOffset = 0;
+				position = current->data;
 				*split = true;
 			}
 		}
 
-		if ((*cur >= 'A' && *cur <= 'Z') || (*cur >= '1' && *cur <= '6'))
+		if ((*position >= 'A' && *position <= 'Z') || (*position >= '1' && *position <= '6'))
 		{
 			count++;
-			cur++;
-			curOffset++;
+			position++;
+			currentOffset++;
 		}
 		else /* character outside of our Base32 set found */
 		{
 			*buffer = current;
-			*offset = curOffset;
+			*offset = currentOffset;
 			*size = count;
 
-			return cur;
+			return position;
 		}
 	}
 
@@ -288,43 +288,43 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out)
 {
 	CipherContext 		*ctx = CipherInit(NULL, CipherTypeValue, NULL, NULL, false);
-	memoryBuffer_t 		*currentBuffer = *buffer;
+	memoryBuffer_t 		*current = *buffer;
 	size_t				currentOffset = offset;
 	
-	while (currentBuffer)
+	while (current)
 	{
-		memoryBuffer_t	*found = currentBuffer;
+		memoryBuffer_t	*found = current;
 		size_t			foundOffset = currentOffset;
 		bool			split = false;
 		char *			cipherTextStart;
 	
 		if ((cipherTextStart = memoryBufferFindString(&found, &foundOffset, "$$$$", 4, &split)) != NULL) /* encrypted data exists */
 		{
-			while (currentBuffer && (currentBuffer != found)) /* output data crosses at least one buffer boundary */
+			while (current && (current != found)) /* output data crosses at least one buffer boundary */
 			{
-				if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
+				if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
 				{
 					setError(WRITE_FAILED);
-					currentBuffer = NULL;
+					current = NULL;
 					break;
 				}
 
-				currentBuffer = currentBuffer->next;
+				current = current->next;
 				currentOffset = 0;
 			}
-			if (currentBuffer && foundOffset > 0)
+			if (current && foundOffset > 0)
 			{
-				if (fwrite(currentBuffer->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
+				if (fwrite(current->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
 				{
 					setError(WRITE_FAILED);
-					currentBuffer = NULL;
+					current = NULL;
 					break;
 				}
 
 				currentOffset = foundOffset;
 			}
-			cipherTextStart = memoryBufferAdvancePointer(&currentBuffer, &currentOffset, 4);
-			found = currentBuffer;
+			cipherTextStart = memoryBufferAdvancePointer(&current, &currentOffset, 4);
+			found = current;
 			foundOffset = currentOffset;
 
 			size_t		valueSize;
@@ -336,36 +336,36 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 			
 				memset(cipherText, 0, valueSize + 1);
 				copy = cipherText;
-				while (currentBuffer && (currentBuffer != found))
+				while (current && (current != found))
 				{
-					memcpy(copy, currentBuffer->data + currentOffset, currentBuffer->used - currentOffset);
-					copy += (currentBuffer->used - currentOffset);
-					currentBuffer = currentBuffer->next;
+					memcpy(copy, current->data + currentOffset, current->used - currentOffset);
+					copy += (current->used - currentOffset);
+					current = current->next;
 					currentOffset = 0;
 				}
 
-				memcpy(copy, currentBuffer->data + currentOffset, foundOffset - currentOffset);
+				memcpy(copy, current->data + currentOffset, foundOffset - currentOffset);
 				*(cipherText + valueSize) = 0;
 
 				if (!decryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
 				{
 					if (fwrite("$$$$", 4, 1, out) == 1)
 					{
-						if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
+						if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
 						{
 							setError(WRITE_FAILED);
-							currentBuffer = NULL;
+							current = NULL;
 						}
 					}
 					else
 					{
 						setError(WRITE_FAILED);
-						currentBuffer = NULL;
+						current = NULL;
 					}
 				}
 				else
 				{
-					currentBuffer = found;
+					current = found;
 					currentOffset = foundOffset;
 				}
 
@@ -374,16 +374,16 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 		}
 		else /* no more encrypted data, write remaining buffers */
 		{
-			while (currentBuffer)
+			while (current)
 			{
-				if (fwrite(currentBuffer->data + currentOffset, currentBuffer->used - currentOffset, 1, out) != 1)
+				if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
 				{
 					setError(WRITE_FAILED);
-					currentBuffer = NULL;
+					current = NULL;
 					break;
 				}
 
-				currentBuffer = currentBuffer->next;
+				current = current->next;
 				currentOffset = 0;
 			}
 		}
