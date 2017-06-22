@@ -47,6 +47,7 @@
 #include "base32.h"
 #include "base64.h"
 #include "hex.h"
+#include "crc32.h"
 
 #include "functions.h"
 #include "memory.h"
@@ -73,5 +74,6 @@
 #include "decexp.h"
 #include "deccb.h"
 #include "pkpwd.h"
+#include "checksum.h"
 
 #endif

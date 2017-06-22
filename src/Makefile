@@ -158,6 +158,12 @@ DECODER_CONFIG_DECRYPT_FILES=y
 DECODER_CONFIG_PRIVKEY_PASSWORD=y
 #######################################################################################################
 #                                                                                                     #
+# compute a CRC-32 value for input data                                                               #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CRC_FILE=y
+#######################################################################################################
+#                                                                                                     #
 # applet names, multiple names may be specified for the same applet                                   #
 #                                                                                                     #
 #######################################################################################################
@@ -249,6 +255,12 @@ endif
 DECODER_CONFIG_PRIVKEY_PASSWORD_NAME="+privatekeypassword"
 #######################################################################################################
 #                                                                                                     #
+# compute CRC-32 value for input file                                                                 #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_CRC_FILE_NAME="+crc"
+#######################################################################################################
+#                                                                                                     #
 # default memory buffer size                                                                          #
 #                                                                                                     #
 #######################################################################################################
@@ -314,7 +326,7 @@ FILES :=
 LINKS :=
 CMDS :=
 CFG :=
-APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb pkpwd
+APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb pkpwd checksum
 #######################################################################################################
 #                                                                                                     #
 # macros to add an applet                                                                             #
@@ -378,6 +390,14 @@ endif
 #######################################################################################################
 ifeq ($(DECODER_CONFIG_PRIVKEY_PASSWORD),y)
 $(call ADD_APPLET,PRIVKEY_PASSWORD,pkpwd)
+endif
+#######################################################################################################
+#                                                                                                     #
+# CRC-32 applet                                                                                       #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_CRC_FILE),y)
+$(call ADD_APPLET,CRC_FILE,checksum)
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -471,6 +491,7 @@ FILES_COMMON += crypto
 FILES_COMMON += options
 FILES_COMMON += environ
 FILES_COMMON += license
+FILES_COMMON += crc32
 FILES_COMMON += help
 HDRS_COMMON = $(addsuffix .h, $(FILES_COMMON))
 OBJS_COMMON = $(addsuffix .o, $(FILES_COMMON))
@@ -524,6 +545,7 @@ CFG += DECRYPT_EXPORT_BINFILE_NAME
 CFG += DECRYPT_SINGLE_VALUES_NAME
 CFG += DECRYPT_FILES_NAME
 CFG += PRIVKEY_PASSWORD_NAME
+CFG += CRC_FILE_NAME
 CFG += MEMORY_BUFFER_SIZE
 CFG += WRAP_LINE_SIZE
 CFG += URLADER_ENVIRONMENT_PATH
