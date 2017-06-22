@@ -101,7 +101,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 		}
 	}
 
-	if (!current->used)
+	if (current->prev && !current->used)
 	{
 		current->prev->next = NULL;
 		free(current);
