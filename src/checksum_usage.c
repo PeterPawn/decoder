@@ -42,6 +42,11 @@ void 	checksum_usage(const bool help, UNUSED const bool version)
 	showFormatEnd(out);
 
 	showOptionsHeader("options");
+	addOptionsEntry("-d, --all-data", "compute value over the 'raw' input file, don't handle the different parts of an export file", 0);
+	addOptionsEntry("-x, --hex-output", "show the computed value as hexadecimal string on STDOUT, otherwise it's written as decimal string", 0);
+	addOptionsEntry("-r, --raw-output", "write the 32 bits of the computed value as binary data to STDOUT (host order)", 0);
+	addOptionsEntry("-l, --lsb-output", "write the 32 bits of the computed value as binary data to STDOUT (LSB order)", 0);
+	addOptionsEntry("-m, --msb-output", "write the 32 bits of the computed value as binary data to STDOUT (MSB order)", 0);
 	addOptionsEntryVerbose();
 	addOptionsEntryQuiet();
 	addOptionsEntryStrict();
@@ -50,7 +55,20 @@ void 	checksum_usage(const bool help, UNUSED const bool version)
 	showOptionsEnd(out);
 
 	fprintf(out,
-		"\nThe computed value is written to STDOUT in binary format (32 bits).\n"
+		"\nUsually the input data is expected to be an export file from FRITZ!OS. In this case, the CRC-32\n"
+		"value is re-computed over the different parts of this export file and replaced at the last line of\n"
+		"input data, while the whole file is copied to STDOUT.\n"
+	);
+
+	fprintf(out,
+		"\nIf you specify any of the output options, the value is still recomputed, but input data will not\n"
+		"be copied to STDOUT and only the CRC-32 value will be written to STDOUT using the specified format.\n"
+	);
+
+	fprintf(out,
+		"\nIf the '--all-data' option (or '-d') was specified, input data will not be handled as export file\n"
+		"and the CRC-32 value will be computed over the 'raw content'. Output format options are used to set\n"
+		"the format of data on STDOUT, input data will never be copied to STDOUT."
 	);
 
 	showUsageFinalize(out, help, version);

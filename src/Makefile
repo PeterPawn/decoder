@@ -258,7 +258,7 @@ DECODER_CONFIG_PRIVKEY_PASSWORD_NAME="+privatekeypassword"
 # compute CRC-32 value for input file                                                                 #
 #                                                                                                     #
 #######################################################################################################
-DECODER_CONFIG_CRC_FILE_NAME="+crc"
+DECODER_CONFIG_CRC_FILE_NAME="+checksum"
 #######################################################################################################
 #                                                                                                     #
 # default memory buffer size                                                                          #

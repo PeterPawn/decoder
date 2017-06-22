@@ -52,6 +52,7 @@ static char *				__decoder_error_text__[] = {
 	"warning treated as error",
 	"error reading environment value",
 	"invalid buffer size specified",
+	"conflicting options found",
 };
 
 //// error messages ////
@@ -93,6 +94,8 @@ EXPORTED	char *			errorReadFromTTY = "STDIN is connected to a terminal device, e
 EXPORTED	char *			errorNoReadFromTTY = "STDIN is connected to a terminal device, execution aborted.\n";
 EXPORTED	char *			errorWrongMACAddress = "The specified MAC address '%s' has a wrong format.\n";
 EXPORTED	char *			errorInvalidBufferSize = "The specified buffer size value '%s' is invalid.\n";
+EXPORTED	char *			errorConflictingOptions = "Conflicting options found.\n";
+EXPORTED	char *			errorEmptyInputFile = "There's no input data present.\n";
 //// end ////
 
 // functions

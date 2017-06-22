@@ -31,7 +31,7 @@ static	char *				__commandNames[] = {
 		NULL
 };
 static	char * *			commandNames = &__commandNames[0];
-static	commandEntry_t 		__checksum_command = { .names = &commandNames, .ep = &checksum_entry, .short_desc = &checksum_shortdesc, .usage = &checksum_usage };
+static	commandEntry_t 		__checksum_command = { .names = &commandNames, .ep = &checksum_entry, .short_desc = &checksum_shortdesc, .usage = &checksum_usage, .finalNewlineOnTTY = true };
 EXPORTED commandEntry_t *	checksum_command = &__checksum_command;
 
 // 'checksum' function - compute the CRC32 checksum for STDIN data
@@ -42,6 +42,14 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char				buffer[256];
 	size_t				read = 0;
 	uint32_t			value = 0;
+	bool				allData = false;
+	enum {
+		OUTPUT_UNDEFINED,
+		OUTPUT_DECIMAL,
+		OUTPUT_HEXADECIMAL,
+		OUTPUT_HOST,
+		OUTPUT_REVERSE,
+	} 					outputMode = OUTPUT_UNDEFINED;
 
 	if (argc > argo + 1)
 	{
@@ -49,15 +57,72 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
+			{ "all-data", no_argument, NULL, 'd' },
+			{ "hex-output", no_argument, NULL, 'x' },
+			{ "raw-output", no_argument, NULL, 'r' },
+			{ "lsb-output", no_argument, NULL, 'l' },
+			{ "msb-output", no_argument, NULL, 'm' },
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" verbosity_options_short;
+		char *			options_short = ":dxrlm" verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
 			switch (opt)
 			{
+				case 'd':
+					allData = true;
+					break;
+
+				case 'x':
+					if (outputMode != OUTPUT_UNDEFINED)
+					{
+						errorMessage(errorConflictingOptions);
+						setError(OPTIONS_CONFLICT);
+						return EXIT_FAILURE;
+					}
+					outputMode = OUTPUT_HEXADECIMAL;
+					break;
+
+				case 'r':
+					if (outputMode != OUTPUT_UNDEFINED)
+					{
+						errorMessage(errorConflictingOptions);
+						setError(OPTIONS_CONFLICT);
+						return EXIT_FAILURE;
+					}
+					outputMode = OUTPUT_HOST;
+					break;
+
+				case 'l':
+					if (outputMode != OUTPUT_UNDEFINED)
+					{
+						errorMessage(errorConflictingOptions);
+						setError(OPTIONS_CONFLICT);
+						return EXIT_FAILURE;
+					}
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+					outputMode = OUTPUT_HOST;
+#else
+					outputMode = OUTPUT_REVERSE;
+#endif
+					break;
+
+				case 'm':
+					if (outputMode != OUTPUT_UNDEFINED)
+					{
+						errorMessage(errorConflictingOptions);
+						setError(OPTIONS_CONFLICT);
+						return EXIT_FAILURE;
+					}
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+					outputMode = OUTPUT_HOST;
+#else
+					outputMode = OUTPUT_REVERSE;
+#endif
+					break;
+
 				check_verbosity_options_short();
 				help_option();
 				getopt_invalid_option();
@@ -77,42 +142,85 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (isAnyError())
 		return EXIT_FAILURE;
 
+	if (allData && outputMode == OUTPUT_UNDEFINED)
+		outputMode = OUTPUT_DECIMAL;
+
 	resetError();
 
-	ctx = crcInit();
-
-	while ((read = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
+	if (allData)
 	{
-		crcUpdate(ctx, buffer, read);
-	}
+		ctx = crcInit();
 	
-	value = crcFinal(ctx);
+		while ((read = fread(buffer, 1, sizeof(buffer), stdin)) > 0)
+		{
+			crcUpdate(ctx, buffer, read);
+		}
 
-	if (isAnyError()) 
+		value = crcFinal(ctx);
+
+		switch (outputMode)
+		{
+			case OUTPUT_HEXADECIMAL:
+				fprintf(stdout, "%08X", value);
+				break;
+
+			case OUTPUT_REVERSE:
+				/* swap 'value' in-place with XOR */
+				*(((uint8_t *) &value) + 0) ^= *(((uint8_t *) &value) + 3);
+				*(((uint8_t *) &value) + 3) ^= *(((uint8_t *) &value) + 0);
+				*(((uint8_t *) &value) + 0) ^= *(((uint8_t *) &value) + 3);
+				*(((uint8_t *) &value) + 1) ^= *(((uint8_t *) &value) + 2);
+				*(((uint8_t *) &value) + 2) ^= *(((uint8_t *) &value) + 1);
+				*(((uint8_t *) &value) + 1) ^= *(((uint8_t *) &value) + 2);
+				/* fall through to next case */
+
+			case OUTPUT_HOST:
+				fwrite(&value, sizeof(uint32_t), 1, stdout);
+				break;
+
+			case OUTPUT_DECIMAL:
+			default:
+				fprintf(stdout, "%u", value);
+		}
+	}
+	else
 	{
-		if (isError(WRITE_FAILED))
+		memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, -1);
+
+		if (!inputFile)
 		{
-			errorMessage(errorWriteFailed);
+			if (!isAnyError()) /* empty input file */
+			{
+				errorMessage(errorEmptyInputFile);
+			}
+			else
+			{
+				errorMessage(errorReadToMemory);
+			}
+			return EXIT_FAILURE;
 		}
-		else if (isError(INV_HEX_DATA))
+
+		memoryBuffer_t	*consolidated = memoryBufferConsolidateData(inputFile);
+
+		if (!consolidated)
 		{
-			errorMessage(errorInvalidHexValue);
-		}
-		else if (isError(INV_HEX_SIZE))
-		{
-			errorMessage(errorInvalidHexSize);
-		}
-		else if (isError(INV_B64_ENC_SIZE))
-		{
-			errorMessage(errorInvalidDataSize);
+			errorMessage(errorNoMemory);
+			inputFile = memoryBufferFreeChain(inputFile);
+			return EXIT_FAILURE;
 		}
 		else
 		{
-			errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
+			inputFile = memoryBufferFreeChain(inputFile);
+			inputFile = consolidated;
+			verboseMessage(verboseInputDataConsolidated, memoryBufferDataSize(inputFile));
 		}
-	}
 
-	fprintf(stdout, "%08X", value);
+		computeExportFileChecksum(inputFile, stdout);
+
+		memoryBufferFreeChain(inputFile);
+
+		entry->finalNewlineOnTTY = false;
+	}
 
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }

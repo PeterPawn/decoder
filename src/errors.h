@@ -70,6 +70,8 @@ typedef enum {
 	DECODER_ERROR_ENV_VALUE_MISSING,
 	// invalid buffer size specified
 	DECODER_ERROR_INV_BUF_SIZE,
+	// conflicting options specified
+	DECODER_ERROR_OPTIONS_CONFLICT,
 } decoder_error_t;
 
 #ifndef ERRORS_C
@@ -122,6 +124,8 @@ extern	char *							errorReadFromTTY;
 extern	char *							errorNoReadFromTTY;
 extern	char *							errorWrongMACAddress;
 extern	char *							errorInvalidBufferSize;
+extern	char *							errorConflictingOptions;
+extern	char *							errorEmptyInputFile;
 
 #endif
 

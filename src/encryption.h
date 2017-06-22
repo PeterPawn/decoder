@@ -48,6 +48,8 @@ bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * mac
 
 bool	privateKeyPassword(char * out, size_t * outLen, char * maca);
 
+bool	computeExportFileChecksum(memoryBuffer_t * input, FILE * out);
+
 bool	checkMACAddress(char * mac);
 
 #endif
