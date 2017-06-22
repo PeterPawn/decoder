@@ -101,6 +101,12 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 		}
 	}
 
+	if (!current->used)
+	{
+		current->prev->next = NULL;
+		free(current);
+	}
+
 	if (!top->used)
 	{	
 		setError(NOERROR);
@@ -176,6 +182,7 @@ EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset,
 							*buffer = current;
 							*offset = (chk - current->data);
 							*split = true;
+							return chk;
 						}
 					}
 					else /* partial match at end of data */
