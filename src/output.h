@@ -64,6 +64,9 @@ extern	char *							verboseWrapLinesIgnored;
 extern	char *							verboseBufferSize;
 extern	char *							verboseInputDataConsolidated;
 extern	char *							verboseNoConsolidate;
+extern	char *							verboseChecksumFound;
+extern	char *							verboseChecksumIsValid;
+extern	char *							verboseNewChecksum;
 
 extern	char *							verboseDebugKey;
 extern	char *							verboseDebugBase32;

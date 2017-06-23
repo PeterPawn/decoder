@@ -516,21 +516,4 @@ EXPORTED	bool	privateKeyPassword(char * out, size_t * outLen, char * maca)
 	return true;
 }
 
-EXPORTED	bool	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
-{
-	char *				current = input->data;
-
-	for (size_t size = 0; size < input->used; size++, current++)
-	{
-		if (fwrite(current, 1, 1, out) != 1)
-		{
-			errorMessage(errorWriteFailed);
-			setError(WRITE_FAILED);
-			return false;
-		}
-	}
-
-	return true;
-}
-
 #pragma GCC diagnostic pop

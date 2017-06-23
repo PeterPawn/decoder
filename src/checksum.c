@@ -41,15 +41,15 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	crcCtx_t *			ctx = NULL;
 	char				buffer[256];
 	size_t				read = 0;
-	uint32_t			value = 0;
+	uint32_t			crcValue = 0;
 	bool				allData = false;
 	enum {
-		OUTPUT_UNDEFINED,
+		OUTPUT_NONE,
 		OUTPUT_DECIMAL,
 		OUTPUT_HEXADECIMAL,
 		OUTPUT_HOST,
 		OUTPUT_REVERSE,
-	} 					outputMode = OUTPUT_UNDEFINED;
+	} 					outputMode = OUTPUT_NONE;
 
 	if (argc > argo + 1)
 	{
@@ -76,7 +76,7 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					break;
 
 				case 'x':
-					if (outputMode != OUTPUT_UNDEFINED)
+					if (outputMode != OUTPUT_NONE)
 					{
 						errorMessage(errorConflictingOptions);
 						setError(OPTIONS_CONFLICT);
@@ -86,7 +86,7 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					break;
 
 				case 'r':
-					if (outputMode != OUTPUT_UNDEFINED)
+					if (outputMode != OUTPUT_NONE)
 					{
 						errorMessage(errorConflictingOptions);
 						setError(OPTIONS_CONFLICT);
@@ -96,7 +96,7 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					break;
 
 				case 'l':
-					if (outputMode != OUTPUT_UNDEFINED)
+					if (outputMode != OUTPUT_NONE)
 					{
 						errorMessage(errorConflictingOptions);
 						setError(OPTIONS_CONFLICT);
@@ -110,7 +110,7 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 					break;
 
 				case 'm':
-					if (outputMode != OUTPUT_UNDEFINED)
+					if (outputMode != OUTPUT_NONE)
 					{
 						errorMessage(errorConflictingOptions);
 						setError(OPTIONS_CONFLICT);
@@ -142,9 +142,6 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	if (isAnyError())
 		return EXIT_FAILURE;
 
-	if (allData && outputMode == OUTPUT_UNDEFINED)
-		outputMode = OUTPUT_DECIMAL;
-
 	resetError();
 
 	if (allData)
@@ -156,32 +153,10 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			crcUpdate(ctx, buffer, read);
 		}
 
-		value = crcFinal(ctx);
+		crcValue = crcFinal(ctx);
 
-		switch (outputMode)
-		{
-			case OUTPUT_HEXADECIMAL:
-				fprintf(stdout, "%08X", value);
-				break;
-
-			case OUTPUT_REVERSE:
-				/* swap 'value' in-place with XOR */
-				*(((uint8_t *) &value) + 0) ^= *(((uint8_t *) &value) + 3);
-				*(((uint8_t *) &value) + 3) ^= *(((uint8_t *) &value) + 0);
-				*(((uint8_t *) &value) + 0) ^= *(((uint8_t *) &value) + 3);
-				*(((uint8_t *) &value) + 1) ^= *(((uint8_t *) &value) + 2);
-				*(((uint8_t *) &value) + 2) ^= *(((uint8_t *) &value) + 1);
-				*(((uint8_t *) &value) + 1) ^= *(((uint8_t *) &value) + 2);
-				/* fall through to next case */
-
-			case OUTPUT_HOST:
-				fwrite(&value, sizeof(uint32_t), 1, stdout);
-				break;
-
-			case OUTPUT_DECIMAL:
-			default:
-				fprintf(stdout, "%u", value);
-		}
+		if (outputMode == OUTPUT_NONE)
+			outputMode = OUTPUT_DECIMAL;
 	}
 	else
 	{
@@ -215,11 +190,43 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			verboseMessage(verboseInputDataConsolidated, memoryBufferDataSize(inputFile));
 		}
 
-		computeExportFileChecksum(inputFile, stdout);
+		crcValue = computeExportFileChecksum(inputFile, (outputMode == OUTPUT_NONE ? stdout : NULL));
 
 		memoryBufferFreeChain(inputFile);
 
-		entry->finalNewlineOnTTY = false;
+		if (outputMode == OUTPUT_NONE)
+			entry->finalNewlineOnTTY = false;
+	}
+
+	if (!isAnyError())
+	{
+		switch (outputMode)
+		{
+			case OUTPUT_HEXADECIMAL:
+				fprintf(stdout, "%08X", crcValue);
+				break;
+
+			case OUTPUT_REVERSE:
+				/* swap 'value' in-place with XOR */
+				*(((uint8_t *) &crcValue) + 0) ^= *(((uint8_t *) &crcValue) + 3);
+				*(((uint8_t *) &crcValue) + 3) ^= *(((uint8_t *) &crcValue) + 0);
+				*(((uint8_t *) &crcValue) + 0) ^= *(((uint8_t *) &crcValue) + 3);
+				*(((uint8_t *) &crcValue) + 1) ^= *(((uint8_t *) &crcValue) + 2);
+				*(((uint8_t *) &crcValue) + 2) ^= *(((uint8_t *) &crcValue) + 1);
+				*(((uint8_t *) &crcValue) + 1) ^= *(((uint8_t *) &crcValue) + 2);
+				/* fall through to next case */
+
+			case OUTPUT_HOST:
+				fwrite(&crcValue, sizeof(uint32_t), 1, stdout);
+				break;
+
+			case OUTPUT_DECIMAL:
+				fprintf(stdout, "%u", crcValue);
+				break;
+
+			case OUTPUT_NONE:
+				break;
+		}
 	}
 
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);

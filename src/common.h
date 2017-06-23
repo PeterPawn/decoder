@@ -59,6 +59,7 @@
 
 #include "crypto.h"
 #include "encryption.h"
+#include "chksum.h"
 
 #include "b32dec.h"
 #include "b32enc.h"

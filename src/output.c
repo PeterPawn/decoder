@@ -53,6 +53,9 @@ EXPORTED	char *				verboseWrapLinesIgnored = "output data is written as binary c
 EXPORTED	char *				verboseBufferSize = "input data will be read in blocks of %u bytes\n";
 EXPORTED	char *				verboseInputDataConsolidated = "input data consolidated in a single buffer with %lu bytes\n";
 EXPORTED	char *				verboseNoConsolidate = "input data consolidation will be skipped\n";
+EXPORTED	char *				verboseChecksumFound = "found current checksum '%s'\n";
+EXPORTED	char *				verboseChecksumIsValid = "the current checksum is still valid\n";
+EXPORTED	char *				verboseNewChecksum = "the new checksum '%s' was written instead of the old one\n";
 
 EXPORTED	char *				verboseDebugKey = "key\t: (%03u) 0x%s\n";
 EXPORTED	char *				verboseDebugBase32 = "base32\t: (%03u) %s\n";

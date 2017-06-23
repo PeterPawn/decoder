@@ -485,6 +485,7 @@ FILES_COMMON += base32
 FILES_COMMON += base64
 FILES_COMMON += hex
 FILES_COMMON += encryption
+FILES_COMMON += chksum
 FILES_COMMON += memory
 FILES_COMMON += functions
 FILES_COMMON += crypto
