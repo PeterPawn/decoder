@@ -193,7 +193,7 @@ EXPORTED	uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
 									valueSize--;
 								}
 
-								if (*value == '\\' && *(value + 1) == '\\' && valueSize >= 2)
+								if (valueSize >= 2 && *value == '\\' && *(value + 1) == '\\') /* two consecutive backslashes */
 								{
 									crcUpdate(ctx, last, lastSize - valueSize);
 									last = value + 1;
