@@ -187,7 +187,7 @@ EXPORTED	uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
 						{
 							while (valueSize > 0)
 							{
-								while (valueSize > 0 && *value != '\\')
+								while (valueSize > 0 && strncmp(value, "\\\\", 2))
 								{
 									value++;
 									valueSize--;

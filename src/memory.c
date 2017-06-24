@@ -290,7 +290,10 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 	return NULL;	
 }
 
-// scan memory buffer and replace occurrences of encrypted data while writing data to an output file 
+// scan memory buffer and replace occurrences of encrypted data while writing data to an output file;
+// if no output file is used (NULL), input data has to be contained in a single buffer and cipher-text
+// values are replaced with the corresponding clear-text in this buffer ... gaps are marked with 0xFF
+// and a 16 bit integer containing the offset from 0xFF to the next valid character
 
 EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out)
 {
@@ -304,12 +307,16 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 		size_t			foundOffset = currentOffset;
 		bool			split = false;
 		char *			cipherTextStart;
+		char *			outputStart;
 	
 		if ((cipherTextStart = memoryBufferFindString(&found, &foundOffset, "$$$$", 4, &split)) != NULL) /* encrypted data exists */
 		{
+			if (!out)
+				outputStart = cipherTextStart;
+
 			while (current && (current != found)) /* output data crosses at least one buffer boundary */
 			{
-				if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
+				if (out && fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
 				{
 					setError(WRITE_FAILED);
 					current = NULL;
@@ -321,7 +328,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 			}
 			if (current && foundOffset > 0)
 			{
-				if (fwrite(current->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
+				if (out && fwrite(current->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
 				{
 					setError(WRITE_FAILED);
 					current = NULL;
@@ -354,24 +361,28 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 				memcpy(copy, current->data + currentOffset, foundOffset - currentOffset);
 				*(cipherText + valueSize) = 0;
 
-				if (!decryptValue(ctx, cipherText, valueSize, out, NULL, key, true)) /* unable to decrypt, write data as is */
+				if (!decryptValue(ctx, cipherText, valueSize, out, (out ? NULL : outputStart), key, true)) /* unable to decrypt, write data as is */
 				{
-					if (fwrite("$$$$", 4, 1, out) == 1)
+					if (out)
 					{
-						if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
+						if (fwrite("$$$$", 4, 1, out) != 1 ||
+							fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
 						{
 							setError(WRITE_FAILED);
 							current = NULL;
 						}
 					}
-					else
-					{
-						setError(WRITE_FAILED);
-						current = NULL;
-					}
 				}
 				else
 				{
+					if (!out)	/* set number of bytes to skip to get the next valid position */
+					{
+						while (*outputStart != '\xFF')
+						{
+							outputStart++;
+						}
+						*((uint16_t *) ((char *) outputStart + 1)) = (uint16_t) ((found->data + foundOffset) - outputStart);
+					}
 					current = found;
 					currentOffset = foundOffset;
 				}
@@ -381,18 +392,23 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 		}
 		else /* no more encrypted data, write remaining buffers */
 		{
-			while (current)
+			if (out)
 			{
-				if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
+				while (current)
 				{
-					setError(WRITE_FAILED);
-					current = NULL;
-					break;
-				}
+					if (fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
+					{
+						setError(WRITE_FAILED);
+						current = NULL;
+						break;
+					}
 
-				current = current->next;
-				currentOffset = 0;
+					current = current->next;
+					currentOffset = 0;
+				}
 			}
+			else
+				break;
 		}
 	}
 

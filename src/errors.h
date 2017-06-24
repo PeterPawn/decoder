@@ -126,6 +126,7 @@ extern	char *							errorWrongMACAddress;
 extern	char *							errorInvalidBufferSize;
 extern	char *							errorConflictingOptions;
 extern	char *							errorEmptyInputFile;
+extern	char *							errorNoConsolidate;
 
 #endif
 

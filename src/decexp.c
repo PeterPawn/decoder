@@ -47,6 +47,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char *				hexBuffer = NULL;
 	size_t				hexLen = 0;
 	bool				noConsolidate = false;
+	bool				newChecksum = false;
 
 	if (argc > argo + 1)
 	{
@@ -55,13 +56,14 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 		static struct option options_long[] = {
 			{ "tty", no_argument, NULL, 't' },
+			{ "checksum", no_argument, NULL, 'c' },
 			{ "block-size", required_argument, NULL, 'b' },
 			{ "low-memory", no_argument, NULL, 'l' },
 			altenv_options_long,
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" "tb:l" altenv_options_short verbosity_options_short;
+		char *			options_short = ":" "tcb:l" altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -69,6 +71,10 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			{
 				case 't':
 					tty = true;
+					break;
+
+				case 'c':
+					newChecksum = true;
 					break;
 
 				case 'l':
@@ -235,6 +241,12 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 	else
 	{
+		if (newChecksum)
+		{
+			errorMessage(errorNoConsolidate);
+			setError(OPTIONS_CONFLICT);
+			return EXIT_FAILURE;
+		}
 		verboseMessage(verboseNoConsolidate);
 	}
 
@@ -301,7 +313,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			offset = 0;
 			while (current && (current != found)) /* output data in front of password field */
 			{
-				if (fwrite(current->data + offset, current->used - offset, 1, stdout) != 1)
+				if (!newChecksum && fwrite(current->data + offset, current->used - offset, 1, stdout) != 1)
 				{
 					setError(WRITE_FAILED);
 					break;
@@ -311,7 +323,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			}
 			if (current)
 			{
-				if (fwrite(current->data + offset, foundOffset - offset, 1, stdout) != 1)
+				if (!newChecksum && fwrite(current->data + offset, foundOffset - offset, 1, stdout) != 1)
 					setError(WRITE_FAILED);
 				else
 					offset = foundOffset;
@@ -330,7 +342,10 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 
 	if (!isAnyError())
-		memoryBufferProcessFile(&found, foundOffset, key, stdout);
+		memoryBufferProcessFile(&found, foundOffset, key, (newChecksum ? NULL : stdout));
+
+	if (!isAnyError() && newChecksum)
+		computeExportFileChecksum(inputFile, stdout);
 
 	inputFile = memoryBufferFreeChain(inputFile);
 

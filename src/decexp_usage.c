@@ -63,6 +63,7 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 	showOptionsHeader("options");
 	addOptionsEntry("-t, --tty", "don't quit execution, if STDIN is connected to a terminal device", 0);
 	addOptionsEntry("-a, --alt-env " __undl("filename"), "use an alternative source for the 'urlader environment'", 8);
+	addOptionsEntry("-c, --checksum", "re-compute (and replace) the checksum for the provided export file, after the cipher-text values were replaced with the corresponding clear-text", 0);
 	addOptionsEntry("-l, --low-memory", "do not try to consolidate input data into a single buffer", 0);
 	addOptionsEntry("-b, --block-size " __undl("size"), "read input data in blocks of the specified " __undl("size"), 8);
 	addOptionsEntryVerbose();
@@ -120,6 +121,12 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 		"FRITZ!OS device (with the right properties or with a password), even if all encrypted values are\n"
 		"replaced by their corresponding cleartext. Only the CRC32 checksum at the end of the file has to be\n"
 		"re-computed.\n"
+	);
+
+	fprintf(out,
+		"\nIf you want to import the created output file into a FRITZ!OS device, the program can set a valid\n"
+		"checksum at the end of the file, if you've specified the option '--checksum' (or '-c'). This option\n"
+		"is mutually exclusive with the '--low-memory' option.\n"
 	);
 
 	fprintf(out,

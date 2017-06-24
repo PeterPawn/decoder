@@ -40,7 +40,7 @@ void	encryptionInit(void);
 
 bool	digestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string);
 
-bool	decryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped);
+bool	decryptValue(CipherContext * ctx, char * cipherText, size_t cipherTextSize, FILE * out, char * outBuffer, char * key, bool escaped);
 bool    decryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput);
 
 bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport);

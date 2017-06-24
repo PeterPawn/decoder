@@ -37,9 +37,9 @@ EXPORTED	void	encryptionInit(void)
 
 // decrypt a Base32 value using the specified key
 
-EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t valueSize, FILE * out, char * outBuffer, char * key, bool escaped)
+EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t cipherTextSize, FILE * out, char * outBuffer, char * key, bool escaped)
 {
-	size_t			cipherBufSize = base32ToBinary(cipherText, valueSize, NULL, 0);
+	size_t			cipherBufSize = base32ToBinary(cipherText, cipherTextSize, NULL, 0);
 	size_t			cipherSize;
 	char *			cipherBuffer = (char *) malloc(cipherBufSize + *cipher_blockSize + 1);
 	size_t			decryptedSize = 0;
@@ -66,28 +66,47 @@ EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 
 		if (digestCheckValue(decryptedBuffer, decryptedSize, &value, &valueSize, &isString))
 		{
-			if (out && valueSize && escaped)
+			if (valueSize && escaped)
 			{
-				int	start = 0;
+				size_t	start = 0;
+				size_t	extraBufSize = cipherTextSize - valueSize + 4 - 3;
+
+				/* escape processing may result in clear-text values, which are larger than their cipher-text;
+				   space available = sizeof(cipherText) - sizeof(clearText) plus four dollar-signs in front of
+				   cipherText minus 0xFF and the 16-bit value needed for gap marker; extra characters aren't a
+				   problem for output to file, but the output buffer in memory could be too small
+				*/
 
 				if (isString)
 					verboseMessageNoApplet(verboseDecryptedTo, value);
 
-				for (int i = 0; i < (int) valueSize; i++)
+				for (size_t i = 0; i < valueSize; i++)
 				{
 					if (*(value + i) == '\\' || *(value + i) == '"') /* split output */
-					{	
-						if ((i > start) && fwrite((value + start), (i - start), 1, out) != 1)
+					{
+						if (i > start && out && (fwrite((value + start), (i - start), 1, out) != 1)) /* data in front */
 						{
 							setError(WRITE_FAILED);
 							break;
 						}
 
-						if (fwrite("\\", 1, 1, out) != 1)
+						if (out && (fwrite("\\", 1, 1, out) != 1)) /* additional backslash as escape */
 						{
 							setError(WRITE_FAILED);
 							break;
 						}
+
+						if (outBuffer) /* copy to memory and append escape character, as long as the space exists */
+						{
+							memcpy(outBuffer, (value + start), (i - start));
+							outBuffer += (i - start);
+							if (--extraBufSize > 0)
+							{
+								*(outBuffer) = '\\';
+								outBuffer++;
+							}
+						}
+
 						start = i;
 					}
 				}
@@ -95,12 +114,13 @@ EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t valueS
 				value += start;
 			}
 
-			if (out && (valueSize > 0) && (fwrite(value, valueSize, 1, out) != 1))
+			if (out && (valueSize > 0) && (fwrite(value, valueSize, 1, out) != 1)) /* no more escapes needed (or wanted) */
 				setError(WRITE_FAILED);
 
-			if (!out && outBuffer)
+			if (!out && outBuffer) /* copy value and an end-of-value marker */
 			{
-				memcpy(outBuffer, value, valueSize + (isString ? 1 : 0));	
+				memcpy(outBuffer, value, valueSize);
+				*(outBuffer + valueSize) = '\xFF';
 			}
 
 			if (!isString)
