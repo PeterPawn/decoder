@@ -48,6 +48,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	size_t				hexLen = 0;
 	bool				noConsolidate = false;
 	bool				newChecksum = false;
+	bool				decryptFiles = false;
 
 	if (argc > argo + 1)
 	{
@@ -57,13 +58,14 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			{ "tty", no_argument, NULL, 't' },
 			{ "checksum", no_argument, NULL, 'c' },
+			{ "decrypt", no_argument, NULL, 'd' },
 			{ "block-size", required_argument, NULL, 'b' },
 			{ "low-memory", no_argument, NULL, 'l' },
 			altenv_options_long,
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" "tcb:l" altenv_options_short verbosity_options_short;
+		char *			options_short = ":" "tcdb:l" altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -75,6 +77,10 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 				case 'c':
 					newChecksum = true;
+					break;
+
+				case 'd':
+					decryptFiles = true;
 					break;
 
 				case 'l':
@@ -265,6 +271,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	size_t				valueSize = 0;
 	char *				varName;
 	bool				split = false;
+	char				exportKey[*cipher_keyLen];
 
 	if ((varName = memoryBufferFindString(&found, &foundOffset, EXPORT_PASSWORD_NAME, strlen(EXPORT_PASSWORD_NAME) , &split)) != NULL)
 	{
@@ -298,12 +305,12 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			offset = 0;
 		}
 		memcpy(copy, current->data + offset, foundOffset - offset);
-		passwordIsCorrect = decryptValue(NULL, cipherText, valueSize, NULL, key, key, false);
-		memset(key + *cipher_ivLen, 0, *cipher_keyLen - *cipher_ivLen);
+		passwordIsCorrect = decryptValue(NULL, cipherText, valueSize, NULL, exportKey, key, false);
+		memset(exportKey + *cipher_ivLen, 0, *cipher_keyLen - *cipher_ivLen);
 		if (passwordIsCorrect)
 		{
 			char 		hex[(MAX_DIGEST_SIZE * 2) + 1];
-			size_t		hexLen = binaryToHexadecimal(key, *cipher_keyLen - *cipher_ivLen, hex, (MAX_DIGEST_SIZE * 2) + 1);
+			size_t		hexLen = binaryToHexadecimal(exportKey, *cipher_keyLen - *cipher_ivLen, hex, (MAX_DIGEST_SIZE * 2) + 1);
 
 			hex[hexLen] = 0;
 			verboseMessage(verboseUsingKey, hex);
@@ -342,7 +349,10 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	}
 
 	if (!isAnyError())
-		memoryBufferProcessFile(&found, foundOffset, key, (newChecksum ? NULL : stdout));
+		memoryBufferProcessFile(&found, foundOffset, exportKey, (newChecksum ? NULL : stdout), (decryptFiles ? key : NULL));
+
+	clearMemory(exportKey, *cipher_keyLen, false);
+	clearMemory(key, *cipher_keyLen, false);
 
 	if (!isAnyError() && newChecksum)
 		computeExportFileChecksum(inputFile, stdout);

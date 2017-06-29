@@ -295,7 +295,7 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 // values are replaced with the corresponding clear-text in this buffer ... gaps are marked with 0xFF
 // and a 16 bit integer containing the offset from 0xFF to the next valid character
 
-EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out)
+EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out, char * filesKey)
 {
 	CipherContext 		*ctx = CipherInit(NULL, CipherTypeValue, NULL, NULL, false);
 	memoryBuffer_t 		*current = *buffer;

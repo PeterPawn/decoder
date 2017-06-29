@@ -47,7 +47,7 @@ memoryBuffer_t *	memoryBufferConsolidateData(memoryBuffer_t *start);
 
 memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize);
 size_t				memoryBufferDataSize(memoryBuffer_t *top);
-bool				memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out);
+bool				memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, char * key, FILE * out, char * filesKey);
 
 char *				memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset, char *find, size_t findSize, bool *split);
 char *				memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *lastOffset, size_t offset);
