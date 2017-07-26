@@ -56,6 +56,7 @@ EXPORTED	char *				verboseNoConsolidate = "input data consolidation will be skip
 EXPORTED	char *				verboseChecksumFound = "found current checksum '%s'\n";
 EXPORTED	char *				verboseChecksumIsValid = "the current checksum is still valid\n";
 EXPORTED	char *				verboseNewChecksum = "the new checksum '%s' was written instead of the old one\n";
+EXPORTED	char *				verboseOpenedOutputFile = "output file '%s' opened\n";
 
 EXPORTED	char *				verboseDebugKey = "key\t: (%03u) 0x%s\n";
 EXPORTED	char *				verboseDebugBase32 = "base32\t: (%03u) %s\n";
@@ -72,6 +73,8 @@ EXPORTED	char *				verboseDebugValue = "value\t: (%03u) %s\n";
 static	char *					appletName = NULL;
 static	size_t					outputLineWidth = DEFAULT_OUTPUT_LINE_WIDTH;
 static	bool					wrapLines = false;
+UNUSED	static	FILE *			outputFile = NULL;
+UNUSED	static	memoryBuffer_t 	*outputBuffer = NULL;
 
 // get verbosity level
 
@@ -127,16 +130,16 @@ EXPORTED	char *	getAppletName(void)
 
 // output formatting
 
-EXPORTED	char * 				wrapOutput(FILE * outFile, size_t *charsOnLine, size_t *toWrite, char *output)
+EXPORTED	char * 	wrapOutput(FILE * outFile, size_t *charsOnLine, size_t *toWrite, char *output)
 {
-	size_t						remOnLine = outputLineWidth - *charsOnLine;
-	char *						out = output;
+	size_t				remOnLine = outputLineWidth - *charsOnLine;
+	char *				out = output;
 
 	if (wrapLines && !output)
 	{
 		if (fwrite("\n", 1, 1, outFile) != 1) /* append newline */
 			returnError(WRITE_FAILED, 0);
-		returnError(NOERROR, 0);		
+		returnError(NOERROR, 0);
 	}
 	if (wrapLines && (*toWrite > remOnLine)) /* wrap on lineSize */
 	{

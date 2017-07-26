@@ -48,11 +48,11 @@ EXPORTED	memoryBuffer_t *	memoryBufferNew(size_t size)
 EXPORTED	memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start)
 {
 	memoryBuffer_t	*current = start;
-	
+
 	while (current)
 	{
 		memoryBuffer_t	*next = current->next;
-		
+
 		memset(current, 0, current->size);
 		free(current);
 		current = next;
@@ -108,7 +108,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 	}
 
 	if (!top->used)
-	{	
+	{
 		setError(NOERROR);
 		free(top);
 		top = NULL;
@@ -163,7 +163,7 @@ EXPORTED	memoryBuffer_t *	memoryBufferConsolidateData(memoryBuffer_t * start)
 EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset, char *find, size_t findSize, bool *split)
 {
 	memoryBuffer_t	*current = *buffer;
-	
+
 	while (current)
 	{
 		char *		chk = current->data + *offset;
@@ -200,7 +200,7 @@ EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset,
 					}
 					else /* no match */
 						return NULL;
-				}				
+				}
 			}
 			else
 			{
@@ -210,13 +210,13 @@ EXPORTED	char *	memoryBufferFindString(memoryBuffer_t * *buffer, size_t *offset,
 					*offset = (chk - current->data);
 					*split = false;
 					return chk;
-				}	
+				}
 				chk++;
 				remaining--;
 			}
 		}
 	}
-	return NULL;	
+	return NULL;
 }
 
 // advance a pointer value, following the buffer chain, if a buffer is exhausted
@@ -225,7 +225,7 @@ EXPORTED	char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *las
 {
 	memoryBuffer_t	*current = *buffer;
 	size_t			advance = offset;
-	
+
 	while (current)
 	{
 		if ((current->used - *lastOffset) < advance) /* next buffer */
@@ -245,7 +245,7 @@ EXPORTED	char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *las
 		return (current->data + *lastOffset);
 	}
 
-	return NULL;	
+	return NULL;
 }
 
 // find the first non-Base32 character from the specified pointer
@@ -257,7 +257,7 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 	size_t			count = 0;
 	char *			position = current->data + currentOffset;
 
-	*split = false;	
+	*split = false;
 	while (current)
 	{
 		if (current->used <= currentOffset) /* next buffer */
@@ -290,7 +290,7 @@ EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *off
 	return NULL;	
 }
 
-// scan memory buffer and replace occurrences of encrypted data while writing data to an output file;
+// scan memory buffer and replace occurrences of encrypted data while writing data to output;
 // if no output file is used (NULL), input data has to be contained in a single buffer and cipher-text
 // values are replaced with the corresponding clear-text in this buffer ... gaps are marked with 0xFF
 // and a 16 bit integer containing the offset from 0xFF to the next valid character
@@ -308,7 +308,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 		bool			split = false;
 		char *			cipherTextStart;
 		char *			outputStart;
-	
+
 		if ((cipherTextStart = memoryBufferFindString(&found, &foundOffset, "$$$$", 4, &split)) != NULL) /* encrypted data exists */
 		{
 			if (!out)
@@ -347,7 +347,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 			{
 				char *	copy;
 				char *	cipherText = (char *) malloc(valueSize + 1);
-			
+
 				memset(cipherText, 0, valueSize + 1);
 				copy = cipherText;
 				while (current && (current != found))

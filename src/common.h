@@ -59,7 +59,7 @@
 
 #include "crypto.h"
 #include "encryption.h"
-#include "chksum.h"
+#include "exportfile.h"
 
 #include "b32dec.h"
 #include "b32enc.h"
@@ -76,5 +76,6 @@
 #include "deccb.h"
 #include "pkpwd.h"
 #include "checksum.h"
+#include "decompose.h"
 
 #endif

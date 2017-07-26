@@ -134,6 +134,12 @@ DECODER_CONFIG_KEYS_CURRENT_DEVICE=y
 DECODER_CONFIG_DECRYPT_EXPORT_FILES=y
 #######################################################################################################
 #                                                                                                     #
+# split export file                                                                                   #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECOMPOSE_EXPORT_FILES=y
+#######################################################################################################
+#                                                                                                     #
 # export file - CRYPTEDBINFILE sections decryption                                                    #
 #                                                                                                     #
 #######################################################################################################
@@ -226,6 +232,12 @@ DECODER_CONFIG_KEYS_CURRENT_DEVICE_NAME="+password_from_device"
 #                                                                                                     #
 #######################################################################################################
 DECODER_CONFIG_DECRYPT_EXPORT_FILES_NAME="+decode_export"
+#######################################################################################################
+#                                                                                                     #
+# split an export file into the contained settings files                                              #
+#                                                                                                     #
+#######################################################################################################
+DECODER_CONFIG_DECOMPOSE_EXPORT_FILES_NAME="+split_export"
 #######################################################################################################
 #                                                                                                     #
 # decrypt CRYPTEDBINFILE content applet name                                                          #
@@ -326,7 +338,7 @@ FILES :=
 LINKS :=
 CMDS :=
 CFG :=
-APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb pkpwd checksum
+APPLET_SRCS := b32dec b32enc b64dec b64enc hexdec hexenc userpw devpw pwfrdev decsngl decfile decexp deccb pkpwd checksum decompose
 #######################################################################################################
 #                                                                                                     #
 # macros to add an applet                                                                             #
@@ -378,6 +390,9 @@ ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_FILES),y)
 $(call ADD_APPLET,DECRYPT_EXPORT_FILES,decexp)
 ifeq ($(DECODER_CONFIG_DECRYPT_EXPORT_BINFILE),y)
 $(call ADD_APPLET,DECRYPT_EXPORT_BINFILE,deccb)
+endif
+ifeq ($(DECODER_CONFIG_DECOMPOSE_EXPORT_FILES),y)
+$(call ADD_APPLET,DECOMPOSE_EXPORT_FILES,decompose)
 endif
 endif
 ifeq ($(DECODER_CONFIG_DECRYPT_SINGLE_VALUES),y)
@@ -485,7 +500,7 @@ FILES_COMMON += base32
 FILES_COMMON += base64
 FILES_COMMON += hex
 FILES_COMMON += encryption
-FILES_COMMON += chksum
+FILES_COMMON += exportfile
 FILES_COMMON += memory
 FILES_COMMON += functions
 FILES_COMMON += crypto
@@ -542,6 +557,7 @@ CFG += KEYS_USER_PASSWORD_NAME
 CFG += KEYS_DEVICE_PROPERTIES_NAME
 CFG += KEYS_CURRENT_DEVICE_NAME
 CFG += DECRYPT_EXPORT_FILES_NAME
+CFG += DECOMPOSE_EXPORT_FILES_NAME
 CFG += DECRYPT_EXPORT_BINFILE_NAME
 CFG += DECRYPT_SINGLE_VALUES_NAME
 CFG += DECRYPT_FILES_NAME

@@ -67,6 +67,7 @@ extern	char *							verboseNoConsolidate;
 extern	char *							verboseChecksumFound;
 extern	char *							verboseChecksumIsValid;
 extern	char *							verboseNewChecksum;
+extern	char *							verboseOpenedOutputFile;
 
 extern	char *							verboseDebugKey;
 extern	char *							verboseDebugBase32;
