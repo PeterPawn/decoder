@@ -267,7 +267,7 @@ int		decfile_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		return EXIT_FAILURE;
 	}
 
-	memoryBufferProcessFile(&inputFile, 0, key, stdout);
+	memoryBufferProcessFile(&inputFile, 0, key, stdout, NULL);
 
 	inputFile = memoryBufferFreeChain(inputFile);
 
