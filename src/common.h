@@ -39,7 +39,18 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/fcntl.h>
+
+#ifdef DECODER_CONFIG_USE_LIBNETTLE
+
+#include "crypto_nettle.h"
+
+#else
+
 #include <openssl/evp.h>
+
+#include "crypto_ossl.h"
+
+#endif
 
 #include "config.h"
 #include "errors.h"
@@ -57,7 +68,6 @@
 #include "options.h"
 #include "environ.h"
 
-#include "crypto.h"
 #include "encryption.h"
 #include "exportfile.h"
 
