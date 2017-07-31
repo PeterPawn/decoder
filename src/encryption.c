@@ -50,7 +50,7 @@ EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t cipher
 
 	cipherSize = base32ToBinary(cipherText, (size_t) -1, (char *) cipherBuffer, cipherBufSize + *cipher_blockSize);
 	
-	localCtx = (ctx ? ctx : EVP_CIPHER_CTX_new());
+	localCtx = (ctx ? ctx : crypto_EVP_CIPHER_CTX_new());
 	CipherInit(localCtx, CipherTypeValue, key, cipherBuffer, false);
 
 	verboseMessage(verboseFoundCipherText, cipherText);
@@ -193,7 +193,7 @@ EXPORTED	bool	digestCheckValue(char *buffer, size_t bufferSize, char * *value, s
 EXPORTED	bool	decryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput)
 {
 	char *				decryptedBuffer = malloc(inputSize + *cipher_blockSize);
-	CipherContext *		ctx = EVP_CIPHER_CTX_new();
+	CipherContext *		ctx = crypto_EVP_CIPHER_CTX_new();
 	char *				current = decryptedBuffer;
 	size_t				outSize = 0;
 	size_t				ivLen = *cipher_ivLen;

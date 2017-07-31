@@ -43,9 +43,36 @@ EXPORTED	void	CipherSizes()
 	*cipher_blockSize = EVP_CIPHER_block_size(CipherTypeValue);
 }
 
+EXPORTED	EVP_CIPHER *	crypto_EVP_aes_256_cbc(void)
+{
+	return (EVP_CIPHER *) EVP_aes_256_cbc();
+}
+
+EXPORTED	EVP_CIPHER *	crypto_EVP_aes_256_ecb(void)
+{
+	return (EVP_CIPHER *) EVP_aes_256_ecb();
+}
+
+EXPORTED	EVP_MD *	crypto_EVP_md5(void)
+{
+	return (EVP_MD *) EVP_md5();
+}
+
+// EVP functions encapsulated
+
+EXPORTED	void	crypto_EVP_cleanup(void)
+{
+	EVP_cleanup();
+}
+
+EXPORTED	EVP_CIPHER_CTX *	crypto_EVP_CIPHER_CTX_new(void)
+{
+	return EVP_CIPHER_CTX_new();
+}
+
 // initialize a cipher context
 
-EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, const EVP_CIPHER * type, char * key, char * iv, bool padding)
+EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, EVP_CIPHER * type, char * key, char * iv, bool padding)
 {
 	CipherContext	*cipherCTX = NULL;
 
