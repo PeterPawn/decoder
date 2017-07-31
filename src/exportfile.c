@@ -284,8 +284,8 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path, boo
 		IN_CRYPTEDBINFILE,
 	}					output = NO_OUTPUT;
 	FILE *				out = NULL;
-	char *				last;
-	size_t				lastSize;
+	char *				last = NULL;
+	size_t				lastSize = 0;
 	FILE *				dictionary = NULL;
 
 	if (readyForComposition)
