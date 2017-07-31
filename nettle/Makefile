@@ -5,7 +5,7 @@ all:	$(prj) configure build install
 $(prj):
 	./download.sh
 
-configure:
+configure: $(prj)
 	cd $(prj); \
 	umask 077; \
 	sed -e '/gdb3/,+6d' -i configure.ac; \
@@ -13,11 +13,14 @@ configure:
 
 clean:
 	@[ -d $(prj) ] && ( cd $(prj); make clean; cd ..; rm -r $(prj) 2>/dev/null ) || true; \
+	[ -f ../src/libnettle.a ] && rm ../src/libnettle.a 2>/dev/null; \
+	[ -d ../src/include/nettle ] && rm -r ../src/include/nettle 2>/dev/null; \
 	printf "Cleanup done.\n" 1>&2
 	
-build:
+build:	$(prj) $(prj)/config.status
 	$(MAKE) -C $(prj)
 
-install:
+install: $(prj)
 	$(MAKE) -C $(prj) install
 	cp -a $(prj)/lib/libnettle.a ../src/
+	cp -a $(prj)/include ../src/

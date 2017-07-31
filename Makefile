@@ -16,7 +16,9 @@ SCRIPTS=decode_secrets decode_export decode_secret user_password device_password
 #
 all:
 	$(MAKE) -C $(SRC_DIR)
+
 install:
 	$(MAKE) -C $(SRC_DIR) install
+
 clean: 
 	$(MAKE) -C $(SRC_DIR) clean
