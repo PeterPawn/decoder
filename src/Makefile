@@ -627,7 +627,7 @@ endif
 #######################################################################################################
 ifeq ($(DECODER_CONFIG_LINK_STATIC),y)
 override CFLAGS += -DSTATIC -static
-override LDFLAGS += -Wl,-static
+override LDFLAGS += -static
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -666,7 +666,7 @@ $(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP) $(SRCS_USE)
 $(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN) $(USE_MAIN)
 
 $(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
-	$(CC) $(LDFLAGS) -L. $(LIBS) -o $@ $(filter %.o,$^)
+	$(CC) $(LDFLAGS) -L. -o $@ $(filter %.o,$^) $(LIBS)
 
 $(APPLETS): | $(CMDS)
 	@$(RM) $@ 2>/dev/null || true
