@@ -54,6 +54,7 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 
 	showOptionsHeader("options");
 	addOptionsEntry("-t, --tty", "don't quit execution, if STDIN is connected to a terminal device", 0);
+	addOptionsEntry("-b, --bin-input", "input file contains raw binary data", 0);
 	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string", 0);
 	addOptionsEntry("-w, --wrap-lines [ " __undl("width") " ]", "enable line breaks (wrap lines) for textual output data and (opt.) define the maximum width of a line (instead of the default value " STRING(DECODER_CONFIG_WRAP_LINE_SIZE) ")", 8);
 	addOptionsEntry("-a, --alt-env " __undl("filename"), "use an alternative source for the 'urlader environment'", 8);
@@ -67,6 +68,7 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 	fprintf(out,
 		"\nThe input data has to be extracted from the body of a CRYPTEDBINFILE entry - that means, the lines\n"
 		"(starting with asterisks) around the hexadecimal lines have to be removed.\n"
+		"If the input file contains binary data, use the 'bin-input' (or 'b') option while calling.\n"
 	);
 
 	fprintf(out,

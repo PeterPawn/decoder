@@ -43,6 +43,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char *				serial = NULL;
 	char *				maca = NULL;
 	bool				tty = false;
+	bool				binInput = false;
 	bool				hexOutput = false;
 	bool				altEnv = false;
 	char *				hexBuffer = NULL;
@@ -56,12 +57,13 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			{ "tty", no_argument, NULL, 't' },
 			{ "hex-output", no_argument, NULL, 'x' },
+			{ "bin-input", no_argument, NULL, 'b' },
 			width_options_long,
 			altenv_options_long,
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" "tx" width_options_short altenv_options_short verbosity_options_short;
+		char *			options_short = ":" "txb" width_options_short altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -74,6 +76,10 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				case 'x':
 					hexOutput = true;
 					entry->finalNewlineOnTTY = true;
+					break;
+
+				case 'b':
+					binInput = true;
 					break;
 
 				check_altenv_options_short();
@@ -228,22 +234,39 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 	size_t				hexSize = memoryBufferDataSize(inputFile);
 	size_t				binSize = 0;
-	char *				binBuffer = (char *) malloc(hexSize / 2);
-	
-	if (!binBuffer)
-	{
-		setError(NO_MEMORY);
-		errorMessage(errorNoMemory);
-		inputFile = memoryBufferFreeChain(inputFile);
-		return EXIT_FAILURE;
-	}
+	char *				binBuffer = NULL;
+	char *				buffer;
 
-	binSize = hexSize / 2;
-	binSize = hexadecimalToBinary(inputFile->data, inputFile->used, binBuffer, binSize);
+	if (binInput)
+	{
+		binSize = hexSize;
+		buffer = inputFile->data;
+	}
+	else
+	{
+		binBuffer = (char *) malloc(hexSize / 2);
+	
+		if (!binBuffer)
+		{
+			setError(NO_MEMORY);
+			errorMessage(errorNoMemory);
+			inputFile = memoryBufferFreeChain(inputFile);
+			return EXIT_FAILURE;
+		}
+
+		binSize = hexSize / 2;
+		binSize = hexadecimalToBinary(inputFile->data, inputFile->used, binBuffer, binSize);
+		buffer = binBuffer;
+		if (binSize == 0)
+		{
+			errorMessage(errorInvalidHexValue);
+			setError(INV_HEX_DATA);
+		}
+	}
 
 	if (!isAnyError())
 	{
-		decryptFile(binBuffer, binSize, stdout, NULL, key, hexOutput);
+		decryptFile(buffer, binSize, stdout, NULL, key, hexOutput);
 		if (isError(DECRYPT_ERR))
 			errorMessage(errorDecryptFileData);
 	}
