@@ -97,6 +97,8 @@ EXPORTED	char *			errorInvalidBufferSize = "The specified buffer size value '%s'
 EXPORTED	char *			errorConflictingOptions = "Conflicting options found.\n";
 EXPORTED	char *			errorEmptyInputFile = "There's no input data present.\n";
 EXPORTED	char *			errorNoConsolidate = "Checksum computation needs input buffer consolidation.\n";
+EXPORTED	char *			errorMissingDirectoryName = "Missing directory name after 'output-directory' (or 'o') option or the option wasn't specified.\n";
+EXPORTED	char *			errorInvalidDirectoryName = "The specified directory name '%s' is invalid (not a directory or does not exist).\n";
 //// end ////
 
 // functions

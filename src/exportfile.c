@@ -57,11 +57,12 @@ FILE *	openOutputFile(const char * path, char * name, size_t nameSize)
 {
 	FILE *				file = NULL;
 	char				fileName[PATH_MAX + 1];
-	size_t				fileNameSize = sizeof(fileName) - strlen(path);
+	size_t				fileNameSize = sizeof(fileName) - (strlen(path) + 1);
 
 	if (sizeof(fileName) <= strlen(path)) /* path name is too large */
 		return NULL;
 	strcpy(fileName, path);
+	strcat(fileName, "/");
 	if (nameSize > fileNameSize) /* file name larger than remaining space */
 		return NULL;
 	strncat(fileName, name, nameSize);
@@ -270,7 +271,7 @@ EXPORTED	uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
 	return crcValue;
 }
 
-EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
+EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path, bool readyForComposition)
 {
 	char *				current;
 	size_t				offset = 0;
@@ -285,6 +286,12 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 	FILE *				out = NULL;
 	char *				last;
 	size_t				lastSize;
+	FILE *				dictionary = NULL;
+
+	if (readyForComposition)
+	{
+		dictionary = openOutputFile(path, "export_dictionary", strlen("export_dictionary"));
+	}
 	
 	while ((current = getNextLine(input, &offset, &size)) && (size > 0))
 	{
@@ -302,6 +309,18 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 			else if (strncmp(current + 5, "FRITZ", 5) == 0) /* header start found */
 			{
 				output = IN_HEADER;
+				if (readyForComposition)
+				{
+					out = openOutputFile(path, "export_header", strlen("export_header"));
+					if (!out)
+						return;
+					if (fwrite(current, size, 1, out) != 1)
+					{
+						fclose(out);
+						setError(WRITE_FAILED);
+						return;
+					}
+				}
 			}
 			else if (strncmp(current + 5, "CFGFILE:", 8) == 0) /* text file found */
 			{
@@ -314,6 +333,14 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 				out = openOutputFile(path, value, valueSize);
 				if (!out)
 					return;
+				if (dictionary)
+				{
+					char	buffer[PATH_MAX + 1];
+
+					strncpy(buffer, value, valueSize);
+					buffer[valueSize] = 0;
+					fprintf(dictionary, "%c %s\n", 'c', buffer);
+				}
 			}
 			else if (strncmp(current + 5, "BINFILE:", 8) == 0 || strncmp(current + 5, "CRYPTEDBINFILE:", 15) == 0) /* binary file found */
 			{
@@ -324,6 +351,14 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 				out = openOutputFile(path, value, valueSize);
 				if (!out)
 					return;
+				if (dictionary)
+				{
+					char	buffer[PATH_MAX + 1];
+
+					strncpy(buffer, value, valueSize);
+					buffer[valueSize] = 0;
+					fprintf(dictionary, "%c %s\n", (strncmp(current + 5, "BIN", 3) == 0 ? 'b' : 'B'), buffer);
+				}
 			}
 		}
 		else
@@ -332,7 +367,18 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 			{
 				case IN_HEADER:
 					{
-						/* nothing to write for the header */
+						if (!out)
+							break;
+
+						if (size != 1 && *current != '\n')
+						{
+                            if (fwrite(current, size, 1, out) != 1)
+                            {
+                                fclose(out);
+                                setError(WRITE_FAILED);
+                                return;
+                            }
+						}
 					}
 					break;
 
@@ -345,12 +391,12 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 
 						if (value)
 						{
-                            if (fwrite(value, valueSize, 1, out) != 1)
-                            {
-                                fclose(out);
-                                setError(WRITE_FAILED);
-                                return;
-                            }
+							if (fwrite(value, valueSize, 1, out) != 1)
+							{
+								fclose(out);
+								setError(WRITE_FAILED);
+								return;
+							}
 						}
 
 						last = current;
@@ -359,7 +405,11 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 					break;
 
 				case IN_BINFILE:
+				case IN_CRYPTEDBINFILE:
 					{
+						if (size == 1 && *current == '\n')
+							break;
+
 						/* write binary data line */
 
 						char *	binary = malloc((size + 1) / 2);
@@ -368,13 +418,13 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 						if (binary)
 						{
 							binSize = hexadecimalToBinary(current, size, binary, binSize);
-							if (fwrite(binary, binSize, 1, out) != 1)
-                            {
-                                fclose(out);
-                                setError(WRITE_FAILED);
-                                free(binary);
-                                return;
-                            }
+							if (binSize > 0 && fwrite(binary, binSize, 1, out) != 1)
+							{
+								fclose(out);
+								setError(WRITE_FAILED);
+								free(binary);
+								return;
+							}
 							free(binary);
 						}
 					}
@@ -384,6 +434,11 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path)
 					break;
 			}
 		}
+	}
+
+	if (dictionary)
+	{
+		fclose(dictionary);
 	}
 
 	return;

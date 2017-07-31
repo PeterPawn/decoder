@@ -72,6 +72,10 @@ typedef enum {
 	DECODER_ERROR_INV_BUF_SIZE,
 	// conflicting options specified
 	DECODER_ERROR_OPTIONS_CONFLICT,
+	// missing option value
+	DECODER_ERROR_OPTION_VALUE_MISSING,
+	// invalid option value
+	DECODER_ERROR_OPTION_VALUE_INVALID,
 } decoder_error_t;
 
 #ifndef ERRORS_C
@@ -127,6 +131,8 @@ extern	char *							errorInvalidBufferSize;
 extern	char *							errorConflictingOptions;
 extern	char *							errorEmptyInputFile;
 extern	char *							errorNoConsolidate;
+extern	char *							errorMissingDirectoryName;
+extern	char *							errorInvalidDirectoryName;
 
 #endif
 

@@ -26,5 +26,6 @@
 // FRITZ!OS export file checksum routines
 
 uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out);
+void		decomposeExportFile(memoryBuffer_t * input, const char * path, bool readyForComposition);
 
 #endif

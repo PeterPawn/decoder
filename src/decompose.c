@@ -38,6 +38,9 @@ EXPORTED commandEntry_t *	decompose_command = &__decompose_command;
 
 int		decompose_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
+	char *				outputDir = NULL;
+	struct stat			fileStat;
+	bool				withDictionary = false;
 
 	if (argc > argo + 1)
 	{
@@ -45,16 +48,32 @@ int		decompose_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		int				optIndex = 0;
 
 		static struct option options_long[] = {
-			{ "output-directory", no_argument, NULL, 'o' },
+			{ "output-directory", required_argument, NULL, 'o' },
+			{ "dictionary", required_argument, NULL, 'd' },
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" "o:" verbosity_options_short;
+		char *			options_short = ":" "o:d" verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
 			switch (opt)
 			{
+				case 'o':
+					{
+						if (!optarg)
+						{
+							errorMessage(errorMissingDirectoryName);
+							setError(OPTION_VALUE_MISSING);
+							return EXIT_FAILURE;
+						}
+						outputDir = strdup(optarg);
+					}
+					break;
+
+				case 'd':
+					withDictionary = true;
+					break;
 
 				check_verbosity_options_short();
 				help_option();
@@ -72,10 +91,57 @@ int		decompose_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		return EXIT_FAILURE;
 	}
 
+	if (!outputDir)
+	{
+		errorMessage(errorMissingDirectoryName);
+		setError(OPTION_VALUE_MISSING);
+		return EXIT_FAILURE;
+	}
+
+	if (stat(outputDir, &fileStat) != 0 || !S_ISDIR(fileStat.st_mode))
+	{
+		errorMessage(errorInvalidDirectoryName, outputDir);
+		setError(OPTION_VALUE_INVALID);
+	}
+
 	if (isAnyError())
 		return EXIT_FAILURE;
 
 	resetError();
+
+	memoryBuffer_t	*inputFile = memoryBufferReadFile(stdin, -1);
+
+	if (!inputFile)
+	{
+		if (!isAnyError()) /* empty input file */
+		{
+			errorMessage(errorEmptyInputFile);
+		}
+		else
+		{
+			errorMessage(errorReadToMemory);
+		}
+		return EXIT_FAILURE;
+	}
+
+	memoryBuffer_t	*consolidated = memoryBufferConsolidateData(inputFile);
+
+	if (!consolidated)
+	{
+		errorMessage(errorNoMemory);
+		inputFile = memoryBufferFreeChain(inputFile);
+		return EXIT_FAILURE;
+	}
+	else
+	{
+		inputFile = memoryBufferFreeChain(inputFile);
+		inputFile = consolidated;
+		verboseMessage(verboseInputDataConsolidated, memoryBufferDataSize(inputFile));
+	}
+
+	decomposeExportFile(inputFile, outputDir, withDictionary);
+
+	memoryBufferFreeChain(inputFile);
 
 	return (!isAnyError() ? EXIT_SUCCESS : EXIT_FAILURE);
 }
