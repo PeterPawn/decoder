@@ -40,10 +40,11 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 
-#ifdef DECODER_CONFIG_USE_LIBNETTLE
+#ifdef NETTLE
 
-#include "nettle/aes.h"
-#include "nettle/md5.h"
+#include "aes.h"
+#include "md5.h"
+#include "cbc.h"
 
 #include "crypto_nettle.h"
 

@@ -38,9 +38,9 @@ EXPORTED	size_t	*digest_blockSize = &__digest_blockSize;
 
 EXPORTED	void	CipherSizes()
 {
-	*cipher_keyLen = EVP_CIPHER_key_length(CipherTypeValue);
-	*cipher_ivLen = EVP_CIPHER_iv_length(CipherTypeValue);
-	*cipher_blockSize = EVP_CIPHER_block_size(CipherTypeValue);
+	*cipher_keyLen = EVP_CIPHER_key_length(EVP_aes_256_cbc());
+	*cipher_ivLen = EVP_CIPHER_iv_length(EVP_aes_256_cbc());
+	*cipher_blockSize = EVP_CIPHER_block_size(EVP_aes_256_cbc());
 }
 
 // EVP functions encapsulated

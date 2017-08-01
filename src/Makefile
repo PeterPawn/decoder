@@ -303,24 +303,22 @@ DECODER_CONFIG_AUTO_USAGE=n
 DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE=y
 #######################################################################################################
 #                                                                                                     #
-# use OpenSSL or Nettle library                                                                       #
-#                                                                                                     #
-#######################################################################################################
-DECODER_CONFIG_LIBNETTLE=y
-ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
-DECODER_CONFIG_LIBCRYPTO=n
-else
-DECODER_CONFIG_LIBCRYPTO=y
-endif
-#######################################################################################################
-#                                                                                                     #
 # create a statically linked binary, senseless with libcrypto - the binary would be very, very large  #
 #                                                                                                     #
 #######################################################################################################
 ifdef STATIC
-ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
 DECODER_CONFIG_LINK_STATIC=y
+DECODER_CONFIG_LIBNETTLE=y
 endif
+#######################################################################################################
+#                                                                                                     #
+# use OpenSSL or Nettle library                                                                       #
+#                                                                                                     #
+#######################################################################################################
+ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
+DECODER_CONFIG_LIBCRYPTO=n
+else
+DECODER_CONFIG_LIBCRYPTO=y
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -599,9 +597,9 @@ endif
 # additional include directories                                                                      #
 #                                                                                                     #
 #######################################################################################################
-#ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
-#CFLAGS += -Iinclude/nettle
-#endif
+ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
+CFLAGS += -Iinclude/nettle -DNETTLE
+endif
 #######################################################################################################
 #                                                                                                     #
 # additional libraries for linker calls                                                               #
