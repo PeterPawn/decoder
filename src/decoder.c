@@ -143,7 +143,7 @@ int main(int argc, char** argv)
 					if (current->finalNewlineOnTTY && isatty(1) && !isAnyError())
 						fprintf(stdout, "\n");
 				}
-				if (current->usesCrypto) crypto_EVP_cleanup();
+				if (current->usesCrypto) CryptoCleanup();
 				exit(exitCode);
 			}
 			name++;

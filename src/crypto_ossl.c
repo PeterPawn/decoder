@@ -43,36 +43,21 @@ EXPORTED	void	CipherSizes()
 	*cipher_blockSize = EVP_CIPHER_block_size(CipherTypeValue);
 }
 
-EXPORTED	EVP_CIPHER *	crypto_EVP_aes_256_cbc(void)
-{
-	return (EVP_CIPHER *) EVP_aes_256_cbc();
-}
-
-EXPORTED	EVP_CIPHER *	crypto_EVP_aes_256_ecb(void)
-{
-	return (EVP_CIPHER *) EVP_aes_256_ecb();
-}
-
-EXPORTED	EVP_MD *	crypto_EVP_md5(void)
-{
-	return (EVP_MD *) EVP_md5();
-}
-
 // EVP functions encapsulated
 
-EXPORTED	void	crypto_EVP_cleanup(void)
+EXPORTED	void	CryptoCleanup(void)
 {
 	EVP_cleanup();
 }
 
-EXPORTED	EVP_CIPHER_CTX *	crypto_EVP_CIPHER_CTX_new(void)
+EXPORTED	CipherContext *	CipherContextNew(void)
 {
 	return EVP_CIPHER_CTX_new();
 }
 
 // initialize a cipher context
 
-EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, EVP_CIPHER * type, char * key, char * iv, bool padding)
+EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, CipherMode mode, char * key, char * iv, bool padding)
 {
 	CipherContext	*cipherCTX = NULL;
 
@@ -86,13 +71,13 @@ EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, EVP_CIPHER * type, char
 	}
 	else
 	{
-		cipherCTX = EVP_CIPHER_CTX_new();
+		cipherCTX = CipherContextNew();
 		if (!cipherCTX)
 			returnError(OSSL_CIPHER_ERR, NULL);
 	}
 	if (!key && !iv)
 		return cipherCTX;
-	if (EVP_DecryptInit_ex(cipherCTX, (EVP_CIPHER *) type, NULL, (unsigned char *) key, (unsigned char *) iv))
+	if (EVP_DecryptInit_ex(cipherCTX, (mode == CipherTypeValue ? EVP_aes_256_cbc() : EVP_aes_256_ecb()), NULL, (unsigned char *) key, (unsigned char *) iv))
 	{
 		EVP_CIPHER_CTX_set_padding(cipherCTX, padding);
 		return cipherCTX;
@@ -145,7 +130,7 @@ EXPORTED	bool	CipherFinal(CipherContext * ctx, char *output, size_t *outputSize)
 
 EXPORTED	void	DigestSizes()
 {
-	*digest_blockSize = EVP_MD_size(DigestType);
+	*digest_blockSize = EVP_MD_size(EVP_md5());
 }
 
 // initialize a digest context
@@ -158,7 +143,7 @@ EXPORTED	DigestContext * DigestInit()
 		setError(OSSL_DIGEST_ERR);
 	else
 	{
-		if (!EVP_DigestInit_ex(ctx, DigestType, NULL))
+		if (!EVP_DigestInit_ex(ctx, EVP_md5(), NULL))
 		{
 			setError(OSSL_DIGEST_ERR);
 			EVP_MD_CTX_destroy(ctx);

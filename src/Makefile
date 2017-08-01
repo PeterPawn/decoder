@@ -599,9 +599,9 @@ endif
 # additional include directories                                                                      #
 #                                                                                                     #
 #######################################################################################################
-ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
-CFLAGS += -Iinclude/nettle
-endif
+#ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
+#CFLAGS += -Iinclude/nettle
+#endif
 #######################################################################################################
 #                                                                                                     #
 # additional libraries for linker calls                                                               #

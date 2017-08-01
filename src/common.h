@@ -42,6 +42,9 @@
 
 #ifdef DECODER_CONFIG_USE_LIBNETTLE
 
+#include "nettle/aes.h"
+#include "nettle/md5.h"
+
 #include "crypto_nettle.h"
 
 #else
