@@ -306,7 +306,14 @@ DECODER_CONFIG_WARN_ON_TR069_PASSPHRASE=y
 # create a statically linked binary, senseless with libcrypto - the binary would be very, very large  #
 #                                                                                                     #
 #######################################################################################################
-ifdef STATIC
+ifeq "$(strip $(STATIC))" "n"
+DECODER_CONFIG_LINK_STATIC=n
+ifeq "$(strip $(OPENSSL))" "y"
+DECODER_CONFIG_LIBNETTLE=n
+else
+DECODER_CONFIG_LIBNETTLE=y
+endif
+else
 DECODER_CONFIG_LINK_STATIC=y
 DECODER_CONFIG_LIBNETTLE=y
 endif
@@ -703,7 +710,10 @@ $(APPLETS): | $(CMDS)
 $(CONFIG):	| $(APPLETS)
 	@(sed -n -e '1,\|^// configuration area$$|p' config.in; \
 		$(call GEN_CONFIG, $(addprefix DECODER_CONFIG_, $(CFG))) \
-		sed -n -e '\|^// configuration area$$|,$$p' config.in) > $@ ; \
+		sed -n -e '\|^// configuration area$$|,$$p' config.in) > $@ ;
+
+libnettle:
+	$(MAKE) -C nettle all CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
 
 #######################################################################################################
 #                                                                                                     #
@@ -746,6 +756,7 @@ clean:
 	@for n in $(APPLET_SRCS); do \
 		$(RM) $${n}_commands.c 2>/dev/null; \
 	done; \
+	$(MAKE) -C nettle clean; \
 	true
 	@echo "clean succeeded"
 

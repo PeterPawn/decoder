@@ -15,6 +15,7 @@ SCRIPTS=decode_secrets decode_export decode_secret user_password device_password
 .PHONY: all clean
 #
 all:
+	$(MAKE) -C $(SRC_DIR) libnettle
 	$(MAKE) -C $(SRC_DIR)
 
 install:
