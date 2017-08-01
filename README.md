@@ -8,11 +8,13 @@ This is a new version, which works independently of any binary decoding utility 
 - decode internal files from a foreign device, e.g. extracted from a TFFS dump
 
 ### Prerequisites:
-All scripts in this project need an OpenSSL binary with
+All shell scripts in this project need an OpenSSL binary with
 * MD5 digest and
 * AES-256 decryption
 capabilities.
 Every call to ```openssl``` is encapsulated by the ```crypto``` shell script. If you want to use any other crypto solution, you have to change the calls there.
+
+YOU SHOULD REALLY USE THE C PROGRAM (see below), AS LONG AS YOU AREN'T INTERESTED IN INVESTIGATIONS OF THE USED ALGORITHMS.
 
 To generate a password for decoding of data from a TFFS file, you need to have access to the device in question or you need to know the following data for the source device:
 * the serial number, as it was stored in the 'urlader environment' - it was a sequence of 16 '0'es for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
@@ -26,25 +28,22 @@ For each export file, the specified (or implicit) password is only used to encry
 
 If you want to decode an export file, which was created with a password, you need to know exactly this password to decode any data, because the random encryption key from the "Password" field in its header can't be decoded without it (it uses a strong AES-256 encryption). If the data was exported without a password, you need the device, where the file was created on or you need to know the 'SerialNumber' and 'maca' values of the source device.
 
-The C implementation needs an OpenSSL version to be built and any C library - it should work with 'glibc' and 'uClibc' without problems. If any changes are needed to use 'dietlibc', your pull requests are very welcome.
+The C implementation uses Nettle (version 3.3) now to be built and any C library - it should work with 'glibc' and 'uClibc' without problems. If any changes are needed to use 'dietlibc', your pull requests are very welcome. If you want to get a dynamically linked binary, you may use OpenSSL's crypto library instead of Nettle.
 
 ### License changes and limitations:
 It's not allowed any longer to create a 'lean & mean' version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the 'v0.2_freeze' branch.
 
-There is an exhaustive description (http://www.ip-phone-forum.de/showthread.php?t=295101 - sorry, it's only in german language), how AVM's encryption works.
-
-The former license exception for Freetz is revoked now, I think, it's not needed anymore. My intention was (hopefully) clearly expressed and I hope, foreign changes will be well-considered now.
+There is an exhaustive description (http://www.ip-phone-forum.de/showthread.php?t=295101 - sorry, it's only in german language), how AVM's encryption works. It will be moved soon to GitHub Pages in this repository, because the IPPF forum meanwhile changed its software (it's Xenforo now) and the new one doesn't support all of the used (and needed) BBCODE tags.
 
 ### Integration into a Freetz build
-This project is available now from Freetz trunk with another name ... ```decrypt-fritzos-cfg```. This integration uses a slightly different configuration (with an own ```Makefile```), but I'll keep my versions of ```Config.in``` and ```decoder.mk``` (in the root of the project) as a boiler-plate for other toolchains (only the symbol names need usually a change). The example, how to include it into a Freetz build, is useless now and so I've removed it here.
+This project is available now from Freetz trunk with another name ... ```decrypt-fritzos-cfg```. This integration uses a slightly different configuration (with an own ```Makefile```), but I'll keep my versions of ```Config.in``` and ```decoder.mk``` (in the root of the project) as a boiler-plate for other toolchains (only the symbol names need usually a change).
 
 ### Provided files:
 The whole project consists of POSIX-compatible shell scripts for various decoding tasks. Encoding of values is not provided here - AVM's components accept clear-text values in nearly all places, where an encrypted value may be used. Because the shell-based decryption isn't very fast (that's a little bit of understatement ... it's really, really, really slow) and the original firmware from vendor doesn't contain the needed OpenSSL binary, it's a possible, alternative approach to use an own C program for decryption. This binary can use the existing OpenSSL libraries from stock firmware.
 
-The ```src``` subfolder contains an implementation of a multi-call utility in C, which provides all the functions (and some additionals too), that are available as shell scripts too. You need only an OpenSSL installation (1.0.2 prefered, I haven't tested it with later versions yet) to build it and I would advise you to use a compiled version - it's lightning fast, compared to the shell versions.
+The ```src``` subfolder contains an implementation of a multi-call utility in C, which provides all the functions (and some additionals too), that are available as shell scripts too. But I would advise you to use a compiled version - it's lightning fast, compared to the shell versions.
 
-It's possible, that you may find a pre-compiled, statically linked binary for your platform in the ```bin``` directory. I tend to provide/upload some files, which I myself need and use regularly. If you want to use any of these files, you should check the detached GPG signature seriously.
-The ```bin``` directory contains now a version for MIPS32R2 with BE and a version for x86-64, which has been tested with the Windows 10 ```bash``` too. It's working, as long as you provide an environment dump (or another text file looking like it) as ```/var/env```. The next task is it now, to make the path to this environment file selectable at run-time.
+It's possible, that you may find some pre-compiled, statically linked binaries (even for your platform?) in the ```bin``` directory. I tend to provide/upload some files, which I myself need and use regularly. If you want to use any of these files, you should check the detached GPG signature(s) seriously.
 
 ### Discussions/questions/changes
 
