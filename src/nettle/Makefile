@@ -9,7 +9,7 @@ configure: $(prj)
 	cd $(prj); \
 	umask 077; \
 	sed -e '/gdb3/,+6d' -i configure.ac; \
-	./configure --disable-shared --disable-public-key --disable-openssl --disable-documentation --enable-mini-gmp --prefix=$$(pwd) libdir=$$(pwd)/lib CFLAGS="-O2 -ffunction-sections -fdata-sections $(arch) $(CFLAGS)" 
+	./configure --disable-shared --disable-public-key --disable-openssl --disable-documentation --enable-mini-gmp --prefix=$$(pwd) libdir=$$(pwd)/lib CFLAGS="-O2 -ffunction-sections -fdata-sections $(CFLAGS)" 
 
 clean:
 	@[ -d $(prj) ] && ( cd $(prj); make clean; cd ..; rm -r $(prj) 2>/dev/null ) || true; \

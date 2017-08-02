@@ -28,8 +28,6 @@
 #                                                                                                     #
 # categories and applets                                                                              #
 #                                                                                                     #
-# a trailing plus-sign after an applet name will create a symlink for this applet on install          #
-#                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
 # general converters to/from binary to/from ( Base32 | Base64 | hexadecimal )                         #
@@ -171,6 +169,7 @@ DECODER_CONFIG_CRC_FILE=y
 #######################################################################################################
 #                                                                                                     #
 # applet names, multiple names may be specified for the same applet                                   #
+# for applet names with a preceding plus sign (+), symbolic links will be create on installation      #
 #                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
@@ -750,7 +749,7 @@ uninstall:
 	@[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
 	@echo "uninstall succeeded"
 
-clean: 
+clean:
 	@[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
 	@$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
 	@for n in $(APPLET_SRCS); do \
@@ -758,7 +757,7 @@ clean:
 	done; \
 	$(MAKE) -C nettle clean; \
 	true
-	@echo "clean succeeded"
+	@echo "Cleanup done."
 
 #######################################################################################################
 #                                                                                                     #

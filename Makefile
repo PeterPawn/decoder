@@ -6,9 +6,9 @@ BASENAME:=decoder
 #
 SRC_DIR=src
 #
-# shell scripts
+# shell scripts directory
 #
-SCRIPTS=decode_secrets decode_export decode_secret user_password device_password password_from_device crypto
+SCRIPTS_DIR=scripts
 #
 # targets to make
 #
@@ -20,6 +20,9 @@ all:
 
 install:
 	$(MAKE) -C $(SRC_DIR) install
+
+install-scripts:
+	$(MAKE) -C $(SCRIPTS_DIR) install
 
 clean: 
 	$(MAKE) -C $(SRC_DIR) clean
