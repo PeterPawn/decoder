@@ -1,6 +1,9 @@
 # Auto detect text files and perform LF normalization
 * text eol=lf
 
+# GPG public key uses CRLF
+PeterPawn.asc text eol=crlf
+
 # Custom for Visual Studio
 *.cs     diff=csharp
 
