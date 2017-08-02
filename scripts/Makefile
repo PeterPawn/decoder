@@ -23,6 +23,7 @@ LINKS += (test123 test456, test2)
 # ANSI control sequences for colored messages
 #
 MSGGREEN:=$(shell printf "\033[32m")
+MSGRED:=$(shell printf "\033[31m")
 MSGRESET:=$(shell printf "\033[0m")
 MSGBOLD:=$(shell printf "\033[1m")
 define MSG_NEWLINE
@@ -32,7 +33,7 @@ endef
 # check TARGET variable
 #
 ifeq ($(TARGET),)
-$(error Missing TARGET definition.)
+$(error $(MSGRED)$(MSGBOLD)Missing TARGET definition.$(MSGRESET))
 endif
 #
 # use shell to extract from LINKS definition
