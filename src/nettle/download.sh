@@ -13,6 +13,7 @@ sig="$source.sig"
 # constants
 #
 hdir=.gnupg
+export LANG=en-US.UTF-8
 #
 # check GnuPG presence
 #
