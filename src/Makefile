@@ -316,6 +316,10 @@ else
 DECODER_CONFIG_LINK_STATIC=y
 DECODER_CONFIG_LIBNETTLE=y
 endif
+ifeq "$(strip $(OPENSSL))" "y"
+DECODER_CONFIG_LIBNETTLE=n
+DECODER_CONFIG_LINK_STATIC=n
+endif
 #######################################################################################################
 #                                                                                                     #
 # use OpenSSL or Nettle library                                                                       #

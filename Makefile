@@ -14,8 +14,22 @@ SCRIPTS_DIR=scripts
 #
 .PHONY: all clean install uninstall install-scripts uninstall-scripts
 #
-all:
+# libnettle needed?
+#
+ifeq ($(OPENSSL),y)
+NETTLE:=
+else
+NETTLE:=nettle
+endif
+#
+# targets
+#
+all:	$(NETTLE) decoder
+
+nettle:
 	$(MAKE) -C $(SRC_DIR) libnettle
+
+decoder:
 	$(MAKE) -C $(SRC_DIR)
 
 install:
