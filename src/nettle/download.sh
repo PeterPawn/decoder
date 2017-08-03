@@ -25,7 +25,7 @@ fi
 #
 rm -r $hdir 2>/dev/null
 omask=$(umask)
-umask 177
+umask 077
 mkdir $hdir
 gpg --homedir $hdir --keyserver $keyServer --recv-keys $keyID >/dev/null 2>&1
 if ! [ "$(gpg --homedir $hdir --fingerprint $keyID | sed -n -e 's/.* fingerprint = \(.*\)/\1/p')" = "$keyFingerprint" ]; then
