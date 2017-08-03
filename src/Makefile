@@ -723,23 +723,24 @@ libnettle:
 # install targets and rules                                                                           #
 #                                                                                                     #
 #######################################################################################################
-#.PHONY:	$(LINKS:%=$(bindir)/%)
-#
-#$(LINKS:%=$(bindir)/%):	$(binfile)
-#	opwd=$$(pwd); \
-#	cd $(bindir); \
-#	$(LN) -s -f $< $@ ; \
-#	cd $$opwd
-#
-#install_$(binfile):	$(binfile)
-#	$(STRIP) $<
-#	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
-#	$(INSTALL) $(binfile) $(bindir)
-#
-#links:	$(LINKS:%=$(bindir)/%)
-#
-#install:	install_$(binfile) links
-#
+.PHONY:	$(LINKS:%=$(bindir)/%)
+
+$(LINKS:%=$(bindir)/%):	$(binfile)
+	@opwd=$$(pwd); \
+	cd $(bindir); \
+	$(LN) -s -f $< $@ ; \
+	cd $$opwd; \
+	printf "Created symlink '$@' for '$(binfile)' ...\n" 1>&2
+
+install_$(binfile):	$(binfile)
+	$(STRIP) $<
+	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
+	$(INSTALL) $(binfile) $(bindir)
+
+links:	$(LINKS:%=$(bindir)/%)
+
+install:	install_$(binfile) links
+
 #######################################################################################################
 #                                                                                                     #
 # uninstall / clean targets and rules                                                                 #
