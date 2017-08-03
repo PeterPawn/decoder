@@ -90,12 +90,12 @@ If you want to create a dynamically linked binary, add ```STATIC=n``` to your ``
 
 If you want to use OpenSSL's ```libcrypto``` instead of ```libnettle```, you can specify ```OPENSSL=y``` - this will automatically build a dynamically linked binary, because a default ```libcrypto``` library would produce really huge binaries, if used for static linking.
 
+To install the new binary and create symbolic links for included applets, call ```make install```. The default install location is ```$HOME/bin``` - to change it, you can specify ```bindir=<directory>``` with the install request (or edit the ```Makefile``` in a step above).
+
 ### Integration into a ```Freetz``` build
 This project is available from ```Freetz``` trunk with another name ... as ```decrypt-fritzos-cfg```.
 
 This integration uses a slightly different configuration (with an own ```Makefile```), but I'll keep my versions of ```Config.in``` and ```decoder.mk``` (in the root of the project) as a boiler-plate for other toolchains (only the symbol names need usually a change).
-
-To install the new binary and create symbolic links for included applets, call ```make install```. The default install location is ```$HOME/bin``` - to change it, you can specify ```bindir=<directory>``` with the install request (or edit the ```Makefile``` in a step above).
 
 ## License changes and limitations:
 It's not allowed any longer to create a *lean & mean* version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the ```v0.2_freeze``` branch.
