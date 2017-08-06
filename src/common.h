@@ -42,9 +42,9 @@
 
 #ifdef NETTLE
 
-#include "aes.h"
-#include "md5.h"
-#include "cbc.h"
+#include <nettle/aes.h>
+#include <nettle/md5.h>
+#include <nettle/cbc.h>
 
 #include "crypto_nettle.h"
 

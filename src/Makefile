@@ -608,7 +608,7 @@ endif
 #                                                                                                     #
 #######################################################################################################
 ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
-override CFLAGS += -Iinclude/nettle -DNETTLE
+override CFLAGS += -I./include/nettle -DNETTLE
 endif
 #######################################################################################################
 #                                                                                                     #
