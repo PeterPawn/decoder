@@ -16,6 +16,6 @@ The files provided and their target platforms are:
   - built with ```libnettle``` and ```glibc```, targeting Intel 80386 compatible systems
   - somewhat larger due to the usage of ```glibc```
 * decoder.x86_64
-  - built with ```libnettle``` and ```glibc```, targeting x86 compatible systems
+  - built with ```libnettle``` and ```glibc```, targeting x64 compatible systems
   - tested also with (Ubuntu) ```bash``` on a Windows 10 (x64) installation
   - somewhat larger due to the usage of ```glibc```
