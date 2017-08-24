@@ -5,19 +5,23 @@ config FREETZ_PACKAGE_DECODER
 	help
 		decrypt AVM cipher text - see https://github.com/PeterPawn/decode_passwords.git
 
-		This package is a replacement for 'decrypt-fritzos-cfg' and is able to work 
-		without any further file from AVM - only the usual libraries are needed.
-
 		It's a multi-call binary and you have to select the functions to install.
 
-config FREETZ_PACKAGE_DECODER_STATIC
+config FREETZ_PACKAGE_DECODER_DYNAMIC
 	depends on FREETZ_PACKAGE_DECODER
-	bool "build statically linked binary"
+	bool "build dynamically linked binary"
 	default n
 	help
-		Build the utility as a static binary.
+		Build the utility as a binary, which uses DSO's for smaller files.
 
-menu "  symlinks to create for 'decoder'"
+config FREETZ_PACKAGE_DECODER_LIBCRYPTO
+	depends on FREETZ_PACKAGE_DECODER
+	bool "use OpenSSL's libcrypto instead of an own libnettle version"
+	default n
+	help
+		This is the smallest binary, but with the most dependencies on other libraries.
+
+menu "symlinks to create for 'decoder'"
 	depends on FREETZ_PACKAGE_DECODER
 
 config FREETZ_PACKAGE_DECODER_DECODE_SECRETS
@@ -52,6 +56,11 @@ config FREETZ_PACKAGE_DECODER_DECODE_SECRET
 	default n
 	help
 		This function expects the encrypted data and the key as command line arguments.
+
+config FREETZ_PACKAGE_DECODER_SPLIT_EXPORT
+	depends on FREETZ_PACKAGE_DECODER
+	bool "split_export - split a complete FRITZ!OS settings export into the contained settings files"
+	default n
 
 config FREETZ_PACKAGE_DECODER_USER_PASSWORD
 	depends on FREETZ_PACKAGE_DECODER
