@@ -71,7 +71,7 @@ void 	devpw_usage(const bool help, UNUSED const bool version)
 	);
 
 	fprintf(out,
-		"\n%s is the serial number of the device, it consists of 16 characters and can be found at the\n"
+		"\n%s is the serial number of the device, it consists of 15 characters and can be found at the\n"
 		"back of the device, together with other info printed on a sticker. But for a long time this serial\n"
 		"number was only printed there and only the latest models contain this value in a place, where it\n"
 		"can be read by the firmware. All older models used a character string of 16 zeros here. You have to\n"

@@ -412,7 +412,7 @@ EXPORTED	bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, c
 {
 	DigestContext	 	*ctx = DigestInit();
 
-	if (strlen(serial) != 16)
+	if (strncmp(serial, "0000000000000000", 16) && strlen(serial) != 15)
 	{
 		warningMessage(verboseWrongSerialLength, serial);
 
