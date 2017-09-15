@@ -301,7 +301,7 @@ __check_terminal 0 "You should provide the content of a CRYPTEDBINFILE entry the
 #                                                                                                     #
 #######################################################################################################
 if [ $device -eq 1 ]; then
-	key="$("$password_from_device" --export ${altenv:+-a} "$altenv" 2>/dev/null)"
+	key="$("$password_from_device" --export ${altenv:+-a "$altenv"} 2>/dev/null)"
 	if [ ${#key} -eq 0 ]; then
 		__emsg "Error reading device variables, are we really on a FRITZ!Box device?"
 		exit 1

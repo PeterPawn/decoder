@@ -329,7 +329,7 @@ fi
 #                                                                                                     #
 #######################################################################################################
 if [ $device -eq 1 ]; then
-	export_key="$("$password_from_device" --export ${altenv:+-a} "$altenv" 2>/dev/null)"
+	export_key="$("$password_from_device" --export ${altenv:+-a "$altenv"} 2>/dev/null)"
 	if [ ${#export_key} -eq 0 ]; then
 		__emsg "Error reading device variables, are we really on a FRITZ!Box device?"
 		exit 1
