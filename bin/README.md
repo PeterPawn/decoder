@@ -6,8 +6,8 @@ Please don't forget to check the detached GnuPG signature, provided together wit
 The files provided and their target platforms are:
 
 * decoder.armv7
-  - built with ```libnettle``` and ```glibc``` on a Raspberry Pi (3B) running Raspian (Jessie)
-  - it's a little bit larger with glibc, but I had no usable ```uClibc``` for Raspian and there's no other need to build one
+  - built with ```libnettle``` and ```glibc``` on a Raspberry Pi (3B) running Raspbian (Jessie)
+  - it's a little bit larger with glibc, but I had no usable ```uClibc``` for Raspbian and there's no other need to build one
 * decoder.mips32r2
   - built for ```big endian``` machines with ```libnettle``` and ```uClibc``` using the ```Freetz``` toolchain
   - really small for a statically linked program, thanks to the used C library
