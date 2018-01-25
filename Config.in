@@ -3,7 +3,7 @@ config FREETZ_PACKAGE_DECODER
 	select FREETZ_LIB_libcrypto if ! FREETZ_PACKAGE_DECODER_STATIC
 	default y
 	help
-		decrypt AVM cipher text - see https://github.com/PeterPawn/decode_passwords.git
+		decrypt AVM cipher text - see https://github.com/PeterPawn/decoder
 
 		It's a multi-call binary and you have to select the functions to install.
 

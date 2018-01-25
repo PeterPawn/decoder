@@ -6,13 +6,13 @@
 #                                                                                                     #
 ###################################################################################################VER#
 #                                                                                                     #
-# decode_cryptedbinfile, version 0.3, from decode_passwords                                           #
+# decode_cryptedbinfile, version 0.3, from decoder                                                    #
 #                                                                                                     #
-# This script is a part of the project from https://github.com/PeterPawn/decode_passwords.            #
+# This script is a part of the project from https://github.com/PeterPawn/decoder.                     #
 #                                                                                                     #
 ###################################################################################################CPY#
 #                                                                                                     #
-# Copyright (C) 2014-2017 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+# Copyright (C) 2014-2018 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
 #                                                                                                     #
 ###################################################################################################LIC#
 #                                                                                                     #

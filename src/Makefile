@@ -1,13 +1,13 @@
 # vim: set tabstop=4 syntax=sh :
 ###################################################################################################VER#
 #                                                                                                     #
-# decode_passwords, version 0.3                                                                       #
+# decoder, version 0.3                                                                                #
 #                                                                                                     #
-# This Makefile is a part of the project from https://github.com/PeterPawn/decode_passwords.          #
+# This Makefile is a part of the project from https://github.com/PeterPawn/decoder.                   #
 #                                                                                                     #
 ###################################################################################################CPY#
 #                                                                                                     #
-# Copyright (C) 2014-2017 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+# Copyright (C) 2014-2018 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
 #                                                                                                     #
 ###################################################################################################LIC#
 #                                                                                                     #

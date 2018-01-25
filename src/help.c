@@ -1,7 +1,7 @@
 /*
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2017, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@
 
 // common code to show help screens
 
-static	char *			appletNameMask = "\n%s, version " DECODER_MAIN_VERSION "\n\nThis program is a part of the project from https://github.com/PeterPawn/decode_passwords.\n";
+static	char *			appletNameMask = "\n%s, version " DECODER_MAIN_VERSION "\n\nThis program is a part of the project from https://github.com/PeterPawn/decoder.\n";
 
 static	char *			__ansiBold = "\033[1m";
 static	char *			__ansiUndl = "\033[4m";

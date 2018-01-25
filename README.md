@@ -78,7 +78,7 @@ If you want to get a dynamically linked binary, you may use OpenSSL's crypto lib
 
 To create your own binary (supposed you have already a functioning ```gcc``` and ```autoconf``` installation), you need to clone this repository to your system first:
 
-```git clone https://github.com/PeterPawn/decode_passwords.git```
+```git clone https://github.com/PeterPawn/decoder```
 
 If you want to customize some settings from the ```Makefile``` prior to building the binary, you have now the chance to edit this file. Afterwards you can simply call ```make``` to build a 'native' version for your system.
 
