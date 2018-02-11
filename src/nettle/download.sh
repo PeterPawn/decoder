@@ -29,7 +29,7 @@ omask=$(umask)
 umask 077
 mkdir $hdir
 gpg --homedir $hdir --keyserver $keyServer --recv-keys $keyID >/dev/null 2>&1
-if ! [ "$(gpg --homedir $hdir --fingerprint $keyID | sed -n -e 's/.* fingerprint = \(.*\)/\1/p')" = "$keyFingerprint" ]; then
+if ! gpg --homedir $hdir --fingerprint $keyID | grep -q "$keyFingerprint"; then
 	printf "GPG key fingerprint does not match, maybe the key wasn't found or it's the wrong key.\n" 1>&2
 	rmdir -r .gnupg
 	exit 1
