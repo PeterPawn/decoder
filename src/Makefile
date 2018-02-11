@@ -608,7 +608,7 @@ endif
 #                                                                                                     #
 #######################################################################################################
 ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
-override CFLAGS += -I./include -DNETTLE
+override CFLAGS := -I./include -DNETTLE $(CFLAGS)
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -649,12 +649,12 @@ LN = ln
 # tools flags, override them for cross-builds                                                         #
 #                                                                                                     #
 #######################################################################################################
-override CFLAGS += -W -Wall -Wformat=2 -std=c99 -fvisibility=hidden
+override CFLAGS := -W -Wall -Wformat=2 -std=c99 -fvisibility=hidden $(CFLAGS)
 ifeq ($(DECODER_CONFIG_DEBUG),y)
-override CFLAGS += -O0 -ggdb -DDEBUG
+override CFLAGS := -O0 -ggdb -DDEBUG $(CFLAGS)
 else
-override CFLAGS += -O2 -ffunction-sections -fdata-sections
-override LDFLAGS += -Wl,--gc-sections
+override CFLAGS := -O2 -ffunction-sections -fdata-sections $(CFLAGS)
+override LDFLAGS := -Wl,--gc-sections $(LDFLAGS)
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -662,8 +662,8 @@ endif
 #                                                                                                     #
 #######################################################################################################
 ifeq ($(DECODER_CONFIG_LINK_STATIC),y)
-override CFLAGS += -DSTATIC -static
-override LDFLAGS += -static
+override CFLAGS := -DSTATIC -static $(CFLAGS)
+override LDFLAGS := -static $(LDFLAGS)
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -733,7 +733,7 @@ $(LINKS:%=$(bindir)/%):	$(binfile)
 	printf "Created symlink '$@' for '$(binfile)' ...\n" 1>&2
 
 install_$(binfile):	$(binfile)
-	$(STRIP) $<
+	[ "$(strip $(NO_STRIP))" == "y" ] || $(STRIP) $<
 	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
 	$(INSTALL) $(binfile) $(bindir)
 
