@@ -307,7 +307,7 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 		size_t			foundOffset = currentOffset;
 		bool			split = false;
 		char *			cipherTextStart;
-		char *			outputStart;
+		char *			outputStart = NULL;
 
 		if ((cipherTextStart = memoryBufferFindString(&found, &foundOffset, "$$$$", 4, &split)) != NULL) /* encrypted data exists */
 		{

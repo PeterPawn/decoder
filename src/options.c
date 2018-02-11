@@ -49,7 +49,7 @@ EXPORTED	bool	checkLastArgumentIsInputFile(char * name)
 		return false;
 
 	verboseMessage(verboseRedirectStdin, name);
-	freopen(name, "r", stdin);
+	stdin = freopen(name, "r", stdin);
 
 	return true;
 }
