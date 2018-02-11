@@ -733,7 +733,7 @@ $(LINKS:%=$(bindir)/%):	$(binfile)
 	printf "Created symlink '$@' for '$(binfile)' ...\n" 1>&2
 
 install_$(binfile):	$(binfile)
-	$(STRIP) $<
+	[ "$(strip $(NO_STRIP))" == "y" ] || $(STRIP) $<
 	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
 	$(INSTALL) $(binfile) $(bindir)
 
