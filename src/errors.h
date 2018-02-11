@@ -76,6 +76,8 @@ typedef enum {
 	DECODER_ERROR_OPTION_VALUE_MISSING,
 	// invalid option value
 	DECODER_ERROR_OPTION_VALUE_INVALID,
+	// I/O error encountered
+	DECODER_ERROR_IO_ERROR,
 } decoder_error_t;
 
 #ifndef ERRORS_C
@@ -133,6 +135,7 @@ extern	char *							errorEmptyInputFile;
 extern	char *							errorNoConsolidate;
 extern	char *							errorMissingDirectoryName;
 extern	char *							errorInvalidDirectoryName;
+extern	char *							errorUnexpectedIOError;
 
 #endif
 

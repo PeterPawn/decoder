@@ -49,9 +49,21 @@ EXPORTED	bool	checkLastArgumentIsInputFile(char * name)
 		return false;
 
 	verboseMessage(verboseRedirectStdin, name);
-	stdin = freopen(name, "r", stdin);
+	/*
+	   It's possible to re-assign 'stdin' with glibc and others, but with
+	   C89/C99 'stdin' is a macro and for better portability, we use an own
+	   variable here.
+	   The old fd may be closed first (according to POSIX), as a result the
+	   stream behind the pointer may be invalid, if an error occurs.
+	*/
+	FILE * stdin_reloc = freopen(name, "r", stdin);
+	if (!stdin_reloc)
+	{
+		errorMessage(errorUnexpectedIOError, errno, "freopen", "STDIN");
+		setError(IO_ERROR);
+	}
 
-	return true;
+	return (stdin_reloc ? true : false);
 }
 
 EXPORTED	void	warnAboutExtraArguments(char ** argv, int i)

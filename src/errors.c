@@ -53,6 +53,7 @@ static char *				__decoder_error_text__[] = {
 	"error reading environment value",
 	"invalid buffer size specified",
 	"conflicting options found",
+	"input/output error",
 };
 
 //// error messages ////
@@ -99,6 +100,7 @@ EXPORTED	char *			errorEmptyInputFile = "There's no input data present.\n";
 EXPORTED	char *			errorNoConsolidate = "Checksum computation needs input buffer consolidation.\n";
 EXPORTED	char *			errorMissingDirectoryName = "Missing directory name after 'output-directory' (or 'o') option or the option wasn't specified.\n";
 EXPORTED	char *			errorInvalidDirectoryName = "The specified directory name '%s' is invalid (not a directory or does not exist).\n";
+EXPORTED	char *			errorUnexpectedIOError = "Unexpected I/O error (errno=%d) encountered while calling '%s' on '%s' stream.\n";
 //// end ////
 
 // functions
