@@ -741,6 +741,10 @@ links:	$(LINKS:%=$(bindir)/%)
 
 install:	install_$(binfile) links
 
+install-nostrip:	$(binfile)
+	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
+	$(INSTALL) $(binfile) $(bindir)
+
 #######################################################################################################
 #                                                                                                     #
 # uninstall / clean targets and rules                                                                 #
