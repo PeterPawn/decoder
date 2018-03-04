@@ -215,6 +215,7 @@ int		checksum_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 				*(((uint8_t *) &crcValue) + 2) ^= *(((uint8_t *) &crcValue) + 1);
 				*(((uint8_t *) &crcValue) + 1) ^= *(((uint8_t *) &crcValue) + 2);
 				/* fall through to next case */
+				__attribute__ ((fallthrough));
 
 			case OUTPUT_HOST:
 				fwrite(&crcValue, sizeof(uint32_t), 1, stdout);
