@@ -3,6 +3,7 @@
 This is a new version, which works independently of any other utility (from vendor). It's working even outside of any FRITZ!OS device, as long as you known the used password (for exported settings files) or some properties (see below) of the source device (for other files).
 
 ## Purpose(s):
+
 - decode encrypted credentials from any configuration file for system extensions contained in projects like ```Freetz``` or my own ```modfs```
 - decode data from an exported settings file, where the export password is known
 - decode internal files from a foreign device, e.g. extracted from a TFFS dump
@@ -14,13 +15,13 @@ Encoding of values is not provided yet - AVM's components accept clear-text valu
 
 ## Provided files:
 
-<span style="color:red">YOU SHOULD REALLY USE THE C PROGRAM (see below), IF YOUR MAIN INTEREST ISN'T ADDITIONAL RESEARCH.</span>
+YOU SHOULD REALLY USE THE C PROGRAM (see below), IF YOUR MAIN INTEREST ISN'T ADDITIONAL RESEARCH.
 
 There are some shell scripts (in the ```scripts``` subfolder), which may be used on any device with a POSIX-compatible shell interpreter and an ```OpenSSL``` (CLI) binary, which supports AES-256 decryption and MD5 digests.
 
 These files are intended to show the principles, how AVM's encryption works and their usage in a 'production environment' should be limited to situations, where no binary ```decoder``` utility is available (and also can't be built with small efforts).
 
-But I expect, the most users will be interested in the C version, which can be found in the ```src``` subfolder. It uses the Nettle implementation (https://www.lysator.liu.se/~nisse/nettle/) for AES-256 and MD5 and creates a statically linked binary. This binary file has only to be copied to the target system and doesn't need any other file(s) - beside the data to be handled.
+But I expect, the most users will be interested in the C version, which can be found in the ```src``` subfolder. It uses the Nettle implementation (<https://www.lysator.liu.se/~nisse/nettle/>) for AES-256 and MD5 and creates a statically linked binary. This binary file has only to be copied to the target system and doesn't need any other file(s) - beside the data to be handled.
 
 Compared to the shell scripts, the compiled version is lightning fast and the 'complete' binary with all applets provides some additional features not present as shell script.
 
@@ -31,16 +32,19 @@ Which symbolic links are understood and created automatically (during an install
 It's possible, that you may find some pre-compiled, statically linked binaries (even for your platform?) in the ```bin``` subfolder. I tend to provide/upload the files for some platforms that I regularly need and use myself. If *you* want to use any of these files, you should check the detached GPG signature(s) *seriously* - my public key can be found in ```PeterPawn.asc``` in this repository.
 
 ## Why isn't this a 'cracker'?
+
 This project can only decrypt data, if some properties of the source device are known (see below) or the password used for an export is available. While it may be used as a fast way to determine, if a password is correct (and in the last consequence for a 'brute-force attack' on files with unknown export password), the original firmware from AVM may be used for this purpose already. The ```tr069fwupdate``` utility from AVM has a ```check_configimport``` mode, which will fail immediately (and set an appropriate exit code), if the provided password is a wrong one.
 
 As long as the export password for a file was strong enough, this project will not (additionally) weaken the security of any data from or on a FRITZ!OS-based device. But it may serve as an example, how easy it is to steal secret data from a FRITZ!OS device, if an attacker gets access to the TFFS storage of such a device (where all settings are stored) and is able to extract its 'raw' content. This can already be done with a single '(remote) command execution' vulnerability and is another reason, why really **each** known vulnerability needs to be fixed *as fast as possible*. Even if a vulnerability is only usable from the LAN side of a router ... this is also 'remote' to the router itself and meanwhile even the LAN side of an edge router isn't always a 'friendly area'.
 
 ## Which properties of a FRITZ!OS device are important?
+
 To generate a password for decoding of data from a TFFS file, you need to have access to the device in question or you need to know the following data for the source device:
-* the serial number, as it was stored in the ```urlader environment``` - it was a sequence of 16 '0's for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
-* the MAC address stored as ```maca``` in the ```urlader environment```
-* the WLAN key from factory settings - locate it on the back of the device, where it was printed on a sticker or read it from the ```urlader environment``` (value name is ```wlan_key```)
-* the TR-069 passphrase, if the device has a CWMP account configured (```tr069_serial``` and ```tr069_passphrase``` are present in the environment)
+
+- the serial number, as it was stored in the ```urlader environment``` - it was a sequence of 16 '0's for a long time, but newer models seem to have the serial number from the back of the device stored in this environment
+- the MAC address stored as ```maca``` in the ```urlader environment```
+- the WLAN key from factory settings - locate it on the back of the device, where it was printed on a sticker or read it from the ```urlader environment``` (value name is ```wlan_key```)
+- the TR-069 passphrase, if the device has a CWMP account configured (```tr069_serial``` and ```tr069_passphrase``` are present in the environment)
 
 If data is exported without a password (using ```tr069fwupdate configexport```), the password for the export file will be built from the same values as above, but the WLAN key and TR-069 passphrase will always be omitted, while the MD5 hash will be built (this hash will be used then as encryption password).
 
@@ -53,12 +57,16 @@ If a password was provided while exporting the data, its MD5 hash value is used 
 If you want to decode an export file, which was created with a password, you need to know exactly this password to decode any data, because the random encryption key from the ```Password``` field in its header can't be decoded without it (it uses a strong AES-256 encryption). If the data was exported without a password, you need the device, where the file was created on or you need to know the ```SerialNumber``` and ```maca``` values of the source device.
 
 ## Prerequisites/Installation:
+
 ### Shell scripts:
+
 There's a bunch of POSIX-compatible shell scripts for various decoding tasks - take them as 'proof-of-concept' please and don't expect too much, regarding their execution speed.
 
 All shell scripts in the ```scripts``` subfolder need an OpenSSL binary with
-* MD5 digest and
-* AES-256 decryption
+
+- MD5 digest and
+- AES-256 decryption
+
 capabilities.
 
 Every call to ```openssl``` itself is encapsulated by the ```crypto``` shell script. If you want to use any other crypto solution, you have only to change the calls there.
@@ -72,6 +80,7 @@ If you've cloned it as a whole, you may use ```make TARGET=<directory> install-s
 Beware: *Installation of shell scripts with the provided ```Makefile``` isn't a part of the 'released version' 0.3.*
 
 ### C program:
+
 The **C implementation** uses ```Nettle``` (version 3.3) and any C library - it should work with ```glibc``` and ```uClibc``` without problems. If any changes are needed to use ```dietlibc```, your pull requests are very welcome.
 
 If you want to get a dynamically linked binary, you may use OpenSSL's crypto library instead of Nettle.
@@ -93,15 +102,17 @@ If you want to use OpenSSL's ```libcrypto``` instead of ```libnettle```, you can
 To install the new binary and create symbolic links for included applets, call ```make install```. The default install location is ```$HOME/bin``` - to change it, you can specify ```bindir=<directory>``` with the install request (or edit the ```Makefile``` in a step above). If you prefer a binary with all symbols, you may use the make target 'install-nostrip' instead.
 
 ### Integration into a ```Freetz``` build
+
 This project is available from ```Freetz``` trunk with another name ... as ```decrypt-fritzos-cfg```.
 
 This integration uses a slightly different configuration (with an own ```Makefile```), but I'll keep my versions of ```Config.in``` and ```decoder.mk``` (in the root of the project) as a boiler-plate for other toolchains (only the symbol names need usually a change).
 
 ## License changes and limitations:
+
 It's not allowed any longer to create a *lean & mean* version (without comments and/or copyright notices) for other projects from any script or any other source file in this project after the ```v0.2_freeze``` branch.
 
 ## Discussions/questions/changes
 
-There is an exhaustive description (http://www.ip-phone-forum.de/showthread.php?t=295101 - sorry, it's only in german language), how AVM's encryption works. It will be moved soon to ```GitHub Pages``` in this repository, because the IPPF forum meanwhile changed its software (it uses Xenforo now) and the new one doesn't support all of the used (and needed) BBCODE tags.
+There is an exhaustive description (<http://www.ip-phone-forum.de/showthread.php?t=295101> - sorry, it's only in german language), how AVM's encryption works. It will be moved soon to ```GitHub Pages``` in this repository, because the IPPF forum meanwhile changed its software (it uses Xenforo now) and the new one doesn't support all of the used (and needed) BBCODE tags.
 
 Please contemplate to use the IPPF forum, if you've any questions and use ```GitHub Issues``` for this project only for real issues/errors in the code.
