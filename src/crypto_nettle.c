@@ -86,10 +86,10 @@ EXPORTED	CipherContext *	CipherInit(CipherContext * ctx, CipherMode mode, char *
 	if (!key && !iv)
 		return cipherCTX;
 
-	aes256_set_decrypt_key(&(ctx->cbc_context.ctx), (uint8_t *) key);
-	ctx->cipher_mode = mode;
+	aes256_set_decrypt_key(&(cipherCTX->cbc_context.ctx), (uint8_t *) key);
+	cipherCTX->cipher_mode = mode;
 	if (mode == CipherTypeValue)
-		CBC_SET_IV(&(ctx->cbc_context), iv);
+		CBC_SET_IV(&(cipherCTX->cbc_context), iv);
 
 	return cipherCTX;
 }
