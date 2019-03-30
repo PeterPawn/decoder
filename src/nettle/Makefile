@@ -1,4 +1,4 @@
-prj=nettle-3.3
+prj=nettle-3.4.1
 
 all:	$(prj) configure build install
 
