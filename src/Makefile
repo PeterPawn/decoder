@@ -1,4 +1,5 @@
 # vim: set tabstop=4 syntax=sh :
+# SPDX-License-Identifier: GPL-2.0-or-later
 ###################################################################################################VER#
 #                                                                                                     #
 # decoder, version 0.3                                                                                #
@@ -760,7 +761,7 @@ uninstall:
 
 clean:
 	@[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
-	@$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) $(CONFIG) 2>/dev/null || true
+	@$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) crypto_ossl.o $(CONFIG) 2>/dev/null || true
 	@for n in $(APPLET_SRCS); do \
 		$(RM) $${n}_commands.c 2>/dev/null; \
 	done; \

@@ -1,4 +1,6 @@
 /*
+ * SPDX-License-Identifier: GPL-2.0-or-later
+ *
  * vim: set tabstop=4 syntax=c :
  *
  * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)

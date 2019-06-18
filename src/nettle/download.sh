@@ -1,4 +1,5 @@
 #! /bin/bash
+# SPDX-License-Identifier: GPL-2.0-or-later
 #
 # variables
 #
@@ -6,7 +7,7 @@ keyID=28C67298
 keyServer=hkp://keys.gnupg.net:11371
 keyFingerprint="343C 2FF0 FBEE 5EC2 EDBE  F399 F359 9FF8 28C6 7298"
 server="https://ftp.gnu.org/gnu/nettle/"
-project="nettle-3.3"
+project="nettle-3.4.1"
 source="$project.tar.gz"
 sig="$source.sig"
 #

@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: GPL-2.0-or-later
+
 prj=nettle-3.4.1
 
 all:	$(prj) configure build install
