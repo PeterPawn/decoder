@@ -28,14 +28,14 @@
 #                                                                                                     #
 #######################################################################################################
 #                                                                                                     #
-# The script takes the hexadecimal content of an encrypted binary file from an settings export file   #
-# and tries to decrypt it with the specified key.                                                     #
+# The script takes the (hexadecimal or Base64 encoded) content of an encrypted binary file from a     #
+# settings export file and tries to decrypt it with the specified key.                                #
 #                                                                                                     #
 #######################################################################################################
 usage_text()
 {
 	__purpose_hdr
-	__nl "This script expects the hexadecimal encoded content of a CRYPTEDBINFILE entry from an export"
+	__nl "This script expects the hexadecimal or Base64 encoded content of a crypted entry from an export"
 	__nl "file and tries to decrypt it. If decryption was possible, the clear-text data will be written"
 	__nl "to STDOUT."
 	__usage_hdr
@@ -43,13 +43,14 @@ usage_text()
 		__undl "maca")"
 	__usage_end
 	__options_hdr
+	__nl; __option_show_opt 24 "-n" "--b64-input"; __option_show_desc "input data uses the new Base64 encoding (FRITZ!OS 07.19 and above)"
 	__nl; __option_show_opt 24 "-a" "--alt-env" "filename"; __option_show_desc "use an alternative source for the 'urlader environment'"
 	__option_debug 24
 	__option_help 24
 	__option_version 24
 	__options_end
-	__nl "The input data has to be extracted from the body of a CRYPTEDBINFILE entry - that means, the lines"
-	__nl "(starting with asterisks) around the hexadecimal lines have to be removed.\n"
+	__nl "The input data has to be extracted from the body of a crypted entry - that means, the lines"
+	__nl "(starting with asterisks) around the encoded lines have to be removed already.\n"
 	__nl "If the export file was created with a password, this password must be specified as the only"
 	__nl "parameter. If no password was used to export the settings, there are two alternatives to specify"
 	__nl "the two needed properties of the source device. You can use the second form of parameters with"
@@ -243,6 +244,7 @@ __required_scripts="crypto user_password device_password password_from_device"
 $__help_option__
 $__version_option__
 $__debug_option__
+b64input=0
 while [ $# -gt 0 ]; do
 	__is_option "$1" || break
 	if __check_option "$1" "-a" "--alt-env" >/dev/null; then
@@ -254,6 +256,15 @@ while [ $# -gt 0 ]; do
 			shift 2
 			continue
 		fi
+	elif __check_option "$1" "-n" "--b64-input" >/dev/null; then
+		if [ $b64input -eq 1 ]; then
+			__emsg "Duplicate option for Base64 input found."
+			exit 1
+		fi
+		b64input=1
+		shift
+		__required_commands="${__required_commands}${__required_commands:+ }base64"
+		continue
 	fi
 	__is_last_option "$1" && shift && break
 	__emsg "Unknown option '%s'." "$1" && exit 1
@@ -295,7 +306,7 @@ fi
 # check input file                                                                                    #
 #                                                                                                     #
 #######################################################################################################
-__check_terminal 0 "You should provide the content of a CRYPTEDBINFILE entry there." && exit 1
+__check_terminal 0 "You should provide the content of a CRYPTEDB$([ $b64input -eq 1 ] && printf "64" || printf "IN")FILE file entry there." && exit 1
 #######################################################################################################
 #                                                                                                     #
 # get the password to decipher the random key entry                                                   #
@@ -326,9 +337,13 @@ __debug "computed/specified key value is '%s'\n" "$key"
 # try to decrypt the file                                                                             #
 #                                                                                                     #
 #######################################################################################################
-while read line; do
-	printf "%s\n" "$line" | "$crypto" hexdec >>"$td/encryptedbinfile"
-done
+if [ $b64input -eq 0 ]; then
+	while read line; do
+		printf "%s\n" "$line" | "$crypto" hexdec >>"$td/encryptedbinfile"
+	done
+else
+	base64 -d >"$td/encryptedbinfile"
+fi
 "$crypto" aes_decrypt -x "$key" 00000000000000000000000000000000 -aes-256-ecb >"$td/decryptedbinfile" <"$td/encryptedbinfile"
 #######################################################################################################
 #                                                                                                     #
