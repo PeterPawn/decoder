@@ -1,9 +1,14 @@
 #! /bin/sh
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# create an export file with a CRYPTEDBINFILE section
+# create an export file with an encrypted binary file
 #
 # MUST BE EXECUTED ON A FRITZ!OS DEVICE
+#
+# COMMENT: It looks like AVM isn't using the encryption anymore for "dvb.cfg",
+#          starting with FRITZ!OS version 07.19. At least the file is exported
+#          on my 7490 device (with 113.07.19-73513) without encryption, as a 
+#          normal B64FILE entry.
 #
 # remove the character device for an existing dvb.cfg file
 #
@@ -69,7 +74,7 @@ export CONFIG_LINEARTV=y
 #
 # We strip off all lines around the encrypted content.
 #
-tr069fwupdate configexport $1 | sed -n -e "/\*\*\*\* CRYPTEDBINFILE/,/\*\*\*\* END OF FILE/p" | sed -e "1d;\$d"
+tr069fwupdate configexport $1 | sed -n -e "/\*\*\*\* CRYPTEDB\(IN\|64\)FILE/,/\*\*\*\* END OF FILE/p" | sed -e "1d;\$d"
 #
 # data should be visible on STDOUT now
 #
