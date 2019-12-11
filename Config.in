@@ -47,8 +47,9 @@ config FREETZ_PACKAGE_DECODER_DECODE_CRYPTEDBINFILE
 	bool "decode_cryptedbinfile - decrypt data portion of encrypted file sections within an export file"
 	default n
 	help
-		This is a filter and decrypts the content (hexadecimal strings) from a CRYPTEDBINFILE
-		entry in an exported settings file.                                    
+		This is a filter and decrypts the content (hexadecimal or - starting with FRITZ!OS 07.19 -
+		Base64 encoded strings) from an encrypted entry (CRYPTEDBINFILE or CRYPTEDB64FILE) in an
+		exported settings file.
 
 config FREETZ_PACKAGE_DECODER_DECODE_SECRET
 	depends on FREETZ_PACKAGE_DECODER
