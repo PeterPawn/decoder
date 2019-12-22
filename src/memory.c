@@ -55,8 +55,10 @@ EXPORTED	memoryBuffer_t *	memoryBufferFreeChain(memoryBuffer_t *start)
 	{
 		memoryBuffer_t	*next = current->next;
 
+		/* alternative: clearMemory(current, current->size, true); */
 		memset(current, 0, current->size);
 		free(current);
+
 		current = next;
 	}
 	return NULL;
@@ -103,17 +105,20 @@ EXPORTED	memoryBuffer_t *	memoryBufferReadFile(FILE * file, size_t chunkSize)
 		}
 	}
 
-	if (current->prev && !current->used)
+	if (top)
 	{
-		current->prev->next = NULL;
-		free(current);
-	}
+		if (current->prev && !current->used) /* no data in last buffer, previous was exactly filled to its end */
+		{
+			current->prev->next = NULL;
+			memoryBufferFreeChain(current);
+		}
 
-	if (!top->used)
-	{
-		setError(NOERROR);
-		free(top);
-		top = NULL;
+		if (!top->used)	/* no data read at all */
+		{
+			setError(NOERROR);
+			memoryBufferFreeChain(top);
+			top = NULL;
+		}
 	}
 
 	return top;
