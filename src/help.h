@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -30,7 +30,7 @@ typedef	struct	showOption	{
 	char *				description;
 } 	showOption_t;
 
-#define	DECODER_MAIN_VERSION			"0.3"
+#define	DECODER_MAIN_VERSION			"0.4"
 #define DECODER_HELP_WIDTH				99
 
 #define	__undl(string)					"\033[4m" string "\033[0m"

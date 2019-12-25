@@ -73,11 +73,11 @@ Every call to ```openssl``` itself is encapsulated by the ```crypto``` shell scr
 
 To install the shell scripts, you have to copy them to any location ... that's all, as long as the ```openssl``` command-line binary can be found on the system.
 
-You may download a copy of the repository as a ```zip``` or ```gz``` file (for 'release' v0.3) from GitHub and than extract only the ```scripts``` subfolder from it or you may clone the whole repository (this will be a larger transfer with the binary files from the bin subfolder).
+You may download a copy of the repository as a ```zip``` or ```gz``` file (for 'release' v0.4) from GitHub and than extract only the ```scripts``` subfolder from it or you may clone the whole repository (this will be a larger transfer with the binary files from the bin subfolder).
 
 If you've cloned it as a whole, you may use ```make TARGET=<directory> install-scripts``` to install shell scripts and symbolic links (from the ```Makefile``` in the ```scripts``` subfolder) to your prefered location (replace ```<directory>``` with the real destination folder). But this needs a ```make``` version on your system, which is usually missing on a FRITZ!OS device.
 
-Beware: *Installation of shell scripts with the provided ```Makefile``` isn't a part of the 'released version' 0.3.*
+Beware: *Installation of shell scripts with the provided ```Makefile``` isn't a part of the 'released version' 0.4.*
 
 ### C program:
 

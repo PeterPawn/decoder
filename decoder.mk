@@ -1,4 +1,4 @@
-$(call PKG_INIT_BIN, v0.3)
+$(call PKG_INIT_BIN, v0.4)
 
 $(PKG)_BINARY:=$($(PKG)_DIR)/decoder
 $(PKG)_TARGET_BINARY:=$($(PKG)_DEST_DIR)/bin/decoder
