@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,32 +27,53 @@ static 	char * UNUSED	base64Table = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopq
 
 // convert a Base64 string to a binary buffer
 
-size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t binarySize, bool pad)
+size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t binarySize, bool pad, bool ignoreWhitespace)
 {
 	size_t			offset = 0;
 	size_t			outOffset = 0;
-	size_t			b64Size = (base64Size == (size_t) -1 ? strlen(base64) : base64Size);
+	size_t			b64Size = 0;
 	bool			filler = false;
-	size_t			bSize = (b64Size * 3 / 4);
+	size_t			bSize = 0;
 	int				bits = 0;
 	int				value = 0;
-	
-	if (b64Size % 4)
+	size_t			inSize = 0;
+
+	b64Size = (base64Size == (size_t) -1 ? strlen(base64) : base64Size);
+
+	if (ignoreWhitespace)
+	{
+		char		*current = base64;
+
+		while (*current)
+		{
+			if (isspace(*(current++))) /* only whitespace characters (0x20, 0x0A, 0x0D, 0x09, 0x0B, 0x0C) will be ignored here */
+				continue;
+			inSize++;
+		}
+	}
+	else
+		inSize = b64Size;
+
+	bSize = (inSize * 3 / 4);
+
+	if (inSize % 4)
 	{
 		if (pad)	
-			bSize = ((b64Size / 4) + 1) * 3;
+			bSize = ((inSize / 4) + 1) * 3;
 		else
 			returnError(INV_B64_SIZE, 0);
 	}
+
 	if (bSize > binarySize)
 		returnError(BUF_TOO_SMALL, bSize);
+
 	while (offset < b64Size && outOffset < binarySize)
 	{
 		value = 0;
 		for (int i = 0; i < 4 && offset < b64Size; i++)
 		{
 			char 	c = *(base64 + offset++);
-	
+
 			if (c >= 'A' && c <= 'Z')
 				c = c - 'A';
 			else if (c >= 'a' && c <= 'z')
@@ -68,6 +89,8 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 				filler = true;
 				c = 0;
 			}
+			else if (ignoreWhitespace && isspace(c))
+				continue;
 			else
 				returnError(INV_B64_DATA, 0);
 
@@ -83,9 +106,11 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 				outOffset += 3;
 			}
 		}
+
 		if (filler && offset < b64Size)
 			returnError(INV_B64_DATA, 0);
 	}
+
 	if (bits > 0)
 	{
 		if (pad)
@@ -99,10 +124,12 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 		}
 		else
 			returnError(INV_B64_SIZE, 0);
+
 		*(binary + outOffset) = (char) (value >> 16);
 		outOffset++;
 		*(binary + outOffset) = (char) ((value >> 8) & 0xFF);
 		outOffset++;
+
 		if (bits > 12)
 		{
 			if (pad)

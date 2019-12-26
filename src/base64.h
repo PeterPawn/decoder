@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@
 
 // function prototypes
 
-size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t binarySize, bool pad);
+size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t binarySize, bool pad, bool ignoreWhitespace);
 size_t	binaryToBase64(char *binary, size_t binarySize, char *base64, size_t base64Size, bool pad);
 
 #endif
