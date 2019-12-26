@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -41,7 +41,7 @@ EXPORTED commandEntry_t *	b64dec_command = &__b64dec_command;
 int		b64dec_output(char * base64, bool hexOutput, bool pad, size_t * charsOnLine)
 {
 	char				binary[3];
-	size_t				binarySize = base64ToBinary(base64, (size_t) -1, binary, sizeof(binary), pad);
+	size_t				binarySize = base64ToBinary(base64, (size_t) -1, binary, sizeof(binary), pad, false);
 	char				hex[6];
 	char *				out;
 	size_t				outSize;
