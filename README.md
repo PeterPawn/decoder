@@ -81,7 +81,7 @@ Beware: *Installation of shell scripts with the provided ```Makefile``` isn't a 
 
 ### C program:
 
-The **C implementation** uses ```Nettle``` (version 3.3) and any C library - it should work with ```glibc``` and ```uClibc``` without problems. If any changes are needed to use ```dietlibc```, your pull requests are very welcome.
+The **C implementation** uses ```Nettle``` (version 3.5.1) and any C library - it should work with ```glibc``` and ```uClibc``` without problems. If any changes are needed to use ```dietlibc```, your pull requests are very welcome.
 
 If you want to get a dynamically linked binary, you may use OpenSSL's crypto library instead of Nettle.
 
