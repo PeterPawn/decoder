@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -36,7 +36,7 @@ static	char * *			commandNames = &__commandNames[0];
 static	commandEntry_t 		__deccb_command = { .names = &commandNames, .ep = &deccb_entry, .usage = &deccb_usage, .short_desc = &deccb_shortdesc, .usesCrypto = true };
 EXPORTED commandEntry_t *	deccb_command = &__deccb_command;
 
-// 'decode_crypedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT
+// 'decode_cryptedbinfile' function - decode the content of an encrypted binary file body from STDIN and copy the result to STDOUT
 
 int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 {
@@ -46,6 +46,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	char *				maca = NULL;
 	bool				tty = false;
 	bool				binInput = false;
+	bool				b64Input = false;
 	bool				hexOutput = false;
 	bool				altEnv = false;
 	char *				hexBuffer = NULL;
@@ -59,13 +60,14 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		static struct option options_long[] = {
 			{ "tty", no_argument, NULL, 't' },
 			{ "hex-output", no_argument, NULL, 'x' },
+			{ "b64-input", no_argument, NULL, 'n' },
 			{ "bin-input", no_argument, NULL, 'b' },
 			width_options_long,
 			altenv_options_long,
 			verbosity_options_long,
 			options_long_end,
 		};
-		char *			options_short = ":" "txb" width_options_short altenv_options_short verbosity_options_short;
+		char *			options_short = ":" "txnb" width_options_short altenv_options_short verbosity_options_short;
 
 		while ((opt = getopt_long(argc - argo, &argv[argo], options_short, options_long, &optIndex)) != -1)
 		{
@@ -82,6 +84,10 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 
 				case 'b':
 					binInput = true;
+					break;
+
+				case 'n':
+					b64Input = true;
 					break;
 
 				check_altenv_options_short();
@@ -135,15 +141,6 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			return EXIT_FAILURE;
 
 		memcpy(key, hash, *cipher_ivLen);
-		hexBuffer = malloc((hashLen * 2) + 1);
-
-		if (hexBuffer)
-		{
-			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
-			*(hexBuffer + hexLen) = 0;
-			verboseMessage(verboseDeviceKeyHash, hexBuffer);
-			free(hexBuffer);
-		}
 	}
 	else if (!maca) /* single argument - assume it's a user-defined password */
 	{
@@ -160,14 +157,6 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			return EXIT_FAILURE;
 
 		memcpy(key, hash, *cipher_ivLen);
-		hexBuffer = malloc((hashLen * 2) + 1);
-		if (hexBuffer)
-		{
-			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
-			*(hexBuffer + hexLen) = 0;
-			verboseMessage(verbosePasswordHash, hexBuffer);
-			free(hexBuffer);
-		}
 	}
 	else
 	{
@@ -184,15 +173,15 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			return EXIT_FAILURE;
 
 		memcpy(key, hash, *cipher_ivLen);
-		hexBuffer = malloc((hashLen * 2) + 1);
+	}
 
-		if (hexBuffer)
-		{
-			hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
-			*(hexBuffer + hexLen) = 0;
-			verboseMessage(verboseUsingKey, hexBuffer);
-			free(hexBuffer);
-		}
+	hexBuffer = malloc((hashLen * 2) + 1);
+	if (hexBuffer)
+	{
+		hexLen = binaryToHexadecimal((char *) hash, hashLen, hexBuffer, (hashLen * 2) + 1);
+		*(hexBuffer + hexLen) = 0;
+		verboseMessage(verboseDeviceKeyHash, hexBuffer);
+		free(hexBuffer);
 	}
 
 	if (getLineWrap() && !hexOutput)
@@ -234,35 +223,76 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 		}
 	}
 
-	size_t				hexSize = memoryBufferDataSize(inputFile);
+	size_t				inSize = memoryBufferDataSize(inputFile);
 	size_t				binSize = 0;
 	char *				binBuffer = NULL;
 	char *				buffer;
 
 	if (binInput)
 	{
-		binSize = hexSize;
+		binSize = inSize;
 		buffer = inputFile->data;
 	}
 	else
 	{
-		binBuffer = (char *) malloc(hexSize / 2);
-	
-		if (!binBuffer)
+		if (b64Input)
 		{
-			setError(NO_MEMORY);
-			errorMessage(errorNoMemory);
-			inputFile = memoryBufferFreeChain(inputFile);
-			return EXIT_FAILURE;
-		}
+			binSize = base64ToBinary(inputFile->data, -1, NULL, 0, false, true);
 
-		binSize = hexSize / 2;
-		binSize = hexadecimalToBinary(inputFile->data, inputFile->used, binBuffer, binSize);
-		buffer = binBuffer;
-		if (binSize == 0)
+			if (isError(BUF_TOO_SMALL))
+			{
+				resetError();
+
+				binBuffer = (char *) malloc(binSize);
+
+				if (!binBuffer)
+				{
+					setError(NO_MEMORY);
+					errorMessage(errorNoMemory);
+					inputFile = memoryBufferFreeChain(inputFile);
+					return EXIT_FAILURE;
+				}
+
+				binSize = base64ToBinary(inputFile->data, -1, binBuffer, binSize, false, true);	
+				if (binSize == 0)
+				{
+					if (isError(INV_B64_DATA))
+					{
+						errorMessage(errorInvalidValue);
+					}
+					else if (isError(INV_B64_SIZE))
+					{
+						errorMessage(errorInvalidDataSize);
+					}
+					else
+					{
+						errorMessage(errorUnexpectedError, getError(), getErrorText(getError()));
+					}
+				}
+			}
+
+			buffer = binBuffer;
+		}
+		else
 		{
-			errorMessage(errorInvalidHexValue);
-			setError(INV_HEX_DATA);
+			binBuffer = (char *) malloc(inSize / 2);
+
+			if (!binBuffer)
+			{
+				setError(NO_MEMORY);
+				errorMessage(errorNoMemory);
+				inputFile = memoryBufferFreeChain(inputFile);
+				return EXIT_FAILURE;
+			}
+
+			binSize = inSize / 2;
+			binSize = hexadecimalToBinary(inputFile->data, inputFile->used, binBuffer, binSize);
+			buffer = binBuffer;
+			if (binSize == 0)
+			{
+				errorMessage(errorInvalidHexValue);
+				setError(INV_HEX_DATA);
+			}
 		}
 	}
 
@@ -273,7 +303,7 @@ int		deccb_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			errorMessage(errorDecryptFileData);
 	}
 
-	binBuffer = clearMemory(binBuffer, (hexSize / 2), true);
+	binBuffer = clearMemory(binBuffer, binSize, true);
 	inputFile = memoryBufferFreeChain(inputFile);
 
 	return (isAnyError() ? EXIT_FAILURE : EXIT_SUCCESS);

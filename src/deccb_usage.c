@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2018, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -35,8 +35,9 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 
 	showPurposeHeader(out);
 	fprintf(out,
-		"This program expects the hexadecimal encoded content of a CRYPTEDBINFILE entry from an export file\n"
-		"and tries to decrypt it. If decryption was possible, the clear-text data will be written to STDOUT.\n"
+		"This program expects the encoded content (using a hexadecimal (default) or Base64 encoding) of an\n"
+		"encrypted file entry from an export file and tries to decrypt it. If decryption was possible, the\n"
+		"clear-text data will be written to STDOUT.\n"
 	);
 
 	showFormatHeader(out);
@@ -56,6 +57,7 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 
 	showOptionsHeader("options");
 	addOptionsEntry("-t, --tty", "don't quit execution, if STDIN is connected to a terminal device", 0);
+	addOptionsEntry("-n, --b64-input", "input file contains Base64 encoded data (FRITZ!OS 07.19 and above)", 0);
 	addOptionsEntry("-b, --bin-input", "input file contains raw binary data", 0);
 	addOptionsEntry("-x, --hex-output", "output data as a hexadecimal string", 0);
 	addOptionsEntry("-w, --wrap-lines [ " __undl("width") " ]", "enable line breaks (wrap lines) for textual output data and (opt.) define the maximum width of a line (instead of the default value " STRING(DECODER_CONFIG_WRAP_LINE_SIZE) ")", 8);
@@ -68,9 +70,10 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 	showOptionsEnd(out);
 
 	fprintf(out,
-		"\nThe input data has to be extracted from the body of a CRYPTEDBINFILE entry - that means, the lines\n"
-		"(starting with asterisks) around the hexadecimal lines have to be removed.\n"
-		"If the input file contains binary data, use the 'bin-input' (or 'b') option while calling.\n"
+		"\nThe input data has to be extracted from the body of an encrypted file entry (CRPYTEDBINFILE or -\n"
+		"starting with FRITZ!OS 07.19 - CRYPTEDB64FILE) - that means, the lines (starting with asterisks)\n"
+		"around the encoded lines have to be removed already.\n"
+		"If the input file contains binary data without encoding, use the 'bin-input' (or 'b') option."
 	);
 
 	fprintf(out,
@@ -111,5 +114,5 @@ void 	deccb_usage(const bool help, UNUSED const bool version)
 
 char *	deccb_shortdesc(void)
 {
-	return "decrypt CRYPTEDBINFILE data from an export file";
+	return "decrypt encrypted data sections from an export file";
 }

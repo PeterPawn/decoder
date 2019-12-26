@@ -74,6 +74,11 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 		{
 			char 	c = *(base64 + offset++);
 
+			while (c && ignoreWhitespace && isspace(c))
+			{
+				c = *(base64 + offset++);
+			}
+
 			if (c >= 'A' && c <= 'Z')
 				c = c - 'A';
 			else if (c >= 'a' && c <= 'z')
@@ -89,8 +94,6 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 				filler = true;
 				c = 0;
 			}
-			else if (ignoreWhitespace && isspace(c))
-				continue;
 			else
 				returnError(INV_B64_DATA, 0);
 
@@ -106,9 +109,17 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 				outOffset += 3;
 			}
 		}
+	}
 
-		if (filler && offset < b64Size)
-			returnError(INV_B64_DATA, 0);
+	if (ignoreWhitespace && offset < b64Size) /* skip over whitespace at end of data */
+	{
+		while (*(base64 + offset) && isspace(*(base64 + offset)))
+			offset++;
+	}
+
+	if (filler && offset < b64Size)
+	{
+		returnError(INV_B64_DATA, 0);
 	}
 
 	if (bits > 0)
