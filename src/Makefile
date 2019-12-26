@@ -2,13 +2,13 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 ###################################################################################################VER#
 #                                                                                                     #
-# decoder, version 0.3                                                                                #
+# decoder, version 0.4                                                                                #
 #                                                                                                     #
 # This Makefile is a part of the project from https://github.com/PeterPawn/decoder.                   #
 #                                                                                                     #
 ###################################################################################################CPY#
 #                                                                                                     #
-# Copyright (C) 2014-2018 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+# Copyright (C) 2014-2019 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
 #                                                                                                     #
 ###################################################################################################LIC#
 #                                                                                                     #
@@ -312,10 +312,14 @@ ifeq "$(strip $(OPENSSL))" "y"
 DECODER_CONFIG_LIBNETTLE=n
 else
 DECODER_CONFIG_LIBNETTLE=y
+NETTLE_LIB=libnettle.so
+NETTLE_LIB_TARGET=nettle-shared
 endif
 else
 DECODER_CONFIG_LINK_STATIC=y
 DECODER_CONFIG_LIBNETTLE=y
+NETTLE_LIB=libnettle.a
+NETTLE_LIB_TARGET=nettle-static
 endif
 ifeq "$(strip $(OPENSSL))" "y"
 DECODER_CONFIG_LIBNETTLE=n
@@ -350,6 +354,7 @@ endif
 #######################################################################################################
 project := decoder
 srcdir = .
+nettle_version = 3.5.1
 #######################################################################################################
 #                                                                                                     #
 # build settings from configuration above                                                             #
@@ -500,6 +505,15 @@ endif
 CONFIG = config.h
 APPLETS = applets.h
 HDRS_DEP = common.h
+#######################################################################################################
+#                                                                                                     #
+# common.h needs nettle include files, if libnettle has to be used                                    #
+#                                                                                                     #
+#######################################################################################################
+ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
+NETTLE_HEADERS := include/nettle
+COMMON_H_DEPENDS_ON := $(NETTLE_HEADERS)
+endif
 #######################################################################################################
 #                                                                                                     #
 # source files defined so far are applets and have a '%_usage.c' file with help text                  #
@@ -671,13 +685,13 @@ endif
 # show values on debug                                                                                #
 #                                                                                                     #
 #######################################################################################################
-ifdef $(DEBUG)
+ifdef DEBUG
 newline = $(shell printf "\n")
 $(info Settings: $(newline))
+$(info APPLETS=$(APPLETS))
 $(info FILES=$(FILES))
 $(info LINKS=$(LINKS))
 $(info CMDS=$(CMDS))
-$(info DEBUG=$(DECODER_CONFIG_DEBUG))
 $(info $(newline))
 endif
 #######################################################################################################
@@ -692,11 +706,11 @@ endif
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+.PHONY:	all
+
 all:	$(binfile)
 
-.PHONY:	all install_$(binfile) links uninstall clean install $(CMDS)
-
-$(OBJS_COMMON):	$(APPLETS) $(CONFIG) $(HDRS_COMMON) $(SRCS_COMMON)
+$(OBJS_COMMON): $(COMMON_H_DEPENDS_ON) $(CONFIG) $(HDRS_COMMON) $(SRCS_COMMON)
 
 $(OBJS_APP):	$(APPLETS) $(CONFIG) $(HDRS_APP) $(SRCS_APP) $(SRCS_USE)
 
@@ -705,7 +719,7 @@ $(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN) $(USE_MAIN)
 $(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
 	$(CC) $(LDFLAGS) -L. -o $@ $(filter %.o,$^) $(LIBS)
 
-$(APPLETS): | $(CMDS)
+$(APPLETS):
 	@$(RM) $@ 2>/dev/null || true
 	@for l in $(CMDS); do \
 		printf "&%s_command,\n" "$$l"; \
@@ -716,15 +730,20 @@ $(CONFIG):	| $(APPLETS)
 		$(call GEN_CONFIG, $(addprefix DECODER_CONFIG_, $(CFG))) \
 		sed -n -e '\|^// configuration area$$|,$$p' config.in) > $@ ;
 
-libnettle:
-	$(MAKE) -C nettle all CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)"
+crypto_nettle.o:	| $(NETTLE_LIB) $(NETTLE_HEADERS)
+
+$(NETTLE_LIB):
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" $(NETTLE_LIB_TARGET)
+
+$(NETTLE_HEADERS):
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" nettle-headers
 
 #######################################################################################################
 #                                                                                                     #
 # install targets and rules                                                                           #
 #                                                                                                     #
 #######################################################################################################
-.PHONY:	$(LINKS:%=$(bindir)/%)
+.PHONY:	$(LINKS:%=$(bindir)/%) install_$(binfile) links install install-nostrip
 
 $(LINKS:%=$(bindir)/%):	$(binfile)
 	@opwd=$$(pwd); \
@@ -751,6 +770,8 @@ install-nostrip:	$(binfile)
 # uninstall / clean targets and rules                                                                 #
 #                                                                                                     #
 #######################################################################################################
+.PHONY:	uninstall clean
+
 uninstall:
 	@for l in $(LINKS:%=$(bindir)/%); do \
 		[ -L $$l ] && $(RM) $$l && echo "symlink for $$l removed"; \
@@ -765,7 +786,7 @@ clean:
 	@for n in $(APPLET_SRCS); do \
 		$(RM) $${n}_commands.c 2>/dev/null; \
 	done; \
-	$(MAKE) -C nettle clean; \
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" clean; \
 	true
 	@echo "Cleanup done."
 
