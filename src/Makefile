@@ -8,7 +8,7 @@
 #                                                                                                     #
 ###################################################################################################CPY#
 #                                                                                                     #
-# Copyright (C) 2014-2019 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
+# Copyright (C) 2014-2020 P.Haemmerlein (peterpawn@yourfritz.de)                                      #
 #                                                                                                     #
 ###################################################################################################LIC#
 #                                                                                                     #
@@ -139,7 +139,7 @@ DECODER_CONFIG_DECRYPT_EXPORT_FILES=y
 DECODER_CONFIG_DECOMPOSE_EXPORT_FILES=y
 #######################################################################################################
 #                                                                                                     #
-# export file - CRYPTEDBINFILE sections decryption                                                    #
+# export file - CRYPTEDBINFILE/CRYPTEDB64FILE sections decryption                                     #
 #                                                                                                     #
 #######################################################################################################
 DECODER_CONFIG_DECRYPT_EXPORT_BINFILE=y
@@ -240,7 +240,7 @@ DECODER_CONFIG_DECRYPT_EXPORT_FILES_NAME="+decode_export"
 DECODER_CONFIG_DECOMPOSE_EXPORT_FILES_NAME="+split_export"
 #######################################################################################################
 #                                                                                                     #
-# decrypt CRYPTEDBINFILE content applet name                                                          #
+# decrypt CRYPTEDBINFILE/CRYPTEDB64FILE content applet name                                           #
 #                                                                                                     #
 #######################################################################################################
 DECODER_CONFIG_DECRYPT_EXPORT_BINFILE_NAME="+decode_cryptedbinfile"
@@ -312,15 +312,18 @@ ifeq "$(strip $(OPENSSL))" "y"
 DECODER_CONFIG_LIBNETTLE=n
 else
 DECODER_CONFIG_LIBNETTLE=y
+NETTLE_HEADERS=include/nettle
 NETTLE_LIB=libnettle.so
 NETTLE_LIB_TARGET=nettle-shared
 endif
 else
 DECODER_CONFIG_LINK_STATIC=y
 DECODER_CONFIG_LIBNETTLE=y
+NETTLE_HEADERS=include/nettle
 NETTLE_LIB=libnettle.a
 NETTLE_LIB_TARGET=nettle-static
 endif
+NETTLE_LIB_ALL=libnettle
 ifeq "$(strip $(OPENSSL))" "y"
 DECODER_CONFIG_LIBNETTLE=n
 DECODER_CONFIG_LINK_STATIC=n
@@ -511,7 +514,6 @@ HDRS_DEP = common.h
 #                                                                                                     #
 #######################################################################################################
 ifeq "$(strip $(DECODER_CONFIG_LIBNETTLE))" "y"
-NETTLE_HEADERS := include/nettle
 COMMON_H_DEPENDS_ON := $(NETTLE_HEADERS)
 endif
 #######################################################################################################
@@ -664,21 +666,30 @@ LN = ln
 # tools flags, override them for cross-builds                                                         #
 #                                                                                                     #
 #######################################################################################################
-override CFLAGS += -W -Wall -Wformat=2 -std=c99 -fvisibility=hidden
-ifeq ($(DECODER_CONFIG_DEBUG),y)
-override CFLAGS += -O0 -ggdb -DDEBUG
-else
-override CFLAGS += -O2 -ffunction-sections -fdata-sections
-override LDFLAGS += -Wl,--gc-sections
-endif
+GENERAL_CFLAGS := -W -Wall -Wformat=2 -std=c99
 #######################################################################################################
 #                                                                                                     #
 # additional settings for static builds                                                               #
 #                                                                                                     #
 #######################################################################################################
 ifeq ($(DECODER_CONFIG_LINK_STATIC),y)
-override CFLAGS += -DSTATIC -static
+override CFLAGS += $(GENERAL_CFLAGS) -fvisibility=hidden -DSTATIC -static
 override LDFLAGS += -static
+NETTLE_CFLAGS := $(CFLAGS)
+else
+override CFLAGS += $(GENERAL_CFLAGS) -fvisibility=hidden
+NETTLE_CFLAGS := $(GENERAL_CFLAGS)
+endif
+#######################################################################################################
+#                                                                                                     #
+# additional settings for debug builds                                                                #
+#                                                                                                     #
+#######################################################################################################
+ifeq ($(DECODER_CONFIG_DEBUG),y)
+override CFLAGS += -O0 -ggdb -DDEBUG
+else
+override CFLAGS += -O2 -ffunction-sections -fdata-sections
+override LDFLAGS += -Wl,--gc-sections
 endif
 #######################################################################################################
 #                                                                                                     #
@@ -718,6 +729,8 @@ $(OBJS_MAIN):	$(APPLETS) $(CONFIG) $(HDRS_MAIN) $(SRCS_MAIN) $(USE_MAIN)
 
 $(binfile):	$(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN)
 	$(CC) $(LDFLAGS) -L. -o $@ $(filter %.o,$^) $(LIBS)
+	find . -name ".with_lib*" -exec $(RM) '{}' \;
+	[ "$(DECODER_CONFIG_LIBCRYPTO)" = "y" ] && touch .with_libcrypto || touch .with_libnettle
 
 $(APPLETS):
 	@$(RM) $@ 2>/dev/null || true
@@ -733,17 +746,17 @@ $(CONFIG):	| $(APPLETS)
 crypto_nettle.o:	| $(NETTLE_LIB) $(NETTLE_HEADERS)
 
 $(NETTLE_LIB):
-	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" $(NETTLE_LIB_TARGET)
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" $(NETTLE_LIB_TARGET)
 
 $(NETTLE_HEADERS):
-	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(CFLAGS)" LDFLAGS="$(LDFLAGS)" nettle-headers
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" nettle-headers
 
 #######################################################################################################
 #                                                                                                     #
 # install targets and rules                                                                           #
 #                                                                                                     #
 #######################################################################################################
-.PHONY:	$(LINKS:%=$(bindir)/%) install_$(binfile) links install install-nostrip
+.PHONY:	$(LINKS:%=$(bindir)/%) install_$(binfile) nostrip_$(binfile) links install install-nostrip install-shared-libs
 
 $(LINKS:%=$(bindir)/%):	$(binfile)
 	@opwd=$$(pwd); \
@@ -757,13 +770,19 @@ install_$(binfile):	$(binfile)
 	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
 	$(INSTALL) $(binfile) $(bindir)
 
-links:	$(LINKS:%=$(bindir)/%)
-
-install:	install_$(binfile) links
-
-install-nostrip:	$(binfile)
+nostrip_$(binfile):	$(binfile)
 	[ -d $(bindir) ] || $(INSTALL) -d $(bindir)
 	$(INSTALL) $(binfile) $(bindir)
+
+install-shared-libs:	$(NETTLE_LIB)
+	for lib in $$(find . -maxdepth 1 -type f -name "$(NETTLE_LIB_ALL).so*"); do echo $$lib; $(INSTALL) $$lib $(bindir);	done
+	for link in $$(find . -maxdepth 1 -type l -name "$(NETTLE_LIB_ALL).so*"); do ( cd $(bindir); lib=$$(find . -type f -name "$(NETTLE_LIB_ALL).so*"); ln -s $${lib#./} $$link ); done
+
+links:	$(LINKS:%=$(bindir)/%)
+
+install:	install_$(binfile) $(NETTLE_SHARED_LIBS) links
+
+install-nostrip:	nostrip_$(binfile) $(NETTLE_SHARED_LIBS) links
 
 #######################################################################################################
 #                                                                                                     #
@@ -773,15 +792,17 @@ install-nostrip:	$(binfile)
 .PHONY:	uninstall clean
 
 uninstall:
-	@for l in $(LINKS:%=$(bindir)/%); do \
+	for l in $(LINKS:%=$(bindir)/%); do \
 		[ -L $$l ] && $(RM) $$l && echo "symlink for $$l removed"; \
 	done; \
 	true;
-	@[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
+	[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
+	for l in $(bindir)/$(NETTLE_LIB_ALL)*; do $(RM) $$l; true; done 2>/dev/null
 	@echo "uninstall succeeded"
 
 clean:
 	@[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
+	@$(RM) .with_lib{nettle,crypto} 2>/dev/null || true
 	@$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) crypto_ossl.o $(CONFIG) 2>/dev/null || true
 	@for n in $(APPLET_SRCS); do \
 		$(RM) $${n}_commands.c 2>/dev/null; \
