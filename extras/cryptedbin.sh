@@ -9,6 +9,10 @@
 #          starting with FRITZ!OS version 07.19. At least the file is exported
 #          on my 7490 device (with 113.07.19-73513) without encryption, as a 
 #          normal B64FILE entry.
+# UPDATE:  Even the labor version for 6490 (141.07.19-75251) does not use an
+#          encryption anymore for 'dvb.cfg' file. The whole 'CRYPTEDB64FILE'
+#          support is based on assumptions from the earlier 'CRYPTEDBINFILE'
+#          implementation.
 #
 # remove the character device for an existing dvb.cfg file
 #
