@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2020, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -73,10 +73,11 @@ EXPORTED	bool	decryptValue(CipherContext * ctx, char * cipherText, size_t cipher
 				size_t	start = 0;
 				size_t	extraBufSize = cipherTextSize - valueSize + 4 - 3;
 
-				/* escape processing may result in clear-text values, which are larger than their cipher-text;
-				   space available = sizeof(cipherText) - sizeof(clearText) plus four dollar-signs in front of
-				   cipherText minus 0xFF and the 16-bit value needed for gap marker; extra characters aren't a
-				   problem for output to file, but the output buffer in memory could be too small
+				/*
+					escape processing may result in clear-text values, which are larger than their cipher-text;
+					space available = sizeof(cipherText) - sizeof(clearText) plus four dollar-signs in front of
+					cipherText minus 0xFF and the 16-bit value needed for gap marker; extra characters aren't a
+					problem for output to file, but the output buffer in memory could be too small
 				*/
 
 				if (isString)
@@ -190,7 +191,7 @@ EXPORTED	bool	digestCheckValue(char *buffer, size_t bufferSize, char * *value, s
 	return dataLen;
 }
 
-// decrypt a binary encrypted file (CRYPTEDBINFILE)
+// decrypt a binary encrypted file (CRYPTEDBINFILE/CRYPTEDB64FILE)
 
 EXPORTED	bool	decryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput)
 {

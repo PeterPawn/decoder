@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2020, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -260,7 +260,7 @@ EXPORTED	char *	memoryBufferAdvancePointer(memoryBuffer_t * *buffer, size_t *las
 EXPORTED	char *	memoryBufferSearchValueEnd(memoryBuffer_t * *buffer, size_t *offset, size_t * size, bool *split)
 {
 	memoryBuffer_t	*current = *buffer;
-	size_t  		currentOffset = *offset;
+	size_t			currentOffset = *offset;
 	size_t			count = 0;
 	char *			position = current->data + currentOffset;
 

@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2020, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -52,11 +52,11 @@ EXPORTED	bool	checkLastArgumentIsInputFile(char * name)
 
 	verboseMessage(verboseRedirectStdin, name);
 	/*
-	   It's possible to re-assign 'stdin' with glibc and others, but with
-	   C89/C99 'stdin' is a macro and for better portability, we use an own
-	   variable here.
-	   The old fd may be closed first (according to POSIX), as a result the
-	   stream behind the pointer may be invalid, if an error occurs.
+		It's possible to re-assign 'stdin' with glibc and others, but with
+		C89/C99 'stdin' is a macro and for better portability, we use an own
+		variable here.
+		The old fd may be closed first (according to POSIX), as a result the
+		stream behind the pointer may be invalid, if an error occurs.
 	*/
 	FILE * stdin_reloc = freopen(name, "r", stdin);
 	if (!stdin_reloc)

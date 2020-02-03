@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2020, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -43,7 +43,7 @@ void	encryptionInit(void);
 bool	digestCheckValue(char *buffer, size_t bufferSize, char * *value, size_t * dataLen, bool * string);
 
 bool	decryptValue(CipherContext * ctx, char * cipherText, size_t cipherTextSize, FILE * out, char * outBuffer, char * key, bool escaped);
-bool    decryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput);
+bool	decryptFile(char * input, size_t inputSize, FILE * out, char * outBuffer, char * key, bool hexOutput);
 
 bool	keyFromDevice(char * hash, size_t * hashSize, bool forExport);
 bool	keyFromProperties(char * hash, size_t * hashSize, char * serial, char * maca, char * wlanKey, char * tr069Passphrase);
