@@ -33,6 +33,7 @@
 #define	URLADER_TR069PP_NAME	"tr069_passphrase"
 
 #define	EXPORT_PASSWORD_NAME	"\nPassword=$$$$"
+#define	EXPORT_PASSWORD2_NAME	"\nPassword2=$$$$"
 
 #define	PRIVKEY_PASSWORD_SIZE	8
 

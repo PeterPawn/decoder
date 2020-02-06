@@ -51,6 +51,7 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	bool				noConsolidate = false;
 	bool				newChecksum = false;
 	bool				decryptFiles = false;
+	char *				passwordEntry = NULL;
 
 	if (argc > argo + 1)
 	{
@@ -171,6 +172,8 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			verboseMessage(verboseDeviceKeyHash, hexBuffer);
 			free(hexBuffer);
 		}
+
+		passwordEntry = EXPORT_PASSWORD_NAME;
 	}
 	else if (!maca) /* single argument - assume it's a user-defined password */
 	{
@@ -195,6 +198,8 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			verboseMessage(verbosePasswordHash, hexBuffer);
 			free(hexBuffer);
 		}
+
+		passwordEntry = EXPORT_PASSWORD_NAME;
 	}
 	else
 	{
@@ -220,6 +225,8 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 			verboseMessage(verboseUsingKey, hexBuffer);
 			free(hexBuffer);
 		}
+
+		passwordEntry = EXPORT_PASSWORD_NAME;
 	}
 
 	if (isatty(0) && !tty)
@@ -275,19 +282,19 @@ int		decexp_entry(int argc, char** argv, int argo, commandEntry_t * entry)
 	bool				split = false;
 	char				exportKey[*cipher_keyLen];
 
-	if ((varName = memoryBufferFindString(&found, &foundOffset, EXPORT_PASSWORD_NAME, strlen(EXPORT_PASSWORD_NAME) , &split)) != NULL)
+	if ((varName = memoryBufferFindString(&found, &foundOffset, passwordEntry, strlen(passwordEntry) , &split)) != NULL)
 	{
 		current = found;
 		offset = foundOffset;
 
-		memoryBufferAdvancePointer(&current, &offset, strlen(EXPORT_PASSWORD_NAME));
+		memoryBufferAdvancePointer(&current, &offset, strlen(passwordEntry));
 		found = current;
 		foundOffset = offset;
 		memoryBufferSearchValueEnd(&found, &foundOffset, &valueSize, &split);
 
 		if (valueSize != 104)
 		{
-			errorMessage(errorInvalidFirstStageLength, valueSize, EXPORT_PASSWORD_NAME);
+			errorMessage(errorInvalidFirstStageLength, valueSize, passwordEntry);
 			setError(INV_DATA_SIZE);
 			inputFile = memoryBufferFreeChain(inputFile);
 			return EXIT_FAILURE;
