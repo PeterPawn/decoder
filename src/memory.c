@@ -373,10 +373,15 @@ EXPORTED	bool	memoryBufferProcessFile(memoryBuffer_t * *buffer, size_t offset, c
 					if (out)
 					{
 						if (fwrite("$$$$", 4, 1, out) != 1 ||
-							fwrite(current->data + currentOffset, current->used - currentOffset, 1, out) != 1)
+							fwrite(current->data + currentOffset, foundOffset - currentOffset, 1, out) != 1)
 						{
 							setError(WRITE_FAILED);
 							current = NULL;
+						}
+						else
+						{
+							current = found;
+							currentOffset = foundOffset;
 						}
 					}
 				}
