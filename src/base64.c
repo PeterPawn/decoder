@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -33,6 +33,7 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 	size_t			outOffset = 0;
 	size_t			b64Size = 0;
 	bool			filler = false;
+	int				filler_count = 0;
 	size_t			bSize = 0;
 	int				bits = 0;
 	int				value = 0;
@@ -44,7 +45,7 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 	{
 		char		*current = base64;
 
-		while (*current)
+		while (*current && (current < (base64 + b64Size)))
 		{
 			if (isspace(*(current++))) /* only whitespace characters (0x20, 0x0A, 0x0D, 0x09, 0x0B, 0x0C) will be ignored here */
 				continue;
@@ -67,57 +68,73 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 	if (bSize > binarySize)
 		returnError(BUF_TOO_SMALL, bSize);
 
-	while (offset < b64Size && outOffset < binarySize)
+	while (offset < b64Size && outOffset < binarySize && inSize)
 	{
-		value = 0;
-		for (int i = 0; i < 4 && offset < b64Size; i++)
-		{
-			char 	c = *(base64 + offset++);
+		char	 	c = *(base64 + offset++);
+		bool		is_space = isspace(c);
 
-			while (c && ignoreWhitespace && isspace(c))
+		inSize--;
+
+		if (ignoreWhitespace && is_space && inSize)
+		{
+			while (inSize--)
 			{
 				c = *(base64 + offset++);
-			}
-
-			if (c >= 'A' && c <= 'Z')
-				c = c - 'A';
-			else if (c >= 'a' && c <= 'z')
-				c = c - 'a' + 26;
-			else if (c >= '0' && c <= '9')
-				c = c - '0' + 52;
-			else if (c == '+')
-				c = 62;
-			else if (c == '/')
-				c = 63;
-			else if (c == '=')
-			{
-				filler = true;
+				is_space = isspace(c);
+				if (!is_space)
+					break;
 				c = 0;
 			}
-			else
-				returnError(INV_B64_DATA, 0);
+		}
 
+		if (c >= 'A' && c <= 'Z')
+			c = c - 'A';
+		else if (c >= 'a' && c <= 'z')
+			c = c - 'a' + 26;
+		else if (c >= '0' && c <= '9')
+			c = c - '0' + 52;
+		else if (c == '+')
+			c = 62;
+		else if (c == '/')
+			c = 63;
+		else if (c == '=')
+		{
+			filler = true;
+			filler_count++;
+			if (filler_count > 2)
+				returnError(INV_B64_DATA,0);
+			c = 0;
+		}
+		else if (!is_space)
+			returnError(INV_B64_DATA, 0);
+
+		if (!is_space)
+		{
 			value = (value << 6) + c;
 			bits += 6;
 
 			if (bits == 24)
 			{
+				if (outOffset >= (binarySize - 3)) /* one more check, should never be true */
+					returnError(BUF_TOO_SMALL, bSize);
+
 				*(binary + outOffset) = (char) (value >> 16);
 				*(binary + outOffset + 1) = (char) ((value >> 8) & 0xFF);
 				*(binary + outOffset + 2) = (char) (value & 0xFF);
 				bits = 0;
 				outOffset += 3;
+				value = 0;
 			}
 		}
 	}
 
-	if (ignoreWhitespace && offset < b64Size) /* skip over whitespace at end of data */
+	if (ignoreWhitespace && offset < (b64Size - 1)) /* skip over whitespace at end to check for valid data only */
 	{
 		while (*(base64 + offset) && isspace(*(base64 + offset)))
 			offset++;
 	}
 
-	if (filler && offset < b64Size)
+	if (filler && offset < (b64Size - 1))
 	{
 		returnError(INV_B64_DATA, 0);
 	}
@@ -136,8 +153,15 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 		else
 			returnError(INV_B64_SIZE, 0);
 
+		if (outOffset >= binarySize)
+			returnError(BUF_TOO_SMALL, bSize);
+
 		*(binary + outOffset) = (char) (value >> 16);
 		outOffset++;
+
+		if (outOffset >= binarySize)
+			returnError(BUF_TOO_SMALL, bSize);
+
 		*(binary + outOffset) = (char) ((value >> 8) & 0xFF);
 		outOffset++;
 
@@ -145,12 +169,15 @@ size_t	base64ToBinary(char *base64, size_t base64Size, char *binary, size_t bina
 		{
 			if (pad)
 			{
+				if (outOffset >= binarySize)
+					returnError(BUF_TOO_SMALL, bSize);
+
 				*(binary + outOffset) = 0;
 				outOffset++;
 			}
 		}
 	}
-	return outOffset;
+	return (outOffset - filler_count);
 }
 
 // convert a binary buffer to a Base64 string

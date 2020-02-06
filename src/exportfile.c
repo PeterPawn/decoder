@@ -3,7 +3,7 @@
  *
  * vim: set tabstop=4 syntax=c :
  *
- * Copyright (C) 2014-2019, Peter Haemmerlein (peterpawn@yourfritz.de)
+ * Copyright (C) 2014-2020, Peter Haemmerlein (peterpawn@yourfritz.de)
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -12,7 +12,7 @@
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
@@ -90,6 +90,7 @@ EXPORTED	uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
 		IN_HEADER,
 		IN_TEXTFILE,
 		IN_BINFILE,
+		IN_B64FILE,
 	}					output = NO_OUTPUT;
 	uint32_t			crcValue = 0;
 	char				buffer[9];
@@ -160,6 +161,15 @@ EXPORTED	uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
 				size_t	valueSize = size - (5 + (strncmp(current + 5, "BIN", 3) == 0 ? 8 : 15)) - (*(current + size - 1) == '\n' ? 1 : 0);
 
 				output = IN_BINFILE;
+				crcUpdate(ctx, value, valueSize);
+				crcUpdate(ctx, "\0", 1);
+			}
+			else if (strncmp(current + 5, "B64FILE:", 8) == 0 || strncmp(current + 5, "CRYPTEDB64FILE:", 15) == 0) /* Base64 encoded file found */
+			{
+				char *	value = current + 5 + (strncmp(current + 5, "B64", 3) == 0 ? 8 : 15);
+				size_t	valueSize = size - (5 + (strncmp(current + 5, "B64", 3) == 0 ? 8 : 15)) - (*(current + size - 1) == '\n' ? 1 : 0);
+
+				output = IN_B64FILE;
 				crcUpdate(ctx, value, valueSize);
 				crcUpdate(ctx, "\0", 1);
 			}
@@ -255,6 +265,22 @@ EXPORTED	uint32_t	computeExportFileChecksum(memoryBuffer_t * input, FILE * out)
 					}
 					break;
 
+				case IN_B64FILE:
+					{
+						/* count each decoded line (convert it to binary first) */
+
+						size_t	binSize = (size / 4 + 1) * 3;
+						char *	binary = malloc(binSize);
+
+						if (binary)
+						{
+							binSize = base64ToBinary(current, size, binary, binSize, false, true);
+							crcUpdate(ctx, binary, binSize);
+							free(binary);
+						}
+					}
+					break;
+
 				default:
 					break;
 			}
@@ -284,6 +310,8 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path, boo
 		IN_TEXTFILE,
 		IN_BINFILE,
 		IN_CRYPTEDBINFILE,
+		IN_B64FILE,
+		IN_CRYPTEDB64FILE,
 	}					output = NO_OUTPUT;
 	FILE *				out = NULL;
 	char *				last = NULL;
@@ -362,6 +390,24 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path, boo
 					fprintf(dictionary, "%c %s\n", (strncmp(current + 5, "BIN", 3) == 0 ? 'b' : 'B'), buffer);
 				}
 			}
+			else if (strncmp(current + 5, "B64FILE:", 8) == 0 || strncmp(current + 5, "CRYPTEDB64FILE:", 15) == 0) /* Base64 encoded file found */
+			{
+				char *	value = current + 5 + (strncmp(current + 5, "B64", 3) == 0 ? 8 : 15);
+				size_t	valueSize = size - (5 + (strncmp(current + 5, "B64", 3) == 0 ? 8 : 15)) - (*(current + size - 1) == '\n' ? 1 : 0);
+
+				output = (strncmp(current + 5, "B64", 3) == 0 ? IN_B64FILE : IN_CRYPTEDB64FILE);
+				out = openOutputFile(path, value, valueSize);
+				if (!out)
+					return;
+				if (dictionary)
+				{
+					char	buffer[PATH_MAX + 1];
+
+					strncpy(buffer, value, valueSize);
+					buffer[valueSize] = 0;
+					fprintf(dictionary, "%c %s\n", (strncmp(current + 5, "B64", 3) == 0 ? 'n' : 'N'), buffer);
+				}
+			}
 		}
 		else
 		{
@@ -374,12 +420,12 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path, boo
 
 						if (size != 1 && *current != '\n')
 						{
-                            if (fwrite(current, size, 1, out) != 1)
-                            {
-                                fclose(out);
-                                setError(WRITE_FAILED);
-                                return;
-                            }
+							if (fwrite(current, size, 1, out) != 1)
+							{
+								fclose(out);
+								setError(WRITE_FAILED);
+								return;
+							}
 						}
 					}
 					break;
@@ -420,6 +466,32 @@ EXPORTED	void	decomposeExportFile(memoryBuffer_t * input, const char * path, boo
 						if (binary)
 						{
 							binSize = hexadecimalToBinary(current, size, binary, binSize);
+							if (binSize > 0 && fwrite(binary, binSize, 1, out) != 1)
+							{
+								fclose(out);
+								setError(WRITE_FAILED);
+								free(binary);
+								return;
+							}
+							free(binary);
+						}
+					}
+					break;
+
+				case IN_B64FILE:
+				case IN_CRYPTEDB64FILE:
+					{
+						if (size == 1 && *current == '\n')
+							break;
+
+						/* write base64 data line */
+
+						size_t	binSize = (size / 4 + 1) * 3;
+						char *	binary = malloc(binSize);
+
+						if (binary)
+						{
+							binSize = base64ToBinary(current, size, binary, binSize, false, true);
 							if (binSize > 0 && fwrite(binary, binSize, 1, out) != 1)
 							{
 								fclose(out);
