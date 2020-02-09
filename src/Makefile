@@ -693,6 +693,21 @@ override LDFLAGS += -Wl,--gc-sections
 endif
 #######################################################################################################
 #                                                                                                     #
+# set cross-compile target for libnettle, if needed                                                   #
+#                                                                                                     #
+#######################################################################################################
+NETTLE_CONFIGURE=
+ifneq ($(strip $(NETTLE_HOST)),)
+NETTLE_CONFIGURE += --host=$(NETTLE_HOST)
+endif
+ifneq ($(strip $(NETTLE_TARGET)),)
+NETTLE_CONFIGURE += --target=$(NETTLE_TARGET)
+endif
+ifneq ($(strip $(NETTLE_BUILD)),)
+NETTLE_CONFIGURE += --build=$(NETTLE_BUILD)
+endif
+#######################################################################################################
+#                                                                                                     #
 # show values on debug                                                                                #
 #                                                                                                     #
 #######################################################################################################
@@ -746,10 +761,10 @@ $(CONFIG):	| $(APPLETS)
 crypto_nettle.o:	| $(NETTLE_LIB) $(NETTLE_HEADERS)
 
 $(NETTLE_LIB):
-	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" $(NETTLE_LIB_TARGET)
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" NETTLE_CONFIGURE="$(NETTLE_CONFIGURE)" $(NETTLE_LIB_TARGET)
 
 $(NETTLE_HEADERS):
-	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" nettle-headers
+	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" NETTLE_CONFIGURE="$(NETTLE_CONFIGURE)" nettle-headers
 
 #######################################################################################################
 #                                                                                                     #

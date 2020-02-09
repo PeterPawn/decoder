@@ -12,7 +12,7 @@ $(prj):
 $(prj)/config.status: | $(prj)
 	cd $(prj); \
 	umask 077; \
-	./configure --disable-shared --disable-public-key --disable-openssl --disable-documentation --enable-mini-gmp CFLAGS="-O2 -ffunction-sections -fdata-sections $(CFLAGS)" --prefix=
+	./configure --disable-shared --disable-public-key --disable-openssl --disable-documentation --enable-mini-gmp CFLAGS="-O2 -ffunction-sections -fdata-sections $(CFLAGS)" --prefix= $(NETTLE_CONFIGURE)
 
 clean:
 	@for d in $$(find . -type d -name "nettle-*"); do [ -d $$d ] && ( cd $$d; make clean; cd ..; rm -r $$d 2>/dev/null ) || true; done; \
