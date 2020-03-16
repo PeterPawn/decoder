@@ -34,6 +34,10 @@ typedef	struct	showOption	{
 #define DECODER_HELP_WIDTH				99
 
 #define	__undl(string)					"\033[4m" string "\033[0m"
+// Mingw seems to be missing __STRING(x)
+#ifndef __STRING
+#define	__STRING(x)							#x
+#endif
 #define	STRING(number)					__STRING(number)
 
 void									showUsageHeader(FILE * out, const bool help, const bool version);

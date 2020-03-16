@@ -38,11 +38,19 @@ void	main_usage(const bool help, const bool version)
 	}
 
 	showPurposeHeader(out);
+#ifdef _WIN32
+	fprintf(out,
+		"This program is a 'multi-call' binary. Its function is selected by the first argument on\n"
+		"the command-line.\n"
+		"\nLet's call these functions 'applets' from now on, like BusyBox does it.\n"
+	);
+#else
 	fprintf(out,
 		"This program is a 'multi-call' binary. Its function is either selected by the first argument on\n"
 		"the command-line or by the name of the (hard or symbolic) link, which is used to call it.\n"
 		"\nLet's call these functions 'applets' from now on, like BusyBox does it.\n"
 	);
+#endif
 
 	showFormatHeader(out);
 	addSpace();

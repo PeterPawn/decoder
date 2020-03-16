@@ -24,6 +24,10 @@
 #include "decoder.h"
 #include "decoder_usage.c"
 
+#ifdef _WIN32
+#include "windows.h"
+#endif
+
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
 #pragma GCC diagnostic ignored "-Wformat-security"
@@ -37,14 +41,35 @@ int main(int argc, char** argv)
 	int					argumentOffset = 0;
 	char * 				fname = NULL;
 	char * 				ename = NULL;
+
+#ifdef _WIN32
+	// Enable VT processing for the escape sequences on Windows
+	DWORD 				 cmode;
+	HANDLE 				 hcon;
+	
+	hcon = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (hcon != INVALID_HANDLE_VALUE)
+	{
+		if (GetConsoleMode(hcon, &cmode))
+		{
+			SetConsoleMode(hcon, cmode | ENABLE_VIRTUAL_TERMINAL_PROCESSING);
+		}
+	}
+
+	// No "applet" support on Windows
+	ename = basename(strdup(arguments[0]));
+	fname = strdup(ename);
+	argumentOffset = 0;
+#else
 	char 				enameLong[PATH_MAX+1];
 	size_t				linkSize;
-	
+
 	if ((linkSize = readlink("/proc/self/exe", enameLong, PATH_MAX)) == (size_t) -1)
 	{
 		errorMessage(errorExecutableName);
 		exit(EXIT_FAILURE);
 	}
+
 	enameLong[PATH_MAX] = 0;
 	enameLong[linkSize] = 0;
 	if (argumentCount == 0)
@@ -54,12 +79,14 @@ int main(int argc, char** argv)
 	}
 	ename = basename(strdup(enameLong));
 	fname = basename(strdup(arguments[0]));
-	
+
 	if (strcmp(ename, fname))
 	{
 		argumentOffset = 0;		
 	}
-	else if (argumentCount > 1 && *(arguments[1]) != '-')
+	else
+#endif
+	if (argumentCount > 1 && *(arguments[1]) != '-')
 	{
 		fname = arguments[1];
 		argumentOffset = 1;
@@ -156,7 +183,11 @@ int main(int argc, char** argv)
 	if (!current)
 	{
 		setAppletName(ename);
+#ifdef _WIN32
+		errorMessage(errorInvalidFunction, fname);
+#else
 		errorMessage(errorInvalidFunction, fname, enameLong);
+#endif
 		main_usage(false, false);
 	}
 
