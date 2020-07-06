@@ -68,7 +68,11 @@ EXPORTED	char *			errorExecutableName = "Unable to get executable name from proc
 EXPORTED	char *			errorInvalidArgumentData = "The specified arguments contain invalid data.\n";
 EXPORTED	char *			errorInvalidDataSize = "Invalid data size encountered on STDIN.\n";
 EXPORTED	char *			errorInvalidFirstStageLength = "Invalid length of data (%u) in the '%s' entry. Expected value is 104.\n";
+#ifdef _WIN32
+EXPORTED	char *			errorInvalidFunction = "Unknown function '%s'.\n";
+#else
 EXPORTED	char *			errorInvalidFunction = "Unknown function '%s' for '%s' binary.\n";
+#endif
 EXPORTED	char *			errorInvalidHexSize = "Invalid hexadecimal data size encountered on STDIN.\n";
 EXPORTED	char *			errorInvalidHexValue = "Invalid hexadecimal data value encountered on STDIN.\n";
 EXPORTED	char *			errorInvalidKeyValue = "The specified key value '%s' is invalid, it contains wrong characters.\n";
