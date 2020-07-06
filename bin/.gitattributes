@@ -1,2 +1,3 @@
 # this folder and its subfolders contain only binary data
-* binary
+*.md text eol=lf
+decoder* binary
