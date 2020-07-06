@@ -6,14 +6,12 @@ Please don't forget to check the detached GnuPG signature, provided together wit
 The files provided and their target platforms are:
 
 * decoder.armv7l
-  - built with ```libnettle``` (3.6) and ```glibc``` on a Raspberry Pi (4B) running Raspbian (Buster)
-  - it's a little bit larger with glibc, but I had no usable ```uClibc``` for Raspbian and there's no other need to build one
+  - built with ```libnettle``` (3.6) and ```uClibc-ng``` (1.0.14) using the ```Freetz``` toolchain (from my YourFreetz fork) for IPQ40x8/9 devices
 * decoder.mips
-  - built for ```big endian``` machines with ```libnettle``` (3.6) and ```uClibc``` (1.0.14) using the ```Freetz``` toolchain (from my YourFreetz fork)
-  - really small for a statically linked program, thanks to the used C library
+  - built for ```big endian``` machines with ```libnettle``` (3.6) and ```uClibc-ng``` (1.0.14) using the ```Freetz``` toolchain (from my YourFreetz fork)
   - should be usable on all FRITZ!Box models with VR9 and GRX5 chipset, works on Vx180 (7390), too
 * decoder.i686
-  - built with ```libnettle``` (3.6) and ```uClibc``` (1.0.14), targeting Intel 80386 compatible systems (Puma's ATOM and other x86 platforms)
+  - built with ```libnettle``` (3.6) and ```uClibc-ng``` (1.0.14), targeting Intel 80386 compatible systems (Puma's ATOM and other x86 platforms)
 * decoder.x86_64
   - built with ```libnettle``` (3.6) and ```glibc```, targeting x64 compatible systems
   - should be usable from WSL (Windows Subsystem for Linux) on Windows 10
