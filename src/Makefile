@@ -760,7 +760,7 @@ $(CONFIG):	| $(APPLETS)
 
 crypto_nettle.o:	| $(NETTLE_LIB) $(NETTLE_HEADERS)
 
-$(NETTLE_LIB):
+$(NETTLE_LIB): $(NETTLE_HEADERS)
 	$(MAKE) -C nettle NETTLE_VERSION="$(nettle_version)" DESTDIR="$$(pwd)" CFLAGS="$(NETTLE_CFLAGS)" LDFLAGS="$(LDFLAGS)" NETTLE_CONFIGURE="$(NETTLE_CONFIGURE)" $(NETTLE_LIB_TARGET)
 
 $(NETTLE_HEADERS):
@@ -807,17 +807,18 @@ install-nostrip:	nostrip_$(binfile) $(NETTLE_SHARED_LIBS) links
 .PHONY:	uninstall clean
 
 uninstall:
-	for l in $(LINKS:%=$(bindir)/%); do \
+	@for l in $(LINKS:%=$(bindir)/%); do \
 		[ -L $$l ] && $(RM) $$l && echo "symlink for $$l removed"; \
 	done; \
 	true;
-	[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null || true
-	for l in $(bindir)/$(NETTLE_LIB_ALL)*; do $(RM) $$l; true; done 2>/dev/null
+	@[ -f $(bindir)/$(binfile) ] && $(RM) $(bindir)/$(binfile) 2>/dev/null && echo "binary $(binfile) removed" || true
+	@for l in $(bindir)/$(NETTLE_LIB_ALL)*; do $(RM) $$l && echo "library $$l removed" || true; done 2>/dev/null || true
 	@echo "uninstall succeeded"
 
 clean:
 	@[ -f $(binfile) ] && $(RM) $(binfile) 2>/dev/null || true
-	@$(RM) .with_lib{nettle,crypto} 2>/dev/null || true
+	@[ -f .with_libnettle ] && $(RM) .with_libnettle 2>/dev/null || true
+	@[ -f .with_libcrypto ] && $(RM) .with_libcrypto 2>/dev/null || true
 	@$(RM) $(CONFIG) $(APPLETS) $(OBJS_COMMON) $(OBJS_APP) $(OBJS_MAIN) crypto_ossl.o $(CONFIG) 2>/dev/null || true
 	@for n in $(APPLET_SRCS); do \
 		$(RM) $${n}_commands.c 2>/dev/null; \
