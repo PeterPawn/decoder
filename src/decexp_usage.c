@@ -107,7 +107,7 @@ void 	decexp_usage(const bool help, UNUSED const bool version)
 	fprintf(out,
 		"\nAll input data will be read from STDIN; you can provide it using shell redirections. If STDIN is\n"
 		"connected to a terminal device and the '--tty' option (or '-t') wasn't specified, the last value\n"
-		"from command line (following %s or %s and %s values) is checked, wether it's the name\n"
+		"from command line (following %s or %s and %s values) is checked, whether it's the name\n"
 		"of a readable file. In this case the specified %s will be used as source of input data.\n",
 		showUndl("password"), showUndl("serial"), showUndl("maca"), showUndl("input-file")
 	);
