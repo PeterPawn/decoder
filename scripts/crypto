@@ -436,7 +436,7 @@ yf_random_string()
 			i=$(( i + 1 ))
 			if [ $j -gt $i ]; then
 				while [ $i -lt $j ]; do
-					yf_random_string_read_octals_print "$v" "$len"
+					yf_random_string_read_octals_print 0 "$len"
 					len=$(( len - 2 ))
 					i=$(( i + 1 ))
 				done
