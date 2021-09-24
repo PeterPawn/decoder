@@ -537,11 +537,6 @@ Yrd3mkJCrhG+jMs1V2qNb9Uhr5ZLOA40sIz2PHfDrR+gc8THm2p5OvCWEAeukYJ2
 =nBtZ
 -----END PGP PUBLIC KEY BLOCK-----
 EOD
-if ! gpg --homedir $hdir --fingerprint $keyID | grep -q "$keyFingerprint"; then
-	printf "\n\033[31m\033[1mGPG key fingerprint does not match, maybe the key wasn't found or it's the wrong key.\033[0m\a\n\n" 1>&2
-	rm -r .gnupg
-	exit 1
-fi
 umask $omask
 #
 # get source tarball and check the signature
