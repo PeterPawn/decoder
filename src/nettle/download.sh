@@ -28,18 +28,9 @@ if ! gpg --version | grep -q GnuPG; then
 	exit 1
 fi
 #
-# prepare a new base directory and load author's key
+# prepare author's public key
 #
-rm -r $hdir 2>/dev/null
-omask=$(umask)
-umask 077
-mkdir $hdir
-gpg --homedir $hdir --import >/dev/null 2>&1 <<-EOD
-
------BEGIN PGP PUBLIC KEY BLOCK-----
-Comment: Hostname:
-Version: Hockeypuck ~unreleased
-
+base64 -d >./nisse.pub 2>/dev/null <<-EOD
 xsCNBFDrIWMBCgCyyYoTAD/aL6Yl90eSJ1xuFpODTcwyRZsNSUZKSmKwnqXo9LgS
 2B00yVZ2nO2OrSmWPiYikTciitv04bAqFaggSstx6hlni6n3h2PL0jXpf9EI6qOO
 oKwi2IVtbBnJAhWpfRcAce6WEqvnav6KjuBM3lr8/5GzDV8tm6+X/G/paTnBqTB9
@@ -535,9 +526,8 @@ iNbAarGxP40Qvlk2AuXWvq+fiBnU1e1nU2oV7/7nAWH7kj/Vr/JxcBeOpsNDGkW7
 Yrd3mkJCrhG+jMs1V2qNb9Uhr5ZLOA40sIz2PHfDrR+gc8THm2p5OvCWEAeukYJ2
 2XTUIt6XoPO0ERYD
 =nBtZ
------END PGP PUBLIC KEY BLOCK-----
 EOD
-umask $omask
+GPG_KEYID="343C2FF0FBEE5EC2EDBEF399F3599FF828C67298"
 #
 # get source tarball and check the signature
 #
@@ -552,8 +542,9 @@ fi
 #
 # check signature
 #
-if ! gpg --homedir $hdir --verify $sig $source >/dev/null 2>&1; then
+if ! gpgv --keyring ./nisse.pub $sig $source > /dev/null 2>&1; then
 	printf "\n\033[31m\033[1mError verifying signature - either a download problem or the signature is really wrong.\033[0m\a\n\n" 1>&2
+	rm ./nisse.pub 2>/dev/null
 	exit 1
 fi
 #

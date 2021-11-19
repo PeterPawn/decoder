@@ -19,9 +19,9 @@ clean:
 	[ -f $(DESTDIR)/libnettle.a ] && rm $(DESTDIR)/libnettle.a 2>/dev/null; \
 	rm $(DESTDIR)/libnettle.so* 2>/dev/null && true; \
 	[ -d $(DESTDIR)/include/nettle ] && rm -r $(DESTDIR)/include/nettle 2>/dev/null; \
-	rm -r .gnupg nettle*.tar.gz* 2>/dev/null; \
+	rm nisse.pub nettle*.tar.gz* 2>/dev/null; \
 	printf "Cleanup done.\n" 1>&2
-	
+
 build:	$(prj)/config.status
 	$(MAKE) -C $(prj) SUBDIRS=
 
