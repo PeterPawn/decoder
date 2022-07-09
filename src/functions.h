@@ -29,8 +29,6 @@
 
 typedef struct commandEntry commandEntry_t;
 
-void (*usageScreen)(void);
-
 struct commandEntry {
 	char * *		*names;
 	int 			(*ep)(int argc, char **argv, int argo, commandEntry_t * entry);
