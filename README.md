@@ -1,6 +1,6 @@
 # Decode secrets from/for AVM's FRITZ!OS-based devices
 
-This is a new version, which works independently of any other utility (from vendor). It's working even outside of any FRITZ!OS device, as long as you known the used password (for exported settings files) or some properties (see below) of the source device (for other files).
+This is a new version, which works independently of any other utility (from vendor). It's working even outside of any FRITZ!OS device, as long as you know the used password (for exported settings files) or some properties (see below) of the source device (for other files).
 
 ## Purpose(s):
 
